@@ -483,7 +483,7 @@ var S={
   /* 首頁輪播宣傳圖片（後台可上傳；要永久固定可直接放圖片網址或 base64） */
   banners:[],salesScope:'month',salesBy:'month',
   /* EmailJS 訂單通知設定：到 emailjs.com 申請後填入；留空則不寄信 */
-  emailjs:{publicKey:'',serviceId:'',templateId:'',notifyEmail:''}
+  emailjs:{publicKey:'0fDgbRNsr5gYK1db6',serviceId:'service_v1zwgeo',templateSeller:'template_7fudb3h',templateCustomer:'template_lg542mk',notifyEmail:''}
 };
 
 var DEFAULT_PRODUCTS=S.products.slice();
@@ -576,6 +576,20 @@ function doLogout(){
 }
 
 
+function doRegister(){
+  var name=document.getElementById('regName').value.trim();
+  var email=document.getElementById('regEmail').value.trim();
+  var pwd=document.getElementById('regPwd').value;
+  var phone=document.getElementById('regPhone').value.trim();
+  var ig=document.getElementById('regIG').value.trim();
+  if(!name||!email||!pwd){showToast('請填寫姓名、Email 與密碼');return;}
+  if(pwd.length<6){showToast('密碼至少 6 位');return;}
+  if(S.members.some(function(m){return m.email===email;})){showToast('此 Email 已註冊過囉 😿');return;}
+  var u={id:Date.now(),name:name,email:email,pwd:pwd,phone:phone,ig:ig,isAdmin:false,coupons:[]};
+  S.members.push(u);S.currentUser=u;
+  var mb=document.getElementById('memberBtn');if(mb)mb.textContent=u.name;
+  showToast('註冊成功，歡迎加入 Ju 🌸');showPage('home');
+}
 function pCard(p){
   var hs=p.original&&p.original>p.price;
   var pct=hs?Math.round((1-p.price/p.original)*100):0;
@@ -686,20 +700,42 @@ function openOrderDetail(id,isAdmin){
   html+='<div style="font-size:13px;color:var(--text-light);margin-top:12px;line-height:1.9">寄送方式：'+(o.shippingMethod==='711'?'7-11 超商取貨':o.shippingMethod==='home'?'宅配到府':'7-11 賣貨便貨到付款')
     +'<br>取貨/地址：'+(o.address||'—')+'<br>收件人：'+o.receiver+'　'+o.phone+(o.ig?'　IG '+o.ig:'')+(o.note?'<br>備註：'+o.note:'')+'</div>';
   if(o.payment!=='cod'||depOnly){
-    if(o.paymentProof){
-      html+='<div style="margin-top:16px"><p style="font-size:13px;color:#2e7d32;font-weight:600;margin-bottom:6px">✓ 已上傳付款截圖'+(isAdmin?'':'，等待賣家確認')+'</p>'
-        +'<img src="'+o.paymentProof+'" style="width:100%;max-width:240px;border-radius:10px;border:1px solid var(--linen);display:block">'
-        +(isAdmin?'':'<button class="abtn" style="margin-top:8px" onclick="document.getElementById(\'proofInput\').click()">重新上傳</button>')+'</div>';
+    var reported=o.paymentProof||o.paymentNote;
+    if(isAdmin){
+      html+='<div style="margin-top:16px"><p style="font-size:13px;font-weight:600;color:var(--cocoa);margin-bottom:6px">💳 顧客付款回報</p>';
+      if(o.paymentNote)html+='<div class="pay-info" style="margin-top:0">📝 顧客留言：'+o.paymentNote+'</div>';
+      if(o.paymentProof)html+='<img src="'+o.paymentProof+'" style="width:100%;max-width:240px;border-radius:10px;border:1px solid var(--linen);display:block;margin-top:8px">';
+      if(!reported)html+='<p style="font-size:13px;color:var(--text-light);margin:0">顧客尚未回報付款</p>';
+      html+='</div>';
     }else{
-      html+=isAdmin?'<p style="margin-top:16px;font-size:13px;color:var(--text-light)">顧客尚未上傳付款截圖</p>'
-        :'<div class="img-up" style="margin-top:16px;padding:22px" onclick="document.getElementById(\'proofInput\').click()">📷 上傳付款完成截圖，於系統通知付款</div>';
+      html+='<div style="margin-top:16px"><p style="font-size:13px;font-weight:600;color:var(--cocoa);margin-bottom:4px">💳 付款回報</p>'
+        +'<p style="font-size:12px;color:var(--text-light);margin-bottom:10px">完成付款後，上傳截圖或留言告訴我們（擇一即可）🌸</p>';
+      if(reported)html+='<p style="font-size:13px;color:#2e7d32;font-weight:600;margin-bottom:8px">✓ 已回報付款，等待賣家確認</p>';
+      html+='<textarea id="payNoteInput" placeholder="例如：已匯款，帳號末五碼 12345" style="width:100%;box-sizing:border-box;min-height:64px;padding:10px;border:1.5px solid var(--linen);border-radius:10px;font-family:inherit;font-size:16px">'+(o.paymentNote||'')+'</textarea>'
+        +'<button class="abtn" style="margin-top:8px" onclick="submitPaymentNote('+o.id+')">送出留言</button>';
+      if(o.paymentProof){
+        html+='<img src="'+o.paymentProof+'" style="width:100%;max-width:240px;border-radius:10px;border:1px solid var(--linen);display:block;margin-top:12px">'
+          +'<button class="abtn" style="margin-top:8px" onclick="document.getElementById(\'proofInput\').click()">重新上傳截圖</button>';
+      }else{
+        html+='<div class="img-up" style="margin-top:12px;padding:18px" onclick="document.getElementById(\'proofInput\').click()">📷 上傳付款截圖</div>';
+      }
+      html+='<input type="file" id="proofInput" accept="image/*" style="display:none" onchange="uploadPaymentProof(this,'+o.id+')"></div>';
     }
-    if(!isAdmin)html+='<input type="file" id="proofInput" accept="image/*" style="display:none" onchange="uploadPaymentProof(this,'+o.id+')">';
   }
   document.getElementById('orderDetailContent').innerHTML=html;
   document.getElementById('orderDetailModal').classList.add('open');
 }
 
+function submitPaymentNote(id){
+  var el=document.getElementById('payNoteInput');if(!el)return;
+  var note=el.value.trim();
+  if(!note){showToast('請先輸入留言內容');return;}
+  var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
+  o.paymentNote=note;o.paymentNotified=true;
+  showToast('已送出付款留言，將通知賣家 ✓');
+  openOrderDetail(id);
+  if(typeof renderMemberProfile==='function'&&S.currentUser)renderMemberProfile();
+}
 function uploadPaymentProof(input,id){
   var f=input.files[0];if(!f)return;
   showToast('上傳處理中…');
@@ -1209,15 +1245,16 @@ function updateCodBank(){
 function sendOrderEmail(o){
   try{
     var cfg=S.emailjs||{};
-    if(!window.emailjs||!cfg.publicKey||!cfg.serviceId||!cfg.templateId)return;
+    if(!window.emailjs||!cfg.publicKey||!cfg.serviceId)return;
     var items=o.items.map(function(i){return i.name+(i.spec?'（'+i.spec+'）':'')+' x'+i.qty+'（NT$'+(i.price*i.qty)+'）';}).join('、');
     var pay=o.payment==='bank'?'銀行匯款':o.payment==='linepay'?'LINE Pay':'7-11貨到付款';
     var ship=o.shippingMethod==='711'?'7-11取貨':o.shippingMethod==='home'?'宅配':'7-11貨到';
-    emailjs.send(cfg.serviceId,cfg.templateId,{
-      to_email:cfg.notifyEmail||'',order_id:o.id,order_date:o.date,
-      customer_name:o.receiver,customer_phone:o.phone,member_email:(S.currentUser&&S.currentUser.email)||'',
-      items:items,total:o.total,deposit:o.totalDeposit||0,payment:pay,shipping:ship,address:o.address,note:o.note||''
-    });
+    var memberEmail=(S.currentUser&&S.currentUser.email)||o.email||'';
+    var params={to_email:cfg.notifyEmail||'',order_id:o.id,order_date:o.date,
+      customer_name:o.receiver,customer_phone:o.phone,member_email:memberEmail,
+      items:items,total:o.total,deposit:o.totalDeposit||0,payment:pay,shipping:ship,address:o.address,note:o.note||''};
+    if(cfg.templateSeller){emailjs.send(cfg.serviceId,cfg.templateSeller,params);}
+    if(cfg.templateCustomer&&memberEmail){emailjs.send(cfg.serviceId,cfg.templateCustomer,params);}
   }catch(e){}
 }
 
