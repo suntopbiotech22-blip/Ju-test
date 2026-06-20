@@ -254,7 +254,13 @@ input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{fo
   <div style="max-width:1100px;margin:14px auto 0;padding:0 20px">
     <div id="homeCarousel" class="carousel"></div>
   </div>
-  <div class="section">
+  <div class="section" id="homeNewSection">
+    <p class="section-title">最新上架</p>
+    <p class="section-sub">新鮮出爐的手作小物 🌿</p>
+    <div class="divider">— ✿ —</div>
+    <div class="product-grid" id="homeNewProducts"></div>
+  </div>
+  <div class="section" id="homeFeaturedSection">
     <p class="section-title">熱銷精選</p>
     <p class="section-sub">媽媽們最喜愛的人氣作品</p>
     <div class="divider">— ✿ —</div>
@@ -615,7 +621,15 @@ function goCarousel(i){
 }
 
 function isLive(p){return !p.draft;}
-function renderHomeProducts(){document.getElementById('homeProducts').innerHTML=S.products.filter(function(p){return p.hot&&isLive(p);}).map(pCard).join('');}
+function renderHomeProducts(){
+  var live=S.products.filter(isLive);
+  var feat=live.filter(function(p){return p.hot;});
+  var news=live.filter(function(p){return !p.hot;}).sort(function(a,b){return (b.id||0)-(a.id||0);});
+  var fg=document.getElementById('homeProducts');if(fg)fg.innerHTML=feat.map(pCard).join('');
+  var ng=document.getElementById('homeNewProducts');if(ng)ng.innerHTML=news.map(pCard).join('');
+  var fs=document.getElementById('homeFeaturedSection');if(fs)fs.style.display=feat.length?'':'none';
+  var ns=document.getElementById('homeNewSection');if(ns)ns.style.display=news.length?'':'none';
+}
 function renderShopProducts(){
   var tabs=document.getElementById('catTabs');
   tabs.innerHTML=S.categories.map(function(c){return '<button class="cat-tab'+(c===S.selectedCat?' active':'')+'" onclick="filterCat(\''+c+'\')">'+c+'</button>';}).join('');
