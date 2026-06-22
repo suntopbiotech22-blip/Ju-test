@@ -202,6 +202,33 @@ input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{fo
 .mclose{float:right;cursor:pointer;font-size:20px;color:var(--taupe);background:none;border:none;}
 .mimg{width:100%;aspect-ratio:4/3;border-radius:12px;margin-bottom:16px;background:var(--warm-ivory);display:flex;align-items:center;justify-content:center;font-size:60px;}
 
+/* 搜尋彈窗 */
+.search-modal{max-width:440px;}
+.search-modal-input{position:relative;margin-bottom:14px;}
+.search-modal-input .ss-ic{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--dusty-rose);pointer-events:none;}
+.search-modal-input input{width:100%;box-sizing:border-box;padding:12px 16px 12px 42px;border:1px solid var(--linen);border-radius:24px;background:rgba(255,252,247,.9);font-size:14px;font-family:inherit;color:var(--text);}
+.search-modal-input input:focus{outline:none;border-color:var(--gold);}
+.search-modal-cats{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;margin-bottom:2px;-webkit-overflow-scrolling:touch;}
+.search-modal-cats::-webkit-scrollbar{height:0;}
+.search-modal-cats .cat-tab{flex:0 0 auto;white-space:nowrap;}
+.search-modal-results{min-height:60px;max-height:54vh;overflow-y:auto;}
+.sr-item{display:flex;gap:12px;align-items:center;padding:9px;border-radius:12px;cursor:pointer;transition:background .15s;}
+.sr-item:hover{background:var(--warm-ivory);}
+.sr-thumb{width:52px;height:52px;border-radius:10px;background:var(--warm-ivory);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.sr-thumb img{width:100%;height:100%;object-fit:cover;}
+.sr-name{font-size:14px;color:var(--text);margin-bottom:3px;}
+.sr-price{font-size:13px;color:var(--cocoa);font-weight:600;}
+.sr-empty{text-align:center;color:var(--text-light);font-size:13px;padding:24px 10px;}
+
+/* 裁切器 */
+.crop-viewport{position:relative;width:100%;aspect-ratio:3/2;border-radius:14px;overflow:hidden;background:#2c211a;touch-action:none;cursor:grab;user-select:none;}
+.crop-viewport:active{cursor:grabbing;}
+.crop-viewport img{position:absolute;top:0;left:0;will-change:transform;-webkit-user-drag:none;user-drag:none;pointer-events:none;}
+.crop-frame{position:absolute;inset:0;pointer-events:none;box-shadow:0 0 0 9999px rgba(0,0,0,.02);border:2px solid rgba(255,255,255,.55);border-radius:14px;}
+.crop-zoom-row{display:flex;align-items:center;gap:12px;margin-top:14px;color:var(--taupe);}
+.crop-zoom-row input[type=range]{flex:1;accent-color:var(--gold);}
+.mimg-end{display:none;}
+
 .success-screen{text-align:center;padding:60px 20px;max-width:480px;margin:0 auto;}
 .sicon{width:72px;height:72px;margin:0 auto 20px;border-radius:50%;background:var(--warm-ivory);color:var(--cocoa);display:flex;align-items:center;justify-content:center;}
 .success-screen h2{font-family:'Noto Serif TC',serif;font-size:25px;color:var(--cocoa);margin-bottom:12px;font-weight:600;letter-spacing:.5px;}
@@ -256,6 +283,9 @@ input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{fo
 .site-footer{background:var(--cocoa);color:var(--cream);text-align:center;padding:30px 20px;margin-top:20px;}
 .site-footer .ig-link{display:inline-flex;align-items:center;gap:8px;color:var(--cream);text-decoration:none;font-size:15px;font-weight:500;}
 .site-footer .ig-link:hover{opacity:.85;}
+.site-footer .terms-link{display:flex;justify-content:center;align-items:center;gap:8px;color:var(--cream);text-decoration:none;font-size:14px;font-weight:500;cursor:pointer;margin-bottom:14px;opacity:.92;}
+.site-footer .terms-link svg{color:var(--cream);}
+.site-footer .terms-link:hover{opacity:1;text-decoration:underline;}
 .footer-meta{font-size:12px;color:rgba(255,255,255,.7);margin-top:12px;line-height:1.8;}
 
 /* ====== 精選方向：金線奶油 × 溫柔乾燥玫瑰 ====== */
@@ -418,10 +448,6 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
   <div class="section">
     <p class="section-title">全部作品</p>
     <div class="divider">◇</div>
-    <div class="shop-search-wrap">
-      <svg class="ss-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20.5 20.5l-4.2-4.2"/></svg>
-      <input id="shopSearch" type="search" placeholder="搜尋作品名稱…" oninput="doSearch(this.value)">
-    </div>
     <div class="cat-tabs" id="catTabs"></div>
     <div><button class="fav-chip" id="favChip" onclick="toggleFavFilter()"><svg viewBox="0 0 24 24"><path d="M12 20.5s-7-4.3-9.4-8.8C1.2 9 2.6 5.6 6 5.6c2 0 3.3 1.2 4 2.4.7-1.2 2-2.4 4-2.4 3.4 0 4.8 3.4 3.4 6.1C19 16.2 12 20.5 12 20.5z" stroke-linejoin="round"/></svg>只看最愛</button></div>
     <div class="product-grid" id="shopProducts"></div>
@@ -549,7 +575,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
           <div id="bannerSettings"></div>
           <h2 style="margin-top:34px">首頁藝廊（穿搭／形象照）</h2>
           <p style="font-size:13px;color:var(--text-light);margin-bottom:6px">顯示在首圖下方、自動輪播的形象照片，適合放穿搭照或情境照。</p>
-          <p style="font-size:12.5px;color:var(--text-light);background:var(--warm-ivory);border-radius:10px;padding:10px 12px;margin-bottom:16px;line-height:1.7">📐 建議尺寸：<b>橫向 1200 × 800 px（比例 3:2）</b>，最佳。直式或正方形也可上傳，但兩側可能被裁切。每張建議小於 1MB，最多 6 張；上傳後系統會自動壓縮。</p>
+          <p style="font-size:12.5px;color:var(--text-light);background:var(--warm-ivory);border-radius:10px;padding:10px 12px;margin-bottom:16px;line-height:1.7">📐 建議尺寸：<b>橫向 1200 × 800 px（比例 3:2）</b>。選擇照片後可<b>拖曳與縮放裁切</b>，框內範圍即為成品；確認後系統會自動壓縮。任何尺寸（直式、正方形）皆可上傳，最多 6 張。</p>
           <div id="lookbookAdmin"></div>
           <button class="abtn pr" onclick="document.getElementById('lookbookInput').click()">＋ 新增藝廊照片</button>
           <input type="file" id="lookbookInput" accept="image/*" style="display:none" onchange="addLookbookPhoto(this)">
@@ -580,15 +606,45 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
 
 <!-- 全頁共用頁尾 -->
 <footer class="site-footer">
+  <a class="terms-link" onclick="showPage('terms')">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"></path><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M8 11h8M8 15h5"></path></svg>
+    <span>購買須知</span>
+  </a>
   <a class="ig-link" href="https://www.instagram.com/ju.accessories.tw?igsh=MW5jMmsyMzRma2ZlOQ%3D%3D&utm_source=qr" target="_blank" rel="noopener">
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-links"><a onclick="showPage('terms')">購買須知</a></div>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0621l</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0622a</div>
 </footer>
 
 <!-- MODALS -->
+<div class="moverlay" id="searchModal">
+  <div class="modal search-modal">
+    <button class="mclose" onclick="closeModal('searchModal')">✕</button>
+    <h3>搜尋作品</h3><p class="msub">輸入作品名稱關鍵字</p>
+    <div class="search-modal-input">
+      <svg class="ss-ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20.5 20.5l-4.2-4.2"/></svg>
+      <input id="searchModalInput" type="search" autocomplete="off" placeholder="搜尋作品名稱…" oninput="doModalSearch(this.value)">
+    </div>
+    <div id="searchModalCats" class="search-modal-cats"></div>
+    <div id="searchModalResults" class="search-modal-results"></div>
+  </div>
+</div>
+<div class="moverlay" id="cropModal">
+  <div class="modal" style="max-width:440px">
+    <button class="mclose" onclick="closeCrop()">✕</button>
+    <h3>裁切照片</h3><p class="msub">拖曳移動、用滑桿或雙指縮放，框內範圍即為成品（比例 3:2）</p>
+    <div class="crop-viewport" id="cropViewport"><img id="cropImg" alt="" draggable="false"><div class="crop-frame"></div></div>
+    <div class="crop-zoom-row">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M11 8v6M8 11h6M20.5 20.5l-4.2-4.2"/></svg>
+      <input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1" oninput="cropSetZoom(this.value)">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="abtn" style="flex:1;border-radius:30px;background:#fff;border:1.5px solid var(--gold);color:var(--cocoa)" onclick="closeCrop()">取消</button>
+      <button class="abtn pr" style="flex:1;border-radius:30px" onclick="confirmCrop()">確認裁切</button>
+    </div>
+  </div>
+</div>
 <div class="moverlay" id="productModal"><div class="modal"><button class="mclose" onclick="closeModal('productModal')">✕</button><div id="modalContent"></div></div></div>
 <div class="moverlay" id="orderDetailModal"><div class="modal"><button class="mclose" onclick="closeModal('orderDetailModal')">✕</button><div id="orderDetailContent"></div></div></div>
 <div class="moverlay" id="confirmModal"><div class="modal" style="max-width:340px;text-align:center"><p id="confirmMsg" style="margin:6px 0 20px;color:var(--cocoa);font-size:15px"></p><div style="display:flex;gap:10px"><button class="abtn" style="flex:1;border-radius:30px;background:#fff;border:1.5px solid var(--gold);color:var(--cocoa)" onclick="closeModal('confirmModal')">取消</button><button class="abtn pr" style="flex:1;border-radius:30px" id="confirmOkBtn">確定</button></div></div></div>
@@ -882,8 +938,8 @@ function addLookbookPhoto(input){
   var f=input.files[0];if(!f)return;input.value='';
   if(!S.lookbook)S.lookbook=[];
   if(S.lookbook.length>=6){showToast('最多 6 張');return;}
-  compressImage(f,1200,0.68,function(d){
-    S.lookbook.push({img:d,cap:''});
+  openCrop(f,function(dataURL){
+    S.lookbook.push({img:dataURL,cap:''});
     renderLookbookAdmin();renderLookbook();saveLookbook();showToast('已新增照片');
   });
 }
@@ -920,7 +976,45 @@ function renderShopPager(pages){
   el.innerHTML=html;
 }
 function goShopPage(n){S.shopPage=n;renderShopProducts();var t=document.getElementById('page-shop');if(t)t.scrollIntoView({behavior:'smooth',block:'start'});}
-function openSearch(){showPage('shop');setTimeout(function(){var el=document.getElementById('shopSearch');if(el)el.focus();},80);}
+function openSearch(){
+  var modal=document.getElementById('searchModal');if(!modal)return;
+  modal.classList.add('open');
+  S._searchCat='全部';
+  var inp=document.getElementById('searchModalInput');
+  if(inp){inp.value='';}
+  renderSearchCats();
+  doModalSearch('');
+  setTimeout(function(){if(inp)inp.focus();},80);
+}
+function renderSearchCats(){
+  var el=document.getElementById('searchModalCats');if(!el)return;
+  var cat=S._searchCat||'全部';
+  el.innerHTML=(S.categories||['全部']).map(function(c){
+    return '<button class="cat-tab'+(c===cat?' active':'')+'" onclick="selectSearchCat(\''+c.replace(/'/g,"\\'")+'\')">'+esc(c)+'</button>';
+  }).join('');
+}
+function selectSearchCat(c){
+  S._searchCat=c;renderSearchCats();
+  var inp=document.getElementById('searchModalInput');
+  doModalSearch(inp?inp.value:'');
+}
+function doModalSearch(v){
+  var box=document.getElementById('searchModalResults');if(!box)return;
+  var q=(v||'').trim().toLowerCase();
+  var cat=S._searchCat||'全部';
+  var res=S.products.filter(isLive);
+  if(cat!=='全部')res=res.filter(function(p){return p.cat===cat;});
+  if(q)res=res.filter(function(p){return (p.name||'').toLowerCase().indexOf(q)>=0||(p.desc||'').toLowerCase().indexOf(q)>=0;});
+  if(!q&&cat==='全部'){box.innerHTML='<div class="sr-empty">開始輸入關鍵字，或點選上方分類</div>';return;}
+  if(!res.length){box.innerHTML='<div class="sr-empty">'+(q?('找不到符合「'+esc(v)+'」的作品'):'這個分類暫時沒有作品')+'</div>';return;}
+  box.innerHTML=res.map(function(p){
+    var img=p.imgData?('<img loading="lazy" src="'+p.imgData+'" alt="'+esc(p.name)+'">'):IMG_PH;
+    return '<div class="sr-item" onclick="openSearchResult('+p.id+')">'
+      +'<div class="sr-thumb">'+img+'</div>'
+      +'<div><div class="sr-name">'+esc(p.name)+'</div><div class="sr-price">NT$ '+p.price+'</div></div></div>';
+  }).join('');
+}
+function openSearchResult(id){closeModal('searchModal');openDetail(id);}
 function doSearch(v){S.searchQuery=v;S.shopPage=1;renderShopProducts();}
 function filterCat(c){S.selectedCat=c;S.shopPage=1;renderShopProducts();}
 
@@ -940,6 +1034,92 @@ function compressImage(file,maxW,quality,cb){
   };
   r.readAsDataURL(file);
 }
+
+/* ====== 圖片裁切器（3:2，輸出 1200×800 並壓縮） ====== */
+var CROP={cb:null,scale:1,minS:1,x:0,y:0,natW:0,natH:0,vpW:0,vpH:0,dragging:false,lastX:0,lastY:0};
+function openCrop(file,cb){
+  var r=new FileReader();
+  r.onload=function(e){
+    var img=document.getElementById('cropImg');
+    img.onload=function(){
+      CROP.cb=cb;CROP.natW=img.naturalWidth;CROP.natH=img.naturalHeight;
+      var modal=document.getElementById('cropModal');modal.classList.add('open');
+      setTimeout(function(){
+        var vp=document.getElementById('cropViewport');
+        CROP.vpW=vp.clientWidth;CROP.vpH=vp.clientHeight;
+        CROP.scale=1;document.getElementById('cropZoom').value=1;
+        cropApply(true);
+      },30);
+    };
+    img.src=e.target.result;
+  };
+  r.readAsDataURL(file);
+}
+function cropDispScale(){return Math.max(CROP.vpW/CROP.natW,CROP.vpH/CROP.natH)*CROP.scale;}
+function cropClamp(){
+  var s=cropDispScale(),dw=CROP.natW*s,dh=CROP.natH*s;
+  CROP.x=Math.min(0,Math.max(CROP.vpW-dw,CROP.x));
+  CROP.y=Math.min(0,Math.max(CROP.vpH-dh,CROP.y));
+}
+function cropApply(center){
+  var s=cropDispScale(),dw=CROP.natW*s,dh=CROP.natH*s,img=document.getElementById('cropImg');
+  if(center){CROP.x=(CROP.vpW-dw)/2;CROP.y=(CROP.vpH-dh)/2;}
+  cropClamp();
+  img.style.width=dw+'px';img.style.height=dh+'px';
+  img.style.transform='translate('+CROP.x+'px,'+CROP.y+'px)';
+}
+function cropZoomAt(newScale,ax,ay){
+  newScale=Math.min(3,Math.max(1,newScale));
+  var old=cropDispScale();
+  var ix=(ax-CROP.x)/old,iy=(ay-CROP.y)/old;
+  CROP.scale=newScale;
+  var ns=cropDispScale();
+  CROP.x=ax-ix*ns;CROP.y=ay-iy*ns;
+  cropApply(false);
+  var z=document.getElementById('cropZoom');if(z)z.value=CROP.scale;
+}
+function cropSetZoom(v){cropZoomAt(parseFloat(v),CROP.vpW/2,CROP.vpH/2);}
+(function(){
+  var vp=document.getElementById('cropViewport');if(!vp)return;
+  var pinch={active:false,dist:0,scale:1};
+  function pt(e){var t=e.touches?e.touches[0]:e;return {x:t.clientX,y:t.clientY};}
+  function tdist(a,b){var dx=a.clientX-b.clientX,dy=a.clientY-b.clientY;return Math.sqrt(dx*dx+dy*dy);}
+  function start(e){
+    if(e.touches&&e.touches.length>=2){
+      pinch.active=true;pinch.dist=tdist(e.touches[0],e.touches[1]);pinch.scale=CROP.scale;
+      CROP.dragging=false;e.preventDefault();return;
+    }
+    CROP.dragging=true;var p=pt(e);CROP.lastX=p.x;CROP.lastY=p.y;
+  }
+  function move(e){
+    if(pinch.active&&e.touches&&e.touches.length>=2){
+      var nd=tdist(e.touches[0],e.touches[1]);if(!pinch.dist)pinch.dist=nd;
+      var rect=vp.getBoundingClientRect();
+      var mx=(e.touches[0].clientX+e.touches[1].clientX)/2-rect.left;
+      var my=(e.touches[0].clientY+e.touches[1].clientY)/2-rect.top;
+      cropZoomAt(pinch.scale*(nd/pinch.dist),mx,my);
+      e.preventDefault();return;
+    }
+    if(!CROP.dragging)return;
+    var p=pt(e);CROP.x+=p.x-CROP.lastX;CROP.y+=p.y-CROP.lastY;CROP.lastX=p.x;CROP.lastY=p.y;cropApply(false);e.preventDefault();
+  }
+  function end(e){
+    if(!e.touches||e.touches.length<2)pinch.active=false;
+    if(!e.touches||e.touches.length===0)CROP.dragging=false;
+  }
+  vp.addEventListener('mousedown',start);window.addEventListener('mousemove',move);window.addEventListener('mouseup',end);
+  vp.addEventListener('touchstart',start,{passive:false});vp.addEventListener('touchmove',move,{passive:false});vp.addEventListener('touchend',end);vp.addEventListener('touchcancel',end);
+})();
+function confirmCrop(){
+  var OUT_W=1200,OUT_H=800,s=cropDispScale();
+  var sx=(0-CROP.x)/s,sy=(0-CROP.y)/s,sw=CROP.vpW/s,sh=CROP.vpH/s;
+  var c=document.createElement('canvas');c.width=OUT_W;c.height=OUT_H;
+  var img=document.getElementById('cropImg');
+  c.getContext('2d').drawImage(img,sx,sy,sw,sh,0,0,OUT_W,OUT_H);
+  var out;try{out=c.toDataURL('image/jpeg',0.78);}catch(err){out=img.src;}
+  var cb=CROP.cb;closeCrop();if(cb)cb(out);
+}
+function closeCrop(){var m=document.getElementById('cropModal');if(m)m.classList.remove('open');CROP.cb=null;CROP.dragging=false;}
 function openOrderDetail(id,isAdmin){
   var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
   var remainder=(o.items||[]).filter(function(i){return i.isCustom;}).reduce(function(s,i){return s+(i.price-i.deposit)*i.qty;},0)+(o.shipping||0);
