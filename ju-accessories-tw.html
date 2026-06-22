@@ -362,6 +362,12 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
 .pager .pg-num,.pager .pg-arrow{min-width:40px;padding:8px 12px;}
 .pager .pg-num.active{background:var(--cocoa);color:#fff;border-color:var(--cocoa);font-weight:600;}
 .pager .pg-gap{color:var(--text-light);align-self:center;padding:0 2px;}
+/* 作品獨立頁面 */
+#page-product .section{max-width:560px;}
+.pp-bar{max-width:560px;margin:0 auto 18px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.pp-bar .see-all-btn{margin:0;}
+#productPageContent{max-width:560px;margin:0 auto;}
+#productPageContent h3{font-family:'Cormorant Garamond','Noto Serif TC',serif;font-size:22px;color:var(--cocoa);margin:0 0 6px;font-weight:600;letter-spacing:1px;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <!-- ★★ 上線前：把下面所有「你的網域」換成你的實際網址，例如 https://帳號.github.io/倉庫名 或 https://juaccessories.tw（結尾不要加 /） ★★ -->
@@ -604,6 +610,17 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
   </div>
 </div>
 
+<!-- PRODUCT DETAIL PAGE -->
+<div id="page-product" class="page">
+  <div class="section">
+    <div class="pp-bar">
+      <button class="see-all-btn" onclick="showPage('shop')">← 返回作品</button>
+      <button class="see-all-btn" onclick="copyProductLink()">複製作品連結</button>
+    </div>
+    <div id="productPageContent"></div>
+  </div>
+</div>
+
 <!-- 全頁共用頁尾 -->
 <footer class="site-footer">
   <a class="terms-link" onclick="showPage('terms')">
@@ -614,7 +631,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0622a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0622b</div>
 </footer>
 
 <!-- MODALS -->
@@ -725,7 +742,7 @@ function startFirebaseShop(){
   if(!window.FB)return;
   window.FB.subscribeProducts(function(list){
     S.products=list;
-    renderHomeProducts();renderShopProducts();
+    renderHomeProducts();renderShopProducts();route();
     var pa=document.getElementById('page-admin');
     if(pa&&pa.classList.contains('active'))renderAdmin();
   });
@@ -749,9 +766,10 @@ function startFirebaseShop(){
 }
 window.addEventListener('fb-ready',startFirebaseShop);
 
-window.onload=function(){renderHomeProducts();renderLookbook();renderShopProducts();updateCartBadge();renderTicker();renderCatSelect();renderCatAdmin();if(window.emailjs&&S.emailjs&&S.emailjs.publicKey){try{emailjs.init({publicKey:S.emailjs.publicKey});}catch(e){}}};
+window.onload=function(){renderHomeProducts();renderLookbook();renderShopProducts();updateCartBadge();renderTicker();renderCatSelect();renderCatAdmin();route();if(window.emailjs&&S.emailjs&&S.emailjs.publicKey){try{emailjs.init({publicKey:S.emailjs.publicKey});}catch(e){}}};
 
 function showPage(n){
+  if(location.hash){try{history.replaceState(null,'',location.pathname+location.search);}catch(e){}}
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
   document.getElementById('page-'+n).classList.add('active');
   if(n==='cart')renderCart();
@@ -1199,8 +1217,10 @@ function uploadPaymentProof(input,id){
   });
 }
 
-function openDetail(id){
-  var p=S.products.find(function(x){return x.id===id;});if(!p)return;
+function openDetail(id){location.hash='product/'+id;}
+function renderProductPage(id){
+  var p=S.products.find(function(x){return x.id===id;});if(!p){S._pendingProduct=id;return;}
+  S._pendingProduct=null;
   var imgs=(p.images&&p.images.length)?p.images:(p.imgData?[p.imgData]:[]);
   var firstSpecImg=(p.specs||[]).reduce(function(a,s){return a||s.img;},'');
   var cover=imgs[0]||firstSpecImg||'';
@@ -1219,7 +1239,7 @@ function openDetail(id){
         return '<div onclick="selectSpec('+id+','+i+',this)" style="display:flex;align-items:center;gap:6px;border:1.5px solid '+(i===0?'var(--cocoa)':'var(--linen)')+';border-radius:10px;padding:5px 10px;cursor:pointer;font-size:13px">'+th+'<span>'+s.name+(s.price?'　NT$ '+s.price:'')+'</span></div>';
       }).join('')+'</div>';
   }
-  document.getElementById('modalContent').innerHTML=main+thumbs
+  document.getElementById('productPageContent').innerHTML=main+thumbs
     +'<h3>'+p.name+'</h3><p class="msub">'+p.cat+(p.isCustom?' · 客製作品':'')+'</p>'
     +(p.isCustom?'<div style="background:#FFF8F0;border:1.5px solid var(--rose);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--cocoa);margin-bottom:12px"> 客製作品需先支付訂金 <span id="detailDep">NT$ '+shownDep+'</span> 才會開始製作</div>':'')
     +'<p style="font-size:13px;color:var(--text-light);margin-bottom:16px;line-height:1.8">'+p.desc+'</p>'
@@ -1227,8 +1247,28 @@ function openDetail(id){
     +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">'
     +'<span id="detailPrice" style="font-size:22px;font-weight:600;color:var(--cocoa)">NT$ '+shownPrice+'</span>'
     +(hs?'<span style="font-size:13px;color:var(--text-light);text-decoration:line-through">NT$ '+p.original+'</span>':'')
-    +'</div><button class="sub-btn" onclick="addToCart('+p.id+',S._selSpec);closeModal(\'productModal\')">加入購物車</button>';
-  document.getElementById('productModal').classList.add('open');
+    +'</div><button class="sub-btn" onclick="addToCart('+p.id+',S._selSpec)">加入購物車</button>';
+  document.querySelectorAll('.page').forEach(function(pg){pg.classList.remove('active');});
+  document.getElementById('page-product').classList.add('active');
+  window.scrollTo(0,0);
+}
+function route(){
+  var h=(location.hash||'').replace(/^#\/?/,'');
+  var m=h.match(/^product\/(\d+)/);
+  if(m){renderProductPage(parseInt(m[1],10));}
+}
+window.addEventListener('hashchange',route);
+function copyProductLink(){
+  var url=location.href;
+  function done(){showToast('連結已複製，可直接貼上分享');}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(done).catch(function(){fallbackCopy(url,done);});
+  }else{fallbackCopy(url,done);}
+}
+function fallbackCopy(text,cb){
+  var t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.focus();t.select();
+  try{document.execCommand('copy');if(cb)cb();}catch(e){showToast('複製失敗，請手動複製網址');}
+  document.body.removeChild(t);
 }
 function setDetailImg(id,i){var p=S.products.find(function(x){return x.id===id;});if(!p)return;var imgs=(p.images&&p.images.length)?p.images:(p.imgData?[p.imgData]:[]);var m=document.getElementById('detailMain');if(m&&imgs[i])m.src=imgs[i];}
 function selectSpec(id,i,el){
