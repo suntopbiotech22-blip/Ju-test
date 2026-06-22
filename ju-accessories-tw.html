@@ -368,6 +368,13 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
 .pp-bar .see-all-btn{margin:0;}
 #productPageContent{max-width:560px;margin:0 auto;}
 #productPageContent h3{font-family:'Cormorant Garamond','Noto Serif TC',serif;font-size:22px;color:var(--cocoa);margin:0 0 6px;font-weight:600;letter-spacing:1px;}
+/* 后台版面與表格手機溢出修正 */
+.admin-content{min-width:0;}
+.adm-panel{min-width:0;}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -2px;}
+.dtable th,.dtable td{white-space:nowrap;}
+.cat-add{flex-wrap:wrap;}
+.cat-add input{min-width:0;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <!-- ★★ 上線前：把下面所有「你的網域」換成你的實際網址，例如 https://帳號.github.io/倉庫名 或 https://juaccessories.tw（結尾不要加 /） ★★ -->
@@ -545,7 +552,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
           <h2>總覽</h2>
           <div class="stats-grid" id="statsGrid"></div>
           <p style="font-size:13px;font-weight:500;color:var(--cocoa);margin-bottom:12px">最新訂單</p>
-          <table class="dtable" id="recentOrders"></table>
+          <div class="table-scroll"><table class="dtable" id="recentOrders"></table></div>
         </div>
         <div class="adm-panel" id="panel-products">
           <h2>作品管理</h2>
@@ -559,7 +566,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
           <div style="margin-top:16px" id="adminProductList"></div>
         </div>
         <div class="adm-panel" id="panel-orders"><h2>訂單管理</h2><button class="abtn pr" style="margin-bottom:14px" onclick="exportOrders()"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 4 5-4M5 20h14"/></svg> 匯出 Excel</button><div id="adminOrderList"></div></div>
-        <div class="adm-panel" id="panel-members"><h2>會員資料</h2><button class="abtn pr" style="margin-bottom:14px" onclick="exportMembers()"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 4 5-4M5 20h14"/></svg> 匯出 Excel</button><table class="dtable" id="adminMemberTable"></table></div>
+        <div class="adm-panel" id="panel-members"><h2>會員資料</h2><button class="abtn pr" style="margin-bottom:14px" onclick="exportMembers()"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 4 5-4M5 20h14"/></svg> 匯出 Excel</button><div class="table-scroll"><table class="dtable" id="adminMemberTable"></table></div></div>
         <div class="adm-panel" id="panel-discounts">
           <h2>折扣設定</h2>
           <button class="abtn pr" onclick="openDiscountModal()">＋ 新增折扣碼</button>
@@ -631,7 +638,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0622c</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0622d</div>
 </footer>
 
 <!-- MODALS -->
@@ -1746,7 +1753,7 @@ function renderMemberCoupons(){
     +'<div class="fg"><label>開始日期</label><input type="date" id="couponFrom" style="width:100%;box-sizing:border-box"></div>'
     +'<div class="fg"><label>結束日期（留空＝無期限）</label><input type="date" id="couponUntil" style="width:100%;box-sizing:border-box"></div>'
     +'<button class="abtn pr" style="align-self:flex-start" onclick="issueCoupon()">發放折扣</button></div>'
-    +(rows.length?'<table class="dtable" style="margin-top:14px"><thead><tr><th>會員</th><th>金額</th><th>使用期間</th><th>狀態</th></tr></thead><tbody>'+rows.join('')+'</tbody></table>':'<p style="font-size:13px;color:var(--text-light);margin-top:10px">尚未發放任何會員折扣</p>');
+    +(rows.length?'<div class="table-scroll"><table class="dtable" style="margin-top:14px"><thead><tr><th>會員</th><th>金額</th><th>使用期間</th><th>狀態</th></tr></thead><tbody>'+rows.join('')+'</tbody></table></div>':'<p style="font-size:13px;color:var(--text-light);margin-top:10px">尚未發放任何會員折扣</p>');
 }
 function issueCoupon(){
   var mid=S._couponMemberId;
@@ -1857,7 +1864,7 @@ function renderDash(){
     }).join('')+'</tbody>';
 }
 function renderAdminProds(){
-  document.getElementById('adminProductList').innerHTML='<table class="dtable"><thead><tr><th>圖</th><th>名稱</th><th>分類</th><th>售價</th><th>客製</th><th>訂金</th><th>操作</th></tr></thead><tbody>'
+  document.getElementById('adminProductList').innerHTML='<div class="table-scroll"><table class="dtable"><thead><tr><th>圖</th><th>名稱</th><th>分類</th><th>售價</th><th>客製</th><th>訂金</th><th>操作</th></tr></thead><tbody>'
     +S.products.map(function(p){
       var img=p.imgData?('<img loading="lazy" src="'+p.imgData+'" style="width:40px;height:40px;object-fit:cover;border-radius:8px">'):(p.emoji||IMG_PH);
       return '<tr><td style="font-size:24px">'+img+'</td><td>'+p.name+(p.draft?'<br><span style="font-size:11px;color:var(--dusty-rose)"> 草稿（未上架）</span>':'')+'</td><td>'+p.cat+'</td><td>NT$ '+p.price+'</td>'
@@ -1865,7 +1872,7 @@ function renderAdminProds(){
         +'<td><button class="abtn '+(p.draft?'pr':'sc')+'" onclick="togglePublish('+p.id+')">'+(p.draft?'上架':'下架')+'</button>'
         +'<button class="abtn sc" onclick="openProductModal('+p.id+')">編輯</button>'
         +'<button class="abtn dg" onclick="delProd('+p.id+')">刪除</button></td></tr>';
-    }).join('')+'</tbody></table>';
+    }).join('')+'</tbody></table></div>';
 }
 function renderAdminOrds(){
   var el=document.getElementById('adminOrderList');
@@ -1951,13 +1958,13 @@ function renderSales(){
     +'</div>'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin:6px 0 10px"><p style="font-weight:600;color:var(--cocoa)"> 銷售排行（'+L[scope]+'）</p><button class="abtn pr" onclick="exportSales()">⬇ 匯出 Excel</button></div>';
   if(!rank.length)html+='<p style="font-size:13px;color:var(--text-light)">此期間尚無銷售紀錄</p>';
-  else html+='<table class="dtable"><thead><tr><th>名次</th><th>作品</th><th>售出數</th><th>銷售額</th></tr></thead><tbody>'
-    +rank.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td>'+r.name+'</td><td>'+r.qty+'</td><td>NT$ '+r.rev.toLocaleString()+'</td></tr>';}).join('')+'</tbody></table>';
+  else html+='<div class="table-scroll"><table class="dtable"><thead><tr><th>名次</th><th>作品</th><th>售出數</th><th>銷售額</th></tr></thead><tbody>'
+    +rank.map(function(r,i){return '<tr><td>'+(i+1)+'</td><td>'+r.name+'</td><td>'+r.qty+'</td><td>NT$ '+r.rev.toLocaleString()+'</td></tr>';}).join('')+'</tbody></table></div>';
   html+='<div style="display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px"><p style="font-weight:600;color:var(--cocoa)"> 期間營業額</p>'
     +'<div class="radio-grp"><button class="abtn'+(by==='month'?' pr':'')+'" onclick="setSalesBy(\'month\')">月</button><button class="abtn'+(by==='year'?' pr':'')+'" onclick="setSalesBy(\'year\')">年</button></div></div>';
   if(!bd.length)html+='<p style="font-size:13px;color:var(--text-light)">尚無資料</p>';
-  else html+='<table class="dtable"><thead><tr><th>'+(by==='month'?'月份':'年份')+'</th><th>訂單數</th><th>營業額</th></tr></thead><tbody>'
-    +bd.map(function(p){return '<tr><td>'+p.key+'</td><td>'+p.cnt+'</td><td>NT$ '+p.rev.toLocaleString()+'</td></tr>';}).join('')+'</tbody></table>';
+  else html+='<div class="table-scroll"><table class="dtable"><thead><tr><th>'+(by==='month'?'月份':'年份')+'</th><th>訂單數</th><th>營業額</th></tr></thead><tbody>'
+    +bd.map(function(p){return '<tr><td>'+p.key+'</td><td>'+p.cnt+'</td><td>NT$ '+p.rev.toLocaleString()+'</td></tr>';}).join('')+'</tbody></table></div>';
   el.innerHTML=html;
 }
 function setSalesScope(s){S.salesScope=s;renderSales();}
