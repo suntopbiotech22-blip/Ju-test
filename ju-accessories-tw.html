@@ -229,6 +229,30 @@ input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{fo
 .car-dot{width:8px;height:8px;border-radius:50%;background:rgba(120,100,90,.35);cursor:pointer;transition:all .2s;}
 .car-dot.active{background:var(--cocoa);width:20px;border-radius:4px;}
 @media(max-width:600px){.car-slide>img{height:170px;}.car-slide .banner-card{min-height:170px;}}
+/* 最愛 愛心按鈕 */
+.fav-btn{position:absolute;top:10px;right:10px;width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,252,247,.9);box-shadow:0 2px 8px var(--shadow);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:transform .15s,background .2s;z-index:2;}
+.fav-btn:hover{transform:scale(1.1);}
+.fav-btn svg{width:17px;height:17px;stroke:var(--dusty-rose);fill:none;stroke-width:2;transition:fill .2s;}
+.fav-btn.on svg{fill:var(--dusty-rose);stroke:var(--dusty-rose);}
+.fav-chip{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--linen);color:var(--cocoa);border-radius:22px;padding:8px 16px;font-size:13px;font-family:inherit;cursor:pointer;transition:all .2s;margin-bottom:18px;}
+.fav-chip svg{width:15px;height:15px;stroke:var(--dusty-rose);fill:none;stroke-width:2;}
+.fav-chip.on{background:var(--dusty-rose);color:#fff;border-color:var(--dusty-rose);}
+.fav-chip.on svg{fill:#fff;stroke:#fff;}
+/* 藝廊 lookbook */
+.lookbook{max-width:1100px;margin:0 auto;padding:36px 20px 8px;}
+.lookbook .car-slide>img{height:340px;}
+@media(max-width:600px){.lookbook .car-slide>img{height:240px;}}
+.lb-cap{position:absolute;left:0;right:0;bottom:0;padding:26px 16px 16px;background:linear-gradient(to top,rgba(70,53,38,.55),transparent);color:#fff;font-size:14px;text-align:center;}
+.lb-admin-item{display:flex;gap:10px;align-items:center;background:var(--warm-ivory);border-radius:12px;padding:10px;margin-bottom:10px;}
+.lb-admin-item img{width:72px;height:54px;object-fit:cover;border-radius:8px;flex-shrink:0;}
+/* 購買須知頁 */
+.info-page{max-width:680px;margin:0 auto;padding:8px 4px;}
+.info-list{list-style:none;padding:0;margin:8px 0 0;}
+.info-list li{position:relative;padding:16px 18px 16px 46px;background:var(--white);border:1px solid var(--warm-ivory);border-radius:14px;margin-bottom:12px;color:var(--text);font-size:14.5px;line-height:1.85;box-shadow:0 2px 10px var(--shadow);}
+.info-list li::before{content:"◆";position:absolute;left:18px;top:16px;color:var(--gold);font-size:13px;}
+.footer-links{margin-top:14px;display:flex;justify-content:center;gap:18px;flex-wrap:wrap;}
+.footer-links a{color:rgba(255,255,255,.85);font-size:13px;text-decoration:none;cursor:pointer;}
+.footer-links a:hover{color:#fff;text-decoration:underline;}
 .site-footer{background:var(--cocoa);color:var(--cream);text-align:center;padding:30px 20px;margin-top:20px;}
 .site-footer .ig-link{display:inline-flex;align-items:center;gap:8px;color:var(--cream);text-decoration:none;font-size:15px;font-weight:500;}
 .site-footer .ig-link:hover{opacity:.85;}
@@ -357,6 +381,9 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <p class="hero-desc">日本UV樹脂×真花，為每個孩子打造獨一無二的精緻飾品</p>
     <button class="hero-cta hero-cta-light" onclick="showPage('shop')">瀏覽全部作品 →</button>
   </div>
+  <div class="lookbook" id="lookbookSection" style="display:none">
+    <div class="carousel" id="lookbookCarousel"></div>
+  </div>
   <div class="section" id="homeNewSection">
     <p class="section-title">最新上架</p>
     <p class="section-sub">新鮮出爐的手作小物</p>
@@ -396,6 +423,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
       <input id="shopSearch" type="search" placeholder="搜尋作品名稱…" oninput="doSearch(this.value)">
     </div>
     <div class="cat-tabs" id="catTabs"></div>
+    <div><button class="fav-chip" id="favChip" onclick="toggleFavFilter()"><svg viewBox="0 0 24 24"><path d="M12 20.5s-7-4.3-9.4-8.8C1.2 9 2.6 5.6 6 5.6c2 0 3.3 1.2 4 2.4.7-1.2 2-2.4 4-2.4 3.4 0 4.8 3.4 3.4 6.1C19 16.2 12 20.5 12 20.5z" stroke-linejoin="round"/></svg>只看最愛</button></div>
     <div class="product-grid" id="shopProducts"></div>
     <div id="shopPager" class="pager"></div>
   </div>
@@ -519,8 +547,33 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
           <h2>首頁跑馬燈訊息</h2>
           <p style="font-size:13px;color:var(--text-light);margin-bottom:16px">設定首頁橫幅按鈕下方的自動輪播文字，例如優惠活動、免運門檻等，會逐則淡入淡出切換。</p>
           <div id="bannerSettings"></div>
+          <h2 style="margin-top:34px">首頁藝廊（穿搭／形象照）</h2>
+          <p style="font-size:13px;color:var(--text-light);margin-bottom:6px">顯示在首圖下方、自動輪播的形象照片，適合放穿搭照或情境照。</p>
+          <p style="font-size:12.5px;color:var(--text-light);background:var(--warm-ivory);border-radius:10px;padding:10px 12px;margin-bottom:16px;line-height:1.7">📐 建議尺寸：<b>橫向 1200 × 800 px（比例 3:2）</b>，最佳。直式或正方形也可上傳，但兩側可能被裁切。每張建議小於 1MB，最多 6 張；上傳後系統會自動壓縮。</p>
+          <div id="lookbookAdmin"></div>
+          <button class="abtn pr" onclick="document.getElementById('lookbookInput').click()">＋ 新增藝廊照片</button>
+          <input type="file" id="lookbookInput" accept="image/*" style="display:none" onchange="addLookbookPhoto(this)">
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- TERMS / 購買須知 -->
+<div id="page-terms" class="page">
+  <div class="section">
+    <p class="section-title">購買須知</p>
+    <p class="section-sub">下單前請先詳閱以下說明</p>
+    <div class="divider">◇</div>
+    <div class="info-page">
+      <ul class="info-list">
+        <li>每件作品皆為純手工製作，可能帶有些微手作痕跡，且無法百分之百複製——這也是手作獨一無二的溫度。</li>
+        <li>手作品屬於客製訂製商品，恕不接受退貨或換貨，下單前請務必確認款式與規格。</li>
+        <li>每件作品皆享有一次免費維修服務；若需更換零件，將視情況酌收材料費用。</li>
+        <li>UV 樹脂作品請避免潮濕環境與陽光直射，並請勿配戴洗澡或游泳，以延長作品壽命。</li>
+        <li>如有任何問題，歡迎透過 IG 粉專 <b>@ju.accessories.tw</b> 與我們聯繫。</li>
+      </ul>
+      <div style="text-align:center;margin-top:24px"><button class="see-all-btn" onclick="showPage('shop')">← 回作品列表</button></div>
     </div>
   </div>
 </div>
@@ -531,7 +584,8 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0621k</div>
+  <div class="footer-links"><a onclick="showPage('terms')">購買須知</a></div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0621l</div>
 </footer>
 
 <!-- MODALS -->
@@ -585,7 +639,7 @@ var S={
   currentUser:null,cart:[],appliedDiscount:null,
   paymentMethod:null,shippingMethod:null,
   customDepositChoice:null,customRemainChoice:null,
-  selectedCat:'全部',shopPage:1,searchQuery:'',editingProductId:null,editingImgData:null,
+  selectedCat:'全部',shopPage:1,searchQuery:'',favOnly:false,lookbook:[],editingProductId:null,editingImgData:null,
   nextOrderId:1001,nextProductId:7,orders:[],
   discounts:[{code:'JU2024',amount:50,desc:'新會員優惠'},{code:'SPRING',amount:100,desc:'春季促銷'}],
   members:[
@@ -625,6 +679,9 @@ function startFirebaseShop(){
       if(S.selectedCat!=='全部'&&S.categories.indexOf(S.selectedCat)<0)S.selectedCat='全部';
       renderShopProducts();renderCatSelect();renderCatAdmin();
     }
+    if(cfg&&Array.isArray(cfg.lookbook)){
+      S.lookbook=cfg.lookbook;renderLookbook();renderLookbookAdmin();
+    }
   });}
   window.FB.onAdmin(function(isAdmin,email){
     if(isAdmin){
@@ -636,7 +693,7 @@ function startFirebaseShop(){
 }
 window.addEventListener('fb-ready',startFirebaseShop);
 
-window.onload=function(){renderHomeProducts();renderShopProducts();updateCartBadge();renderTicker();renderCatSelect();renderCatAdmin();if(window.emailjs&&S.emailjs&&S.emailjs.publicKey){try{emailjs.init({publicKey:S.emailjs.publicKey});}catch(e){}}};
+window.onload=function(){renderHomeProducts();renderLookbook();renderShopProducts();updateCartBadge();renderTicker();renderCatSelect();renderCatAdmin();if(window.emailjs&&S.emailjs&&S.emailjs.publicKey){try{emailjs.init({publicKey:S.emailjs.publicKey});}catch(e){}}};
 
 function showPage(n){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
@@ -721,12 +778,30 @@ function doRegister(){
   var mb=document.getElementById('memberBtn');if(mb)mb.textContent=u.name;
   showToast('註冊成功，歡迎加入 Ju');showPage('home');
 }
+function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+var HEART_SVG='<svg viewBox="0 0 24 24"><path d="M12 20.5s-7-4.3-9.4-8.8C1.2 9 2.6 5.6 6 5.6c2 0 3.3 1.2 4 2.4.7-1.2 2-2.4 4-2.4 3.4 0 4.8 3.4 3.4 6.1C19 16.2 12 20.5 12 20.5z" stroke-linejoin="round"/></svg>';
+function getFavs(){try{return JSON.parse(localStorage.getItem('ju_favs')||'[]');}catch(e){return [];}}
+function isFav(id){return getFavs().indexOf(id)>=0;}
+function toggleFav(id,btn){
+  var f=getFavs();var at=f.indexOf(id);var on;
+  if(at>=0){f.splice(at,1);on=false;}else{f.push(id);on=true;}
+  try{localStorage.setItem('ju_favs',JSON.stringify(f));}catch(e){}
+  document.querySelectorAll('.fav-btn[data-fid="'+id+'"]').forEach(function(b){b.classList.toggle('on',on);});
+  showToast(on?'已加入最愛':'已移除最愛');
+  if(S.favOnly){renderShopProducts();}
+}
+function toggleFavFilter(){
+  S.favOnly=!S.favOnly;S.shopPage=1;
+  var c=document.getElementById('favChip');if(c)c.classList.toggle('on',S.favOnly);
+  renderShopProducts();
+}
 function pCard(p){
   var hs=p.original&&p.original>p.price;
   var pct=hs?Math.round((1-p.price/p.original)*100):0;
   var img=p.imgData?('<img loading="lazy" src="'+p.imgData+'" alt="'+p.name+'">'):(p.emoji||IMG_PH);
   return '<div class="product-card" onclick="openDetail('+p.id+')">'
     +'<div class="product-img">'+img
+    +'<button class="fav-btn'+(isFav(p.id)?' on':'')+'" data-fid="'+p.id+'" aria-label="加入最愛" onclick="event.stopPropagation();toggleFav('+p.id+',this)">'+HEART_SVG+'</button>'
     +(hs?'<div class="badge">-'+pct+'%</div>':'')
     +(p.isNew&&!hs?'<div class="badge nb">NEW</div>':'')
     +(p.isCustom?'<div class="badge cb" style="top:'+((hs||p.isNew)?'34px':'10px')+'">客製</div>':'')
@@ -766,13 +841,55 @@ function renderHomeProducts(){
   var live=S.products.filter(isLive);
   var feat=live.filter(function(p){return p.hot;});
   var news=live.filter(function(p){return !p.hot;}).sort(function(a,b){return (b.id||0)-(a.id||0);});
-  var fg=document.getElementById('homeProducts');if(fg)fg.innerHTML=feat.slice(0,8).map(pCard).join('');
-  var ng=document.getElementById('homeNewProducts');if(ng)ng.innerHTML=news.slice(0,8).map(pCard).join('');
+  var fg=document.getElementById('homeProducts');if(fg)fg.innerHTML=feat.slice(0,6).map(pCard).join('');
+  var ng=document.getElementById('homeNewProducts');if(ng)ng.innerHTML=news.slice(0,4).map(pCard).join('');
   var fs=document.getElementById('homeFeaturedSection');if(fs)fs.style.display=feat.length?'':'none';
   var ns=document.getElementById('homeNewSection');if(ns)ns.style.display=news.length?'':'none';
-  var sn=document.getElementById('seeAllNew');if(sn)sn.style.display=news.length>8?'inline-block':'none';
-  var sf=document.getElementById('seeAllFeat');if(sf)sf.style.display=feat.length>8?'inline-block':'none';
+  var sn=document.getElementById('seeAllNew');if(sn)sn.style.display=news.length>4?'inline-block':'none';
+  var sf=document.getElementById('seeAllFeat');if(sf)sf.style.display=feat.length>6?'inline-block':'none';
 }
+function renderLookbook(){
+  var sec=document.getElementById('lookbookSection');
+  var box=document.getElementById('lookbookCarousel');if(!box)return;
+  var imgs=(S.lookbook||[]).filter(function(x){return x&&x.img;});
+  if(S._lbTimer)clearInterval(S._lbTimer);
+  if(!imgs.length){if(sec)sec.style.display='none';box.innerHTML='';return;}
+  if(sec)sec.style.display='';
+  var track='<div class="car-track" id="lbTrack">'+imgs.map(function(it){
+    return '<div class="car-slide"><img loading="lazy" src="'+it.img+'" alt="形象照">'+(it.cap?('<div class="lb-cap">'+esc(it.cap)+'</div>'):'')+'</div>';
+  }).join('')+'</div>';
+  var dots=imgs.length>1?('<div class="car-dots" id="lbDots">'+imgs.map(function(_,i){return '<div class="car-dot'+(i===0?' active':'')+'" onclick="lbGo('+i+')"></div>';}).join('')+'</div>'):'';
+  box.innerHTML=track+dots;
+  S._lbIdx=0;S._lbN=imgs.length;
+  if(imgs.length>1)S._lbTimer=setInterval(function(){lbGo((S._lbIdx+1)%S._lbN);},4200);
+}
+function lbGo(i){
+  S._lbIdx=i;
+  var t=document.getElementById('lbTrack');if(t)t.style.transform='translateX(-'+(i*100)+'%)';
+  document.querySelectorAll('#lbDots .car-dot').forEach(function(d,j){d.classList.toggle('active',j===i);});
+}
+function renderLookbookAdmin(){
+  var el=document.getElementById('lookbookAdmin');if(!el)return;
+  var imgs=S.lookbook||[];
+  if(!imgs.length){el.innerHTML='<p style="font-size:13px;color:var(--text-light);margin-bottom:10px">尚未上傳藝廊照片。</p>';return;}
+  el.innerHTML=imgs.map(function(it,i){
+    return '<div class="lb-admin-item"><img src="'+it.img+'" alt="">'
+      +'<input value="'+esc(it.cap||'')+'" onchange="updateLookbookCap('+i+',this.value)" placeholder="說明文字（可留空）" style="flex:1;min-width:0;padding:8px;border:1.5px solid var(--linen);border-radius:8px;font-family:inherit;font-size:13px;background:var(--cream)">'
+      +'<button class="abtn dg" style="flex-shrink:0" onclick="removeLookbookPhoto('+i+')">刪除</button></div>';
+  }).join('');
+}
+function addLookbookPhoto(input){
+  var f=input.files[0];if(!f)return;input.value='';
+  if(!S.lookbook)S.lookbook=[];
+  if(S.lookbook.length>=6){showToast('最多 6 張');return;}
+  compressImage(f,1200,0.68,function(d){
+    S.lookbook.push({img:d,cap:''});
+    renderLookbookAdmin();renderLookbook();saveLookbook();showToast('已新增照片');
+  });
+}
+function removeLookbookPhoto(i){S.lookbook.splice(i,1);renderLookbookAdmin();renderLookbook();saveLookbook();showToast('已刪除');}
+function updateLookbookCap(i,v){if(S.lookbook[i]){S.lookbook[i].cap=v;saveLookbook();}}
+function saveLookbook(){if(window.FB&&window.FB.saveConfig){window.FB.saveConfig({lookbook:S.lookbook}).catch(function(e){showToast('儲存失敗：'+(e.code||e.message));});}}
 function goShopAll(){S.selectedCat='全部';S.searchQuery='';S.shopPage=1;var sb=document.getElementById('shopSearch');if(sb)sb.value='';showPage('shop');renderShopProducts();window.scrollTo({top:0});}
 function renderShopProducts(){
   var tabs=document.getElementById('catTabs');
@@ -781,10 +898,12 @@ function renderShopProducts(){
   var f=S.selectedCat==='全部'?all:all.filter(function(p){return p.cat===S.selectedCat;});
   var q=(S.searchQuery||'').trim().toLowerCase();
   if(q){f=f.filter(function(p){return (p.name||'').toLowerCase().indexOf(q)>=0||(p.desc||'').toLowerCase().indexOf(q)>=0;});}
+  if(S.favOnly){var fv=getFavs();f=f.filter(function(p){return fv.indexOf(p.id)>=0;});}
   var per=12,pages=Math.max(1,Math.ceil(f.length/per));
   if(S.shopPage>pages)S.shopPage=pages;if(S.shopPage<1)S.shopPage=1;
   var start=(S.shopPage-1)*per,pageItems=f.slice(start,start+per);
-  document.getElementById('shopProducts').innerHTML=f.length?pageItems.map(pCard).join(''):'<div class="empty-st"><span class="emo"></span>'+(q?('找不到符合「'+S.searchQuery+'」的作品'):'這個分類暫時沒有作品')+'</div>';
+  var emptyMsg=S.favOnly?'還沒有加入最愛的作品，點作品上的愛心收藏吧':(q?('找不到符合「'+S.searchQuery+'」的作品'):'這個分類暫時沒有作品');
+  document.getElementById('shopProducts').innerHTML=f.length?pageItems.map(pCard).join(''):'<div class="empty-st"><span class="emo"></span>'+emptyMsg+'</div>';
   renderShopPager(pages);
 }
 function renderShopPager(pages){
@@ -1259,7 +1378,7 @@ function renderMemberProfile(){
 
 function renderAdmin(){
   if(!S.currentUser||!S.currentUser.isAdmin){showPage('home');return;}
-  renderDash();renderAdminProds();renderAdminOrds();renderAdminMembs();renderDiscs();renderPayment();renderSales();renderBanners();renderMemberCoupons();
+  renderDash();renderAdminProds();renderAdminOrds();renderAdminMembs();renderDiscs();renderPayment();renderSales();renderBanners();renderLookbookAdmin();renderMemberCoupons();
 }
 function renderCatSelect(){
   var sel=document.getElementById('editCat');if(!sel)return;
