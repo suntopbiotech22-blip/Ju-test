@@ -642,7 +642,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0623b</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0623c</div>
 </footer>
 
 <!-- MODALS -->
@@ -889,6 +889,18 @@ function saveCart(){try{localStorage.setItem('ju_cart',JSON.stringify(S.cart));}
 function loadCart(){try{var c=JSON.parse(localStorage.getItem('ju_cart')||'[]');if(Array.isArray(c))S.cart=c;}catch(e){}}
 function saveShopState(){try{localStorage.setItem('ju_shop',JSON.stringify({cat:S.selectedCat,page:S.shopPage,favOnly:S.favOnly}));}catch(e){}}
 function loadShopState(){try{var s=JSON.parse(localStorage.getItem('ju_shop')||'{}');if(s.cat)S.selectedCat=s.cat;if(s.page)S.shopPage=s.page;if(typeof s.favOnly==='boolean')S.favOnly=s.favOnly;}catch(e){}}
+function applyOrderStock(o,sign){
+  if(!o||!o.items)return;
+  o.items.forEach(function(it){
+    var p=S.products.find(function(x){return x.id===it.id;});
+    if(!p||p.stock==null||p.stock==='')return;
+    var n=Math.max(0,(parseInt(p.stock,10)||0)+sign*it.qty);
+    p.stock=n;
+    if(p._docId&&window.FB&&window.FB.updateProduct){window.FB.updateProduct(p._docId,{stock:n}).catch(function(e){console.error('stock update',e&&(e.code||e.message));});}
+  });
+  if(S._prodsReady){renderHomeProducts();renderShopProducts();}
+  var pa=document.getElementById('page-admin');if(pa&&pa.classList.contains('active'))renderInventory();
+}
 function persistOrder(o){if(o&&window.FB&&window.FB.saveOrder){window.FB.saveOrder(o).then(function(did){if(did)o._docId=did;}).catch(function(e){console.error('saveOrder',e&&(e.code||e.message));});}}
 function persistOrderDelete(o){if(o&&o._docId&&window.FB&&window.FB.deleteOrder){window.FB.deleteOrder(o._docId).catch(function(e){console.error('deleteOrder',e&&(e.code||e.message));});}}
 function persistMember(m){if(m&&!m.isAdmin&&window.FB&&window.FB.saveMember){window.FB.saveMember(m).then(function(did){if(did)m._docId=did;}).catch(function(e){console.error('saveMember',e&&(e.code||e.message));});}}
@@ -1598,6 +1610,7 @@ function placeOrder(total){
     hasCustom:hasC,customDepositChoice:S.customDepositChoice,
     customRemainChoice:S.customRemainChoice,totalDeposit:td,depositPaid:false,balancePaid:false,
     status:'pending',date:new Date().toLocaleDateString('zh-TW'),created:new Date().toISOString()};
+  applyOrderStock(o,-1);o.stockApplied=true;
   S.orders.unshift(o);persistOrder(o);
   if(S.appliedDiscount&&S.appliedDiscount._couponId&&S.currentUser){var _cid=S.appliedDiscount._couponId,_cc=(S.currentUser.coupons||[]).find(function(x){return x.id===_cid;});if(_cc){_cc.used=true;_cc.usedOrderId=o.id;_cc.usedDate=o.date;persistMember(S.currentUser);}}
   sendOrderEmail(o);
@@ -1888,17 +1901,20 @@ function cancelOrder(id){
   askConfirm('是否取消整筆訂單 #'+id+'？取消後不列入營業額，仍可再恢復。',function(){
     var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
     o._prevStatus=o.status;o.status='cancelled';
+    if(o.stockApplied){applyOrderStock(o,1);o.stockApplied=false;}
     persistOrder(o);renderAdmin();closeModal('orderDetailModal');showToast('訂單 #'+id+' 已取消');
   });
 }
 function restoreOrder(id){
   var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
   o.status=o._prevStatus||'pending';delete o._prevStatus;
+  if(!o.stockApplied){applyOrderStock(o,-1);o.stockApplied=true;}
   persistOrder(o);renderAdmin();openOrderDetail(id,true);showToast('訂單 #'+id+' 已恢復');
 }
 function deleteOrder(id){
   askConfirm('確定永久刪除訂單 #'+id+'？此動作無法復原。',function(){
     var i=S.orders.findIndex(function(x){return x.id===id;});if(i<0)return;
+    if(S.orders[i].stockApplied)applyOrderStock(S.orders[i],1);
     persistOrderDelete(S.orders[i]);S.orders.splice(i,1);
     renderAdmin();closeModal('orderDetailModal');showToast('訂單 #'+id+' 已刪除');
   });
@@ -1940,6 +1956,7 @@ function mergeOrders(targetId,sourceId){
       if(ex){ex.qty+=it.qty;}else{t.items.push(Object.assign({},it));}
     });
     if(s.note){t.note=(t.note?t.note+'；':'')+'(併入#'+sourceId+') '+s.note;}
+    if(s.stockApplied)t.stockApplied=true;
     recalcOrder(t);
     var i=S.orders.findIndex(function(x){return x.id===sourceId;});if(i>=0){persistOrderDelete(S.orders[i]);S.orders.splice(i,1);}
     persistOrder(t);renderAdmin();openOrderDetail(targetId,true);showToast('已將 #'+sourceId+' 併入 #'+targetId);
