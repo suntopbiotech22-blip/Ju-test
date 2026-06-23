@@ -642,7 +642,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0623c</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0623d</div>
 </footer>
 
 <!-- MODALS -->
@@ -752,6 +752,8 @@ var S={
   emailjs:{publicKey:'0fDgbRNsr5gYK1db6',serviceId:'service_v1zwgeo',templateSeller:'template_7fudb3h',templateCustomer:'template_lg542mk',notifyEmail:''}
 };
 
+var ADMIN_EMAILS=['turisms09@gmail.com','suntop.biotech22@gmail.com'];
+function isAdminEmail(e){return ADMIN_EMAILS.indexOf((e||'').trim().toLowerCase())>=0;}
 var DEFAULT_PRODUCTS=S.products.slice();
 function startFirebaseShop(){
   if(!window.FB)return;
@@ -761,20 +763,6 @@ function startFirebaseShop(){
     var pa=document.getElementById('page-admin');
     if(pa&&pa.classList.contains('active'))renderAdmin();
   });
-  if(window.FB.subscribeOrders){window.FB.subscribeOrders(function(list){
-    if(!Array.isArray(list))return;
-    S.orders=list.slice().sort(function(a,b){return (b.id||0)-(a.id||0);});
-    var mx=S.orders.reduce(function(m,o){return Math.max(m,o.id||0);},1000);
-    S.nextOrderId=Math.max(S.nextOrderId||1001,mx+1);
-    var pa=document.getElementById('page-admin');if(pa&&pa.classList.contains('active'))renderAdmin();
-    var pm=document.getElementById('page-member');if(pm&&pm.classList.contains('active'))renderMemberProfile();
-  });}
-  if(window.FB.subscribeMembers){window.FB.subscribeMembers(function(list){
-    if(!Array.isArray(list)||!list.length)return;
-    var admins=S.members.filter(function(m){return m.isAdmin;});
-    S.members=admins.concat(list.filter(function(m){return !m.isAdmin;}));
-    var pa=document.getElementById('page-admin');if(pa&&pa.classList.contains('active'))renderAdmin();
-  });}
   if(window.FB.subscribeConfig){window.FB.subscribeConfig(function(cfg){
     if(cfg&&Array.isArray(cfg.categories)){
       S.categories=['全部'].concat(cfg.categories.filter(function(c){return c&&c!=='全部';}));
@@ -785,13 +773,58 @@ function startFirebaseShop(){
       S.lookbook=cfg.lookbook;renderLookbook();renderLookbookAdmin();
     }
   });}
-  window.FB.onAdmin(function(isAdmin,email){
-    if(isAdmin){
-      S.currentUser={id:99,name:'管理員Ju',email:email,isAdmin:true};
-      var mb=document.getElementById('memberBtn');if(mb)mb.textContent='管理員Ju';
-      var ab=document.getElementById('adminBtn');if(ab)ab.style.display='inline-block';
-    }
-  });
+  if(window.FB.onAuth){window.FB.onAuth(handleAuthUser);}
+}
+function handleAuthUser(user){
+  if(S._unsubOrders){try{S._unsubOrders();}catch(e){}S._unsubOrders=null;}
+  if(S._unsubMembers){try{S._unsubMembers();}catch(e){}S._unsubMembers=null;}
+  if(!user){
+    S.currentUser=null;S.orders=[];
+    var mb0=document.getElementById('memberBtn');if(mb0)mb0.textContent='會員';
+    var ab0=document.getElementById('adminBtn');if(ab0)ab0.style.display='none';
+    var pm0=document.getElementById('page-member');if(pm0&&pm0.classList.contains('active'))showPage('home');
+    return;
+  }
+  if(isAdminEmail(user.email)){
+    S.currentUser={id:user.uid,uid:user.uid,name:'管理員Ju',email:user.email,isAdmin:true};
+    var mb=document.getElementById('memberBtn');if(mb)mb.textContent='管理員Ju';
+    var ab=document.getElementById('adminBtn');if(ab)ab.style.display='inline-block';
+    if(window.FB.seedIfEmpty&&typeof DEFAULT_PRODUCTS!=='undefined'){window.FB.seedIfEmpty(DEFAULT_PRODUCTS);}
+    if(window.FB.subscribeOrders){S._unsubOrders=window.FB.subscribeOrders(function(list){
+      if(!Array.isArray(list))return;
+      S.orders=list.slice().sort(function(a,b){return (b.id||0)-(a.id||0);});
+      var mx=S.orders.reduce(function(m,o){return Math.max(m,o.id||0);},1000);
+      S.nextOrderId=Math.max(S.nextOrderId||1001,mx+1);
+      var pa=document.getElementById('page-admin');if(pa&&pa.classList.contains('active'))renderAdmin();
+    });}
+    if(window.FB.subscribeMembers){S._unsubMembers=window.FB.subscribeMembers(function(list){
+      if(!Array.isArray(list))return;
+      var admins=S.members.filter(function(m){return m.isAdmin;});
+      S.members=admins.concat(list.filter(function(m){return !m.isAdmin;}));
+      var pa=document.getElementById('page-admin');if(pa&&pa.classList.contains('active'))renderAdmin();
+    });}
+  }else{
+    if(S._registering)return;
+    window.FB.getMember(user.uid).then(function(m){
+      if(!m){m={id:user.uid,uid:user.uid,name:(user.email||'會員').split('@')[0],email:user.email,isAdmin:false,coupons:[],favs:getFavs()};window.FB.saveMember(m);}
+      m.id=user.uid;m.uid=user.uid;m.isAdmin=false;if(!m.coupons)m.coupons=[];
+      S.currentUser=m;
+      var mb=document.getElementById('memberBtn');if(mb)mb.textContent=m.name||'會員';
+      var ab=document.getElementById('adminBtn');if(ab)ab.style.display='none';
+      var localFavs=getFavs();var cloud=Array.isArray(m.favs)?m.favs:[];var merged=cloud.slice();
+      localFavs.forEach(function(id){if(merged.indexOf(id)<0)merged.push(id);});
+      try{localStorage.setItem('ju_favs',JSON.stringify(merged));}catch(e){}
+      m.favs=merged;
+      if(merged.length!==cloud.length&&window.FB.saveMember){window.FB.saveMember({id:user.uid,favs:merged});}
+      if(S._prodsReady)renderShopProducts();
+      if(window.FB.subscribeMyOrders){S._unsubOrders=window.FB.subscribeMyOrders(user.uid,function(list){
+        if(!Array.isArray(list))return;
+        S.orders=list.slice().sort(function(a,b){return (b.id||0)-(a.id||0);});
+        var pm=document.getElementById('page-member');if(pm&&pm.classList.contains('active'))renderMemberProfile();
+      });}
+      var pm=document.getElementById('page-member');if(pm&&pm.classList.contains('active'))renderMemberProfile();
+    }).catch(function(e){console.error('getMember',e&&(e.code||e.message));});
+  }
 }
 window.addEventListener('fb-ready',startFirebaseShop);
 
@@ -820,14 +853,15 @@ function switchAuthTab(tab,btn){
 function doLogin(){
   var e=document.getElementById('loginEmail').value.trim();
   var p=document.getElementById('loginPwd').value;
-  if(window.FB){
-    window.FB.signInAdmin(e,p).then(function(r){
-      if(r.status==='ok'){afterAdminLogin();}
-      else if(r.status==='mfa'){S._mfaResolver=r.resolver;showMfaPrompt();}
-    }).catch(function(err){memberLogin(e,p);});
-    return;
-  }
-  memberLogin(e,p);
+  if(!e||!p){showToast('請輸入 Email 與密碼');return;}
+  if(!window.FB||!window.FB.signInAdmin){memberLogin(e,p);return;}
+  window.FB.signInAdmin(e,p).then(function(r){
+    if(r&&r.status==='mfa'){S._mfaResolver=r.resolver;showMfaPrompt();}
+    else{showToast('登入成功');showPage('home');}
+  }).catch(function(err){
+    var c=err&&err.code;
+    showToast((c==='auth/invalid-credential'||c==='auth/wrong-password'||c==='auth/user-not-found'||c==='auth/invalid-email')?'帳號或密碼錯誤':(c==='auth/too-many-requests'?'嘗試次數過多，請稍後再試':'登入失敗，請稍後再試'));
+  });
 }
 function memberLogin(e,p){
   var u=S.members.find(function(m){return m.email===e&&m.pwd===p;});
@@ -856,7 +890,7 @@ function submitMfa(){
   if(!window.FB||!S._mfaResolver)return;
   window.FB.resolveMfa(S._mfaResolver,code).then(function(){
     var m=document.getElementById('mfaPrompt');if(m)m.remove();
-    afterAdminLogin();
+    showToast('管理員登入成功');showPage('home');
   }).catch(function(e){showToast('驗證碼錯誤或逾時');});
 }
 function doLogout(){
@@ -876,11 +910,30 @@ function doRegister(){
   var ig=document.getElementById('regIG').value.trim();
   if(!name||!email||!pwd){showToast('請填寫姓名、Email 與密碼');return;}
   if(pwd.length<6){showToast('密碼至少 6 位');return;}
-  if(S.members.some(function(m){return m.email===email;})){showToast('此 Email 已註冊過囉');return;}
-  var u={id:Date.now(),name:name,email:email,pwd:pwd,phone:phone,ig:ig,isAdmin:false,coupons:[]};
-  S.members.push(u);S.currentUser=u;persistMember(u);
-  var mb=document.getElementById('memberBtn');if(mb)mb.textContent=u.name;
-  showToast('註冊成功，歡迎加入 Ju');showPage('home');
+  if(isAdminEmail(email)){showToast('此 Email 為管理帳號，請改用登入');return;}
+  if(!window.FB||!window.FB.registerUser){
+    if(S.members.some(function(m){return m.email===email;})){showToast('此 Email 已註冊過囉');return;}
+    var u0={id:Date.now(),name:name,email:email,pwd:pwd,phone:phone,ig:ig,isAdmin:false,coupons:[],favs:getFavs()};
+    S.members.push(u0);S.currentUser=u0;
+    var mb0=document.getElementById('memberBtn');if(mb0)mb0.textContent=u0.name;
+    showToast('註冊成功，歡迎加入 Ju');showPage('home');return;
+  }
+  S._registering=true;
+  window.FB.registerUser(email,pwd).then(function(uid){
+    var u={id:uid,uid:uid,name:name,email:email,phone:phone,ig:ig,isAdmin:false,coupons:[],favs:getFavs()};
+    return window.FB.saveMember(u).then(function(){
+      S.currentUser=u;
+      var mb=document.getElementById('memberBtn');if(mb)mb.textContent=u.name;
+      var ab=document.getElementById('adminBtn');if(ab)ab.style.display='none';
+      if(window.FB.subscribeMyOrders){if(S._unsubOrders){try{S._unsubOrders();}catch(e){}}S._unsubOrders=window.FB.subscribeMyOrders(uid,function(list){if(Array.isArray(list)){S.orders=list.slice().sort(function(a,b){return (b.id||0)-(a.id||0);});var pm=document.getElementById('page-member');if(pm&&pm.classList.contains('active'))renderMemberProfile();}});}
+      S._registering=false;
+      showToast('註冊成功，歡迎加入 Ju');showPage('home');
+    });
+  }).catch(function(err){
+    S._registering=false;
+    var c=err&&err.code;
+    showToast(c==='auth/email-already-in-use'?'此 Email 已註冊過囉':(c==='auth/invalid-email'?'Email 格式不正確':(c==='auth/weak-password'?'密碼至少 6 位':'註冊失敗，請稍後再試')));
+  });
 }
 function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 var HEART_SVG='<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke-linejoin="round"/></svg>';
@@ -909,6 +962,7 @@ function toggleFav(id,btn){
   var f=getFavs();var at=f.indexOf(id);var on;
   if(at>=0){f.splice(at,1);on=false;}else{f.push(id);on=true;}
   try{localStorage.setItem('ju_favs',JSON.stringify(f));}catch(e){}
+  if(S.currentUser&&!S.currentUser.isAdmin&&S.currentUser.uid&&window.FB&&window.FB.saveMember){S.currentUser.favs=f;window.FB.saveMember({id:S.currentUser.uid,favs:f}).catch(function(){});}
   document.querySelectorAll('.fav-btn[data-fid="'+id+'"]').forEach(function(b){b.classList.toggle('on',on);});
   showToast(on?'已加入最愛':'已移除最愛');
   if(S.favOnly){renderShopProducts();}
@@ -2424,8 +2478,8 @@ function showToast(msg){
 </script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, getMultiFactorResolver, TotpMultiFactorGenerator, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
-import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, getMultiFactorResolver, TotpMultiFactorGenerator, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc, getDoc, query, where } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 import { getStorage, ref as storageRef, uploadString, getDownloadURL } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js';
 const firebaseConfig = {
   apiKey: "AIzaSyAETCZAk1fOUsFMPt5eb2q3DlrQlkr5GUc",
@@ -2455,6 +2509,10 @@ window.FB={
   },
   signOutAdmin:function(){return signOut(auth);},
   onAdmin:function(cb){onAuthStateChanged(auth,function(u){cb(!!u,u?u.email:'');});},
+  onAuth:function(cb){onAuthStateChanged(auth,function(u){cb(u?{uid:u.uid,email:u.email}:null);});},
+  registerUser:function(email,pwd){return createUserWithEmailAndPassword(auth,email,pwd).then(function(c){return c.user.uid;});},
+  getMember:function(uid){return getDoc(doc(db,'members',uid)).then(function(s){return s.exists()?s.data():null;});},
+  subscribeMyOrders:function(uid,cb){return onSnapshot(query(collection(db,'orders'),where('userId','==',uid)),function(snap){cb(snap.docs.map(function(d){var o=d.data();o._docId=d.id;return o;}));},function(err){console.error('myorders subscribe error',err);});},
   subscribeProducts:function(cb){
     return onSnapshot(collection(db,'products'),function(snap){
       cb(snap.docs.map(function(d){var o=d.data();o._docId=d.id;return o;}));
@@ -2472,7 +2530,7 @@ window.FB={
   saveOrder:function(order){var data=Object.assign({},order);var id=data._docId;delete data._docId;if(id){return updateDoc(doc(db,'orders',id),data).then(function(){return id;});}return addDoc(collection(db,'orders'),data).then(function(ref){return ref.id;});},
   deleteOrder:function(docId){return deleteDoc(doc(db,'orders',docId));},
   subscribeMembers:function(cb){return onSnapshot(collection(db,'members'),function(snap){cb(snap.docs.map(function(d){var o=d.data();o._docId=d.id;return o;}));},function(err){console.error('members subscribe error',err);});},
-  saveMember:function(m){var data=Object.assign({},m);var id=data._docId;delete data._docId;if(id){return updateDoc(doc(db,'members',id),data).then(function(){return id;});}return addDoc(collection(db,'members'),data).then(function(ref){return ref.id;});},
+  saveMember:function(m){var data=Object.assign({},m);delete data._docId;var id=String(m.id);return setDoc(doc(db,'members',id),data,{merge:true}).then(function(){return id;});},
   deleteMember:function(docId){return deleteDoc(doc(db,'members',docId));},
   subscribeConfig:function(cb){return onSnapshot(doc(db,'config','site'),function(snap){cb(snap.exists()?snap.data():null);},function(err){console.error('config subscribe error',err);});},
   saveConfig:function(data){return setDoc(doc(db,'config','site'),data,{merge:true});},
