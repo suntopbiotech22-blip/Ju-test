@@ -207,6 +207,8 @@ input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{fo
 .disc-excats{display:flex;flex-wrap:wrap;gap:6px 12px;}
 .disc-excats label{display:inline-flex;align-items:center;gap:5px;font-size:13px;color:var(--cocoa);margin:0;cursor:pointer;}
 .disc-excats input{width:auto;margin:0;}
+.spec-chip{display:flex;align-items:center;gap:6px;border:1.5px solid var(--linen);border-radius:10px;padding:5px 10px;cursor:pointer;font-size:13px;background:#fff;color:var(--text);transition:border-color .15s,background .15s,box-shadow .15s;}
+.spec-chip.sel{border-color:var(--cocoa);border-width:2px;background:var(--rose);color:var(--cocoa);font-weight:600;box-shadow:0 2px 8px rgba(92,70,54,.15);}
 
 .pfg{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
 .img-up{grid-column:1/-1;border:2px dashed var(--linen);border-radius:14px;padding:30px;text-align:center;cursor:pointer;transition:border-color .2s;color:var(--text-light);font-size:13px;}
@@ -666,7 +668,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0624c</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0624e</div>
 </footer>
 
 <!-- MODALS -->
@@ -749,7 +751,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
 <script>
 var IMG_PH='<div class="product-img-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2.4"/><path d="M12 9.6V4M12 14.4V20M9.6 12H4M14.4 12H20M9.4 9.4 6 6M14.6 14.6 18 18M14.6 9.4 18 6M9.4 14.6 6 18"/></svg></div>';
 var S={
-  currentUser:null,cart:[],appliedDiscount:null,_authResolved:false,
+  currentUser:null,cart:[],appliedDiscount:null,_authResolved:false,_adminPanel:"dashboard",
   paymentMethod:null,shippingMethod:null,
   customDepositChoice:null,customRemainChoice:null,
   selectedCat:'全部',shopPage:1,searchQuery:'',favOnly:false,lookbook:[],editingProductId:null,editingImgData:null,_prodsReady:false,
@@ -835,7 +837,7 @@ function handleAuthUser(user){
     });}
     var _hh=(location.hash||'').replace(/^#\/?/,'');
     var _pa=document.getElementById('page-admin');
-    if(_hh==='admin'||(_pa&&_pa.classList.contains('active')))showPage('admin');
+    if(/^admin(\/|$)/.test(_hh)||(_pa&&_pa.classList.contains('active')))showPage('admin');
   }else{
     if(S._registering)return;
     var _paM=document.getElementById('page-admin');if(_paM&&_paM.classList.contains('active'))showPage('home');
@@ -1392,7 +1394,7 @@ function renderProductPage(id){
     specsHtml='<p style="font-size:13px;color:var(--cocoa);font-weight:500;margin-bottom:8px">選擇規格</p><div id="specChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">'
       +p.specs.map(function(s,i){
         var th=s.img?('<img loading="lazy" src="'+s.img+'" style="width:40px;height:40px;object-fit:cover;border-radius:6px">'):'';
-        return '<div onclick="selectSpec('+id+','+i+',this)" style="display:flex;align-items:center;gap:6px;border:1.5px solid '+(i===0?'var(--cocoa)':'var(--linen)')+';border-radius:10px;padding:5px 10px;cursor:pointer;font-size:13px">'+th+'<span>'+s.name+(s.price?'　NT$ '+s.price:'')+'</span></div>';
+        return '<div class="spec-chip'+(i===0?' sel':'')+'" onclick="selectSpec('+id+','+i+',this)">'+th+'<span>'+s.name+(s.price?'　NT$ '+s.price:'')+'</span></div>';
       }).join('')+'</div>';
   }
   document.getElementById('productPageContent').innerHTML=main+thumbs
@@ -1416,7 +1418,9 @@ function route(){
   var h=(location.hash||'').replace(/^#\/?/,'');
   var m=h.match(/^product\/(\d+)/);
   if(m){renderProductPage(parseInt(m[1],10));return;}
-  var valid={shop:1,cart:1,auth:1,member:1,success:1,admin:1,terms:1,home:1};
+  var am=h.match(/^admin(?:\/([a-z]*))?$/);
+  if(am){S._adminPanel=am[1]||'dashboard';showPage('admin');return;}
+  var valid={shop:1,cart:1,auth:1,member:1,success:1,terms:1,home:1};
   showPage(valid[h]?h:'home');
 }
 window.addEventListener('hashchange',route);
@@ -1436,7 +1440,7 @@ function setDetailImg(id,i){var p=S.products.find(function(x){return x.id===id;}
 function selectSpec(id,i,el){
   var p=S.products.find(function(x){return x.id===id;});if(!p||!p.specs[i])return;
   var s=p.specs[i];S._selSpec=s.name;
-  var c=document.getElementById('specChips').children;for(var k=0;k<c.length;k++)c[k].style.borderColor='var(--linen)';el.style.borderColor='var(--cocoa)';
+  var c=document.getElementById('specChips').children;for(var k=0;k<c.length;k++)c[k].classList.remove('sel');el.classList.add('sel');
   var pr=document.getElementById('detailPrice');if(pr)pr.textContent='NT$ '+((s.price)?s.price:p.price);
   var dep=document.getElementById('detailDep');if(dep)dep.textContent='NT$ '+((s.deposit!==''&&s.deposit!=null)?s.deposit:p.deposit);
   var m=document.getElementById('detailMain');
@@ -1783,6 +1787,7 @@ function renderAdmin(){
     showPage('home');return;
   }
   renderDash();renderAdminProds();renderInventory();renderAdminOrds();renderAdminMembs();renderDiscs();renderPayment();renderSales();renderBanners();renderLookbookAdmin();renderMemberCoupons();
+  activateAdminPanel(S._adminPanel||'dashboard');
 }
 function renderCatSelect(){
   var sel=document.getElementById('editCat');if(!sel)return;
@@ -1873,19 +1878,19 @@ function sendCustomerCopy(){
     if(box)box.innerHTML='<div class="se-box"><p class="se-sent">✓ 訂單明細已寄至 <b>'+em+'</b>，請至信箱查收。</p></div>';
   }catch(e){showToast('寄送失敗，請稍後再試');}
 }
-function switchAdmin(p,el){
+function activateAdminPanel(p){
+  if(!document.getElementById('panel-'+p))p='dashboard';
+  S._adminPanel=p;
   document.querySelectorAll('.adm-panel').forEach(function(x){x.classList.remove('active');});
   document.querySelectorAll('.adm-nav').forEach(function(x){x.classList.remove('active');});
-  document.getElementById('panel-'+p).classList.add('active');el.classList.add('active');
+  document.getElementById('panel-'+p).classList.add('active');
+  document.querySelectorAll('.adm-nav').forEach(function(n){var a=n.getAttribute('onclick')||'';if(a.indexOf("'"+p+"'")>=0)n.classList.add('active');});
+  try{history.replaceState(null,'',location.pathname+location.search+'#admin/'+p);}catch(e){}
   if(p==='products'){renderCatAdmin();renderCatSelect();}
   if(p==='inventory')renderInventory();
 }
-function goAdmin(panel){
-  document.querySelectorAll('.adm-panel').forEach(function(x){x.classList.remove('active');});
-  document.querySelectorAll('.adm-nav').forEach(function(x){x.classList.remove('active');});
-  var p=document.getElementById('panel-'+panel);if(p)p.classList.add('active');
-  document.querySelectorAll('.adm-nav').forEach(function(n){var a=n.getAttribute('onclick')||'';if(a.indexOf("'"+panel+"'")>=0)n.classList.add('active');});
-}
+function switchAdmin(p,el){activateAdminPanel(p);window.scrollTo(0,0);}
+function goAdmin(panel){activateAdminPanel(panel);window.scrollTo(0,0);}
 function refreshTotals(){
   var sub=S.cart.reduce(function(s,i){return s+i.price*i.qty;},0);
   var d=appliedDiscAmt();
