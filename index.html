@@ -671,7 +671,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0624g</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0624h</div>
 </footer>
 
 <!-- MODALS -->
@@ -2518,22 +2518,35 @@ function toggleDeposit(){document.getElementById('depositField').style.display=d
 function renderGalleryEditor(){
   var el=document.getElementById('galleryEditor');if(!el)return;
   var imgs=S.editImages||[];
+  if(S._galSel==null||S._galSel>=imgs.length)S._galSel=imgs.length?0:null;
   var html='<div style="display:flex;gap:8px;flex-wrap:wrap">';
   imgs.forEach(function(src,i){
-    html+='<div class="gal-item" draggable="true" data-i="'+i+'" ondragstart="galDragStart(event,'+i+')" ondragover="galDragOver(event)" ondrop="galDrop(event,'+i+')" ondragend="galDragEnd(event)" style="width:72px">'
-      +'<div style="position:relative;width:72px;height:72px">'
-      +'<img loading="lazy" src="'+src+'" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:'+(i===0?'2px solid var(--cocoa)':'1px solid var(--linen)')+'">'
+    var seld=(i===S._galSel);
+    html+='<div class="gal-item" draggable="true" data-i="'+i+'" onclick="selectGalleryImg('+i+')" ondragstart="galDragStart(event,'+i+')" ondragover="galDragOver(event)" ondrop="galDrop(event,'+i+')" ondragend="galDragEnd(event)" style="position:relative;width:72px;height:72px;cursor:pointer">'
+      +'<img loading="lazy" src="'+src+'" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:'+(seld?'3px solid var(--dusty-rose)':(i===0?'2px solid var(--cocoa)':'1px solid var(--linen)'))+'">'
       +(i===0?'<span style="position:absolute;left:0;bottom:0;background:var(--cocoa);color:#fff;font-size:9px;padding:1px 5px;border-radius:0 6px 0 6px">封面</span>':'')
-      +'<button type="button" onclick="removeGalleryPhoto('+i+')" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--dusty-rose);color:#fff;cursor:pointer;font-size:12px;line-height:1">×</button>'
-      +'</div>'
-      +'<div style="display:flex;justify-content:space-between;margin-top:3px">'
-      +'<button type="button" onclick="moveGalleryImg('+i+',-1)" '+(i===0?'disabled':'')+' style="border:none;background:var(--warm-ivory);border-radius:6px;width:32px;height:22px;cursor:pointer;color:var(--cocoa);font-size:12px;opacity:'+(i===0?'.35':'1')+'">◀</button>'
-      +'<button type="button" onclick="moveGalleryImg('+i+',1)" '+(i===imgs.length-1?'disabled':'')+' style="border:none;background:var(--warm-ivory);border-radius:6px;width:32px;height:22px;cursor:pointer;color:var(--cocoa);font-size:12px;opacity:'+(i===imgs.length-1?'.35':'1')+'">▶</button>'
-      +'</div></div>';
+      +'<button type="button" onclick="event.stopPropagation();removeGalleryPhoto('+i+')" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;border:none;background:var(--dusty-rose);color:#fff;cursor:pointer;font-size:12px;line-height:1">×</button>'
+      +'</div>';
   });
   if(imgs.length<3)html+='<div onclick="document.getElementById(\'galleryInput\').click()" style="width:72px;height:72px;border:1.5px dashed var(--linen);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-light);font-size:24px">＋</div>';
-  html+='</div><p style="font-size:11px;color:var(--text-light);margin-top:6px">第一張為封面。用 ◀ ▶ 調整順序，電腦也可直接拖曳。</p>';
+  html+='</div>';
+  if(imgs.length>1){
+    var canL=S._galSel>0,canR=S._galSel<imgs.length-1;
+    html+='<div style="display:flex;gap:8px;margin-top:8px">'
+      +'<button type="button" onclick="moveSelGallery(-1)" '+(canL?'':'disabled')+' style="border:none;background:var(--warm-ivory);border-radius:8px;padding:7px 18px;cursor:pointer;color:var(--cocoa);font-size:13px;opacity:'+(canL?'1':'.35')+'">◀ 左移</button>'
+      +'<button type="button" onclick="moveSelGallery(1)" '+(canR?'':'disabled')+' style="border:none;background:var(--warm-ivory);border-radius:8px;padding:7px 18px;cursor:pointer;color:var(--cocoa);font-size:13px;opacity:'+(canR?'1':'.35')+'">右移 ▶</button>'
+      +'</div>';
+  }
+  html+='<p style="font-size:11px;color:var(--text-light);margin-top:6px">點照片選取（粉紅框），再用 ◀ 左移 / 右移 ▶ 調整順序。第一張為封面，電腦也可直接拖曳。</p>';
   el.innerHTML=html;
+}
+function selectGalleryImg(i){S._galSel=i;renderGalleryEditor();}
+function moveSelGallery(dir){
+  if(S._galSel==null){showToast('請先點選要移動的照片');return;}
+  var i=S._galSel,j=i+dir;
+  if(j<0||j>=(S.editImages||[]).length)return;
+  S._galSel=j;
+  moveGalleryImg(i,dir);
 }
 function moveGalleryImg(i,dir){
   var a=S.editImages||[];var j=i+dir;if(j<0||j>=a.length)return;
@@ -2629,7 +2642,7 @@ function openProductModal(id){
     ['editHot','editNew','editCustom','editCanCustom','editDraft','editInStock'].forEach(function(x){document.getElementById(x).checked=false;});
     S.editImages=[];S.editThumbs=[];S.editSpecs=[];
   }
-  renderGalleryEditor();renderSpecEditor();
+  S._galSel=null;renderGalleryEditor();renderSpecEditor();
   document.getElementById('productEditModal').classList.add('open');
 }
 
