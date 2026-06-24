@@ -671,7 +671,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0624h</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0624i</div>
 </footer>
 
 <!-- MODALS -->
@@ -746,6 +746,8 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <div class="fg"><label>折扣碼</label><input id="dCode" placeholder="例：JU2024"></div>
     <div class="fg"><label>折扣金額 (NT$)</label><input type="number" id="dAmount" placeholder="50"></div>
     <div class="fg"><label>說明</label><input id="dDesc" placeholder="新會員優惠"></div>
+    <div class="fg"><label>開始日期（留空＝即刻生效）</label><input type="date" id="dStart"></div>
+    <div class="fg"><label>結束日期（留空＝永久有效）</label><input type="date" id="dEnd"></div>
     <div class="fg"><label>排除分類（勾選的分類不參與此折扣）</label><div id="dExCats" class="disc-excats"></div></div>
     <button class="sub-btn" onclick="saveDiscount()">儲存折扣碼</button>
   </div>
@@ -1556,10 +1558,20 @@ function appliedDiscAmt(){
   }
   return amt;
 }
+function discActive(d){
+  var t=new Date();
+  var ymd=t.getFullYear()+'-'+String(t.getMonth()+1).padStart(2,'0')+'-'+String(t.getDate()).padStart(2,'0');
+  if(d.start&&ymd<d.start)return 'before';
+  if(d.end&&ymd>d.end)return 'after';
+  return 'ok';
+}
 function applyDiscount(){
   var c=(document.getElementById('discountInput').value||'').trim().toUpperCase();
   var f=S.discounts.find(function(d){return d.code===c;});
   if(!f){showToast('折扣碼無效');return;}
+  var ds=discActive(f);
+  if(ds==='before'){showToast('此折扣 '+f.start+' 起才能使用');return;}
+  if(ds==='after'){showToast('此折扣碼已過期');return;}
   if(f.exCats&&f.exCats.length&&discEligibleSub(f)<=0){showToast('購物車內商品不適用此折扣碼');return;}
   S.appliedDiscount=f;var amt=appliedDiscAmt();showToast('折扣套用成功！折扣 NT$ '+amt+'');renderCart();
 }
@@ -2318,7 +2330,10 @@ function toggleInStock(id){
 function renderDiscs(){
   document.getElementById('discountList').innerHTML=S.discounts.map(function(d,i){
     var exLine=(d.exCats&&d.exCats.length)?'<div style="font-size:11px;color:var(--dusty-rose);margin-top:3px">排除分類：'+d.exCats.join('、')+'</div>':'';
-    return '<div class="disc-card"><div><div style="font-size:14px;font-weight:500;margin-bottom:4px">'+d.desc+'</div><div style="font-size:12px;color:var(--text-light)">'+d.code+'</div>'+exLine+'</div>'
+    var dateLine=(d.start||d.end)?('<div style="font-size:11px;color:var(--text-light);margin-top:3px">期間：'+(d.start||'不限')+' ～ '+(d.end||'不限')+'</div>'):'';
+    var ds=discActive(d);
+    var stTag=ds==='before'?'<span style="font-size:10px;background:#EEE;color:#777;border-radius:8px;padding:1px 7px;margin-left:6px">未開始</span>':ds==='after'?'<span style="font-size:10px;background:#FDECEA;color:#C0392B;border-radius:8px;padding:1px 7px;margin-left:6px">已過期</span>':'';
+    return '<div class="disc-card"><div><div style="font-size:14px;font-weight:500;margin-bottom:4px">'+d.desc+stTag+'</div><div style="font-size:12px;color:var(--text-light)">'+d.code+'</div>'+dateLine+exLine+'</div>'
       +'<div style="display:flex;align-items:center;gap:10px"><div class="disc-tag">-NT$ '+d.amount+'</div>'
       +'<button class="abtn dg" onclick="delDisc('+i+')">刪除</button></div></div>';
   }).join('');
@@ -2706,7 +2721,7 @@ function renderDiscExCats(sel){
     return '<label><input type="checkbox" class="dExCat" value="'+c+'" '+(sel.indexOf(c)>=0?'checked':'')+'>'+c+'</label>';
   }).join('');
 }
-function openDiscountModal(){['dCode','dAmount','dDesc'].forEach(function(x){document.getElementById(x).value='';});renderDiscExCats([]);document.getElementById('discountEditModal').classList.add('open');}
+function openDiscountModal(){['dCode','dAmount','dDesc','dStart','dEnd'].forEach(function(x){var e=document.getElementById(x);if(e)e.value='';});renderDiscExCats([]);document.getElementById('discountEditModal').classList.add('open');}
 function persistDiscounts(){if(window.FB&&window.FB.saveConfig){window.FB.saveConfig({discounts:S.discounts}).catch(function(e){showToast('折扣儲存失敗：'+(e.code||e.message));});}}
 function saveDiscount(){
   var c=document.getElementById('dCode').value.trim().toUpperCase();
@@ -2714,7 +2729,10 @@ function saveDiscount(){
   var d=document.getElementById('dDesc').value.trim();
   if(!c||!a){showToast('請填寫折扣碼和金額');return;}
   var ex=Array.prototype.slice.call(document.querySelectorAll('.dExCat')).filter(function(x){return x.checked;}).map(function(x){return x.value;});
-  var obj={code:c,amount:a,desc:d};if(ex.length)obj.exCats=ex;
+  var st=document.getElementById('dStart').value;
+  var en=document.getElementById('dEnd').value;
+  if(st&&en&&en<st){showToast('結束日期不可早於開始日期');return;}
+  var obj={code:c,amount:a,desc:d};if(ex.length)obj.exCats=ex;if(st)obj.start=st;if(en)obj.end=en;
   S.discounts.push(obj);
   persistDiscounts();
   closeModal('discountEditModal');renderDiscs();showToast('折扣碼已新增');
