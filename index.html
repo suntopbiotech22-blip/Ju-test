@@ -677,7 +677,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0625c</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0625d</div>
 </footer>
 
 <!-- MODALS -->
@@ -806,8 +806,17 @@ function startFirebaseShop(){
     if(cfg&&Array.isArray(cfg.discounts)){
       S.discounts=cfg.discounts;renderDiscs();
     }
+    if(cfg&&cfg.linePay&&typeof cfg.linePay==='object'){
+      S.linePay=Object.assign({},S.linePay,cfg.linePay);
+      var _pcl=document.getElementById('page-cart');if(_pcl&&_pcl.classList.contains('active'))renderCart();
+      if(document.getElementById('paymentSettings'))renderPayment();
+    }
   });}
   if(window.FB.onAuth){window.FB.onAuth(handleAuthUser);}
+}
+function refreshAuthUI(){
+  var pc=document.getElementById('page-cart');if(pc&&pc.classList.contains('active'))renderCart();
+  var pm=document.getElementById('page-member');if(pm&&pm.classList.contains('active')&&typeof renderMemberProfile==='function')renderMemberProfile();
 }
 function handleAuthUser(user){
   S._authResolved=true;
@@ -819,6 +828,7 @@ function handleAuthUser(user){
     var ab0=document.getElementById('adminBtn');if(ab0)ab0.style.display='none';
     var pm0=document.getElementById('page-member');if(pm0&&pm0.classList.contains('active'))showPage('home');
     var pa0=document.getElementById('page-admin');if(pa0&&pa0.classList.contains('active'))showPage('home');
+    refreshAuthUI();
     return;
   }
   if(isAdminEmail(user.email)){
@@ -843,6 +853,7 @@ function handleAuthUser(user){
     var _hh=(location.hash||'').replace(/^#\/?/,'');
     var _pa=document.getElementById('page-admin');
     if(/^admin(\/|$)/.test(_hh)||(_pa&&_pa.classList.contains('active')))showPage('admin');
+    refreshAuthUI();
   }else{
     if(S._registering)return;
     var _paM=document.getElementById('page-admin');if(_paM&&_paM.classList.contains('active'))showPage('home');
@@ -863,7 +874,7 @@ function handleAuthUser(user){
         S.orders=list.slice().sort(function(a,b){return (b.id||0)-(a.id||0);});
         var pm=document.getElementById('page-member');if(pm&&pm.classList.contains('active'))renderMemberProfile();
       });}
-      var pm=document.getElementById('page-member');if(pm&&pm.classList.contains('active'))renderMemberProfile();
+      refreshAuthUI();
     }).catch(function(e){console.error('getMember',e&&(e.code||e.message));});
   }
 }
@@ -2544,13 +2555,16 @@ function previewLinePay(input){
   showToast('圖片上傳中…');
   compressImage(f,1000,0.9,function(d){window.FB.uploadImage(d,'paycode').then(function(url){S.linePay.qrImage=url;
     document.getElementById('lpQrPreview').innerHTML='<img loading="lazy" src="'+url+'" style="width:160px;height:160px;object-fit:contain;border-radius:12px;background:#fff;border:1px solid var(--linen);padding:6px">';
-    showToast('收款碼已更新，記得按儲存');}).catch(function(e){showToast('上傳失敗：'+(e.code||e.message));});});
+    if(window.FB.saveConfig){window.FB.saveConfig({linePay:S.linePay}).then(function(){showToast('收款碼已上傳並儲存');}).catch(function(e){showToast('已上傳，但儲存失敗：'+(e.code||e.message));});}else{showToast('收款碼已更新，記得按儲存');}
+  }).catch(function(e){showToast('上傳失敗：'+(e.code||e.message));});});
 }
 
 function savePaymentSettings(){
   S.linePay.link=document.getElementById('lpLink').value.trim();
   S.linePay.note=document.getElementById('lpNote').value.trim();
-  showToast('收款設定已儲存');
+  if(window.FB&&window.FB.saveConfig){
+    window.FB.saveConfig({linePay:S.linePay}).then(function(){showToast('收款設定已儲存');}).catch(function(e){showToast('儲存失敗：'+(e.code||e.message));});
+  }else{showToast('收款設定已儲存（離線）');}
 }
 
 function updStatus(id,ns){
