@@ -681,7 +681,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0625e</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0625f</div>
 </footer>
 
 <!-- MODALS -->
@@ -1081,11 +1081,19 @@ function cmpProducts(a,b){
   if(ap&&bp)return (b.pinOrder||0)-(a.pinOrder||0);
   return (b.id||0)-(a.id||0);
 }
+function cmpProductsFront(a,b){
+  var ap=a.pinned?1:0,bp=b.pinned?1:0;
+  if(ap!==bp)return bp-ap;
+  if(ap&&bp)return (b.pinOrder||0)-(a.pinOrder||0);
+  var an=a.isNew?1:0,bn=b.isNew?1:0;
+  if(an!==bn)return bn-an;
+  return (b.id||0)-(a.id||0);
+}
 function renderHomeProducts(){
   if(!S._prodsReady){var fg0=document.getElementById('homeProducts');if(fg0)fg0.innerHTML='<div class="empty-st" style="opacity:.55;grid-column:1/-1">載入作品中…</div>';var ng0=document.getElementById('homeNewProducts');if(ng0)ng0.innerHTML='';return;}
   var live=S.products.filter(isLive);
   var feat=live.filter(function(p){return p.hot;}).slice().sort(cmpProducts);
-  var news=live.filter(function(p){return !p.hot;}).slice().sort(cmpProducts);
+  var news=live.filter(function(p){return !p.hot;}).slice().sort(cmpProductsFront);
   var fg=document.getElementById('homeProducts');if(fg)fg.innerHTML=feat.slice(0,6).map(pCard).join('');
   var ng=document.getElementById('homeNewProducts');if(ng)ng.innerHTML=news.slice(0,4).map(pCard).join('');
   var fs=document.getElementById('homeFeaturedSection');if(fs)fs.style.display=feat.length?'':'none';
@@ -1144,7 +1152,7 @@ function renderShopProducts(){
   var tabs=document.getElementById('catTabs');
   tabs.innerHTML=S.categories.map(function(c){return '<button class="cat-tab'+(c===S.selectedCat?' active':'')+'" onclick="filterCat(\''+c+'\')">'+c+'</button>';}).join('');
   if(!S._prodsReady){var sp=document.getElementById('shopProducts');if(sp)sp.innerHTML='<div class="empty-st" style="opacity:.55">載入作品中…</div>';var pg=document.getElementById('shopPager');if(pg)pg.innerHTML='';return;}
-  var all=S.products.filter(isLive).slice().sort(cmpProducts);
+  var all=S.products.filter(isLive).slice().sort(cmpProductsFront);
   var f=S.selectedCat==='全部'?all:all.filter(function(p){return p.cat===S.selectedCat;});
   var q=(S.searchQuery||'').trim().toLowerCase();
   if(q){f=f.filter(function(p){return (p.name||'').toLowerCase().indexOf(q)>=0||(p.desc||'').toLowerCase().indexOf(q)>=0;});}
