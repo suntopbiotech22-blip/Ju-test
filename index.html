@@ -82,10 +82,12 @@ nav{background:var(--white);border-bottom:1px solid var(--linen);position:sticky
 .banner-card .emo{font-size:40px;position:absolute;right:20px;top:16px;opacity:.5;}
 
 .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:22px;}
-.product-card{background:var(--white);border-radius:16px;overflow:hidden;box-shadow:0 2px 12px var(--shadow);transition:all .25s;cursor:pointer;border:1px solid var(--warm-ivory);}
+.product-card{display:block;text-decoration:none;color:inherit;-webkit-tap-highlight-color:transparent;background:var(--white);border-radius:16px;overflow:hidden;box-shadow:0 2px 12px var(--shadow);transition:all .25s;cursor:pointer;border:1px solid var(--warm-ivory);}
 .product-card:hover{transform:translateY(-4px);box-shadow:0 8px 28px var(--shadow);}
 .product-img{width:100%;aspect-ratio:1;background:var(--warm-ivory);display:flex;align-items:center;justify-content:center;font-size:48px;position:relative;overflow:hidden;}
 .product-img img{width:100%;height:100%;object-fit:cover;}
+.product-img.has-bg{background-size:cover;background-position:center;}
+img,.product-img.has-bg{-webkit-touch-callout:none;-webkit-user-select:none;-moz-user-select:none;user-select:none;}
 .badge{position:absolute;top:10px;left:10px;background:var(--dusty-rose);color:white;font-size:10px;padding:3px 10px;border-radius:20px;}
 .badge.nb{background:var(--sage);color:var(--cocoa);}
 .badge.cb{background:var(--cocoa);color:white;}
@@ -675,7 +677,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0625b</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0625c</div>
 </footer>
 
 <!-- MODALS -->
@@ -868,6 +870,8 @@ function handleAuthUser(user){
 window.addEventListener('fb-ready',startFirebaseShop);
 
 document.addEventListener('DOMContentLoaded',function(){loadCart();loadShopState();renderHomeProducts();renderLookbook();renderShopProducts();updateCartBadge();renderTicker();renderCatSelect();renderCatAdmin();route();if(window.emailjs&&S.emailjs&&S.emailjs.publicKey){try{emailjs.init({publicKey:S.emailjs.publicKey});}catch(e){}}setTimeout(function(){if(!S._prodsReady){S._prodsReady=true;renderHomeProducts();renderShopProducts();}},3500);});
+document.addEventListener('contextmenu',function(e){if(e.target&&e.target.tagName==='IMG')e.preventDefault();});
+document.addEventListener('dragstart',function(e){if(e.target&&e.target.tagName==='IMG')e.preventDefault();});
 
 function showPage(n){
   try{var _hash=(n==='home')?'':'#'+n;history.replaceState(null,'',location.pathname+location.search+_hash);}catch(e){}
@@ -1015,10 +1019,11 @@ function pCard(p){
   var hs=p.original&&p.original>p.price;
   var pct=hs?Math.round((1-p.price/p.original)*100):0;
   var _t=p.imgThumb||p.imgData;
-  var img=_t?('<img loading="lazy" src="'+_t+'" alt="'+p.name+'">'):(p.emoji||IMG_PH);
-  return '<div class="product-card" onclick="openDetail('+p.id+')">'
-    +'<div class="product-img">'+img
-    +'<button class="fav-btn'+(isFav(p.id)?' on':'')+'" data-fid="'+p.id+'" aria-label="加入最愛" onclick="event.stopPropagation();toggleFav('+p.id+',this)">'+HEART_SVG+'</button>'
+  var bgStyle=_t?(' style="background-image:url(\''+String(_t).replace(/'/g,"\\'")+'\')"'):'';
+  var ph=_t?'':(p.emoji||IMG_PH);
+  return '<a class="product-card" href="#product/'+p.id+'" onclick="event.preventDefault();openDetail('+p.id+')">'
+    +'<div class="product-img'+(_t?' has-bg':'')+'"'+bgStyle+'>'+ph
+    +'<button class="fav-btn'+(isFav(p.id)?' on':'')+'" data-fid="'+p.id+'" aria-label="加入最愛" onclick="event.preventDefault();event.stopPropagation();toggleFav('+p.id+',this)">'+HEART_SVG+'</button>'
     +(hs?'<div class="badge">-'+pct+'%</div>':'')
     +(p.isNew&&!hs?'<div class="badge nb">NEW</div>':'')
     +(p.isCustom?'<div class="badge cb" style="top:'+((hs||p.isNew)?'34px':'10px')+'">客製</div>':'')
@@ -1028,8 +1033,8 @@ function pCard(p){
     +'<div class="product-price-row"><div>'
     +'<div class="prc'+(hs?' sale':'')+'">NT$ '+p.price+'</div>'
     +(hs?'<div class="prc-orig">NT$ '+p.original+'</div>':'')
-    +'</div><button class="add-btn" onclick="event.stopPropagation();addToCart('+p.id+')">+ 加入</button>'
-    +'</div></div></div>';
+    +'</div><button class="add-btn" onclick="event.preventDefault();event.stopPropagation();addToCart('+p.id+')">+ 加入</button>'
+    +'</div></div></a>';
 }
 function renderTicker(){
   var el=document.getElementById('promoTicker');if(!el)return;
