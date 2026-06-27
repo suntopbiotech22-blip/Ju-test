@@ -298,6 +298,9 @@ input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{fo
 .fav-chip.on{background:var(--dusty-rose);color:#fff;border-color:var(--dusty-rose);}
 .fav-chip.on svg{fill:#fff;stroke:#fff;}
 .fav-row{text-align:center;margin-top:2px;}
+.ship-box{margin-top:14px;padding:14px 14px 4px;border:1px solid var(--linen);border-radius:14px;background:var(--white);}
+.ship-box-h{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--cocoa);margin-bottom:10px;}
+.ship-box-h svg{flex-shrink:0;}
 /* 藝廊 lookbook */
 .lookbook{max-width:1100px;margin:0 auto;padding:36px 20px 8px;}
 .lookbook .car-slide>img{height:340px;}
@@ -681,7 +684,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0625f</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0627a</div>
 </footer>
 
 <!-- MODALS -->
@@ -752,14 +755,15 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
 <div class="moverlay" id="discountEditModal">
   <div class="modal">
     <button class="mclose" onclick="closeModal('discountEditModal')">✕</button>
-    <h3>折扣設定</h3><p class="msub">建立折扣碼優惠</p>
+    <h3 id="discModalTitle">折扣設定</h3><p class="msub">建立折扣碼優惠</p>
     <div class="fg"><label>折扣碼</label><input id="dCode" placeholder="例：JU2024"></div>
     <div class="fg"><label>折扣金額 (NT$)</label><input type="number" id="dAmount" placeholder="50"></div>
     <div class="fg"><label>說明</label><input id="dDesc" placeholder="新會員優惠"></div>
     <div class="fg"><label>開始日期（留空＝即刻生效）</label><input type="date" id="dStart"></div>
     <div class="fg"><label>結束日期（留空＝永久有效）</label><input type="date" id="dEnd"></div>
     <div class="fg"><label>排除分類（勾選的分類不參與此折扣）</label><div id="dExCats" class="disc-excats"></div></div>
-    <button class="sub-btn" onclick="saveDiscount()">儲存折扣碼</button>
+    <div class="fg" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="dOnce" style="width:auto"><label style="margin-bottom:0">每個帳號限用一次</label></div>
+    <button class="sub-btn" id="discSaveBtn" onclick="saveDiscount()">儲存折扣碼</button>
   </div>
 </div>
 
@@ -772,6 +776,7 @@ var S={
   selectedCat:'全部',shopPage:1,searchQuery:'',favOnly:false,lookbook:[],editingProductId:null,editingImgData:null,_prodsReady:false,
   nextOrderId:1001,nextProductId:7,orders:[],
   discounts:[{code:'JU2024',amount:50,desc:'新會員優惠'},{code:'SPRING',amount:100,desc:'春季促銷'}],
+  welcomeCoupon:{enabled:false,amount:50,days:30,desc:'新會員首購禮'},
   members:[
     {id:1,name:'小花媽媽',email:'mom@example.com',pwd:'123456',phone:'0912000001',ig:'@momflower',isAdmin:false}
   ],
@@ -814,6 +819,14 @@ function startFirebaseShop(){
       S.linePay=Object.assign({},S.linePay,cfg.linePay);
       var _pcl=document.getElementById('page-cart');if(_pcl&&_pcl.classList.contains('active'))renderCart();
       if(document.getElementById('paymentSettings'))renderPayment();
+    }
+    if(cfg&&Array.isArray(cfg.ticker)){
+      S.ticker=cfg.ticker;renderTicker();
+      if(document.getElementById('bannerSettings'))renderBanners();
+    }
+    if(cfg&&cfg.welcomeCoupon&&typeof cfg.welcomeCoupon==='object'){
+      S.welcomeCoupon=Object.assign({},S.welcomeCoupon,cfg.welcomeCoupon);
+      if(document.getElementById('memberCouponAdmin'))renderMemberCoupons();
     }
   });}
   if(window.FB.onAuth){window.FB.onAuth(handleAuthUser);}
@@ -972,6 +985,7 @@ function doRegister(){
   if(!window.FB||!window.FB.registerUser){
     if(S.members.some(function(m){return m.email===email;})){showToast('此 Email 已註冊過囉');return;}
     var u0={id:Date.now(),name:name,email:email,pwd:pwd,phone:phone,ig:ig,isAdmin:false,coupons:[],favs:getFavs()};
+    var _wc0=welcomeCouponObj();if(_wc0)u0.coupons.push(_wc0);
     S.members.push(u0);S.currentUser=u0;
     var mb0=document.getElementById('memberBtn');if(mb0)mb0.textContent=u0.name;
     showToast('註冊成功，歡迎加入 Ju');showPage('home');return;
@@ -979,6 +993,7 @@ function doRegister(){
   S._registering=true;
   window.FB.registerUser(email,pwd).then(function(uid){
     var u={id:uid,uid:uid,name:name,email:email,phone:phone,ig:ig,isAdmin:false,coupons:[],favs:getFavs()};
+    var _wc=welcomeCouponObj();if(_wc)u.coupons.push(_wc);
     return window.FB.saveMember(u).then(function(){
       S.currentUser=u;
       var mb=document.getElementById('memberBtn');if(mb)mb.textContent=u.name;
@@ -1611,6 +1626,7 @@ function applyDiscount(){
   if(ds==='before'){showToast('此折扣 '+f.start+' 起才能使用');return;}
   if(ds==='after'){showToast('此折扣碼已過期');return;}
   if(f.exCats&&f.exCats.length&&discEligibleSub(f)<=0){showToast('購物車內商品不適用此折扣碼');return;}
+  if(discUsedByUser(f)){showToast('此折扣碼每個帳號限用一次，您已使用過');return;}
   S.appliedDiscount=f;var amt=appliedDiscAmt();showToast('折扣套用成功！折扣 NT$ '+amt+'');renderCart();
 }
 
@@ -1628,7 +1644,8 @@ function checkoutForm(total,hasC){
     +'<div id="prepaidSection" style="display:none;margin-top:14px">'
     +'<div id="bankInfo" style="display:none"><div class="pay-info"><strong> 台新銀行（812）</strong>帳號：20730100008145<br>訂單成立後請 48 小時內匯款，並至「會員 → 訂單」上傳付款截圖通知付款</div></div>'
     +'<div id="linePayInfo" style="display:none">'+linePayBlock()+'</div>'
-    +'<p style="font-size:12px;color:var(--text-light);margin-top:12px;margin-bottom:8px">選擇寄送方式</p>'
+    +'<div class="ship-box">'
+    +'<div class="ship-box-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5h10v9H3zM13 9.5h4l3.5 3.5v2.5H13z"/><circle cx="7" cy="17.5" r="1.7"/><circle cx="17.5" cy="17.5" r="1.7"/></svg>選擇寄送方式</div>'
     +'<div class="radio-grp">'
     +'<label class="radio-opt" id="ship-711" onclick="selShip(\'711\')">'
     +'<input type="radio" name="ship" value="711" onchange="selShip(\'711\')"> 7-11 超商取貨</label>'
@@ -1637,6 +1654,7 @@ function checkoutForm(total,hasC){
     +'</div>'
     +'<div id="field-711" style="display:none;margin-top:10px" class="fg"><label>7-11 店名或店號</label><input id="storeInput" value="'+(S.currentUser&&S.currentUser.defaultStore?S.currentUser.defaultStore:'')+'" placeholder="例：台北市大安區信義門市"></div>'
     +'<div id="field-home" style="display:none;margin-top:10px" class="fg"><label>收件地址</label><input id="addrInput" value="'+(S.currentUser&&S.currentUser.defaultAddr?S.currentUser.defaultAddr:'')+'" placeholder="縣市、鄉鎮市區、詳細地址"></div>'
+    +'</div>'
     +'</div>'
     +'<div id="codSection" style="display:none;margin-top:14px">'
     +'<div class="pay-info" style="margin-bottom:10px"> 7-11 貨到付款採用賣貨便物流，下單完成後我們會私訊提供賣貨便下單連結，請記得追蹤粉專以免漏接訊息</div>'
@@ -1751,6 +1769,7 @@ function selShip(t){
 function placeOrder(total){
   if(!S.paymentMethod){showToast('請選擇付款方式');return;}
   if((S.paymentMethod==='bank'||S.paymentMethod==='linepay')&&!S.shippingMethod){showToast('請選擇寄送方式');return;}
+  if(S.appliedDiscount&&discUsedByUser(S.appliedDiscount)){showToast('此折扣碼每個帳號限用一次，您已使用過');S.appliedDiscount=null;renderCart();return;}
   var nm=(document.getElementById('rcvName')||{}).value||'';
   var ph=(document.getElementById('rcvPhone')||{}).value||'';
   if(!nm.trim()||!ph.trim()){showToast('請填寫收件人資訊');return;}
@@ -1997,6 +2016,20 @@ function renderMemberCoupons(){
     +'<div class="fg"><label>開始日期</label><input type="date" id="couponFrom" style="width:100%;box-sizing:border-box"></div>'
     +'<div class="fg"><label>結束日期（留空＝無期限）</label><input type="date" id="couponUntil" style="width:100%;box-sizing:border-box"></div>'
     +'<button class="abtn pr" style="align-self:flex-start" onclick="issueCoupon()">發放折扣</button></div>'
+    +'<div class="disc-card" style="flex-direction:column;align-items:stretch;gap:10px;margin-top:14px">'
+    +'<div style="font-weight:600;color:var(--cocoa);font-size:14px">🎁 新會員自動贈券</div>'
+    +'<label style="display:flex;align-items:center;gap:8px;font-size:13px"><input type="checkbox" id="wcEnabled" '+(S.welcomeCoupon.enabled?'checked':'')+' style="width:auto">啟用：新會員註冊後自動獲得優惠券</label>'
+    +'<div style="display:flex;gap:10px"><div class="fg" style="flex:1;min-width:0"><label>金額</label><input type="number" id="wcAmount" value="'+(S.welcomeCoupon.amount||'')+'" style="width:100%;box-sizing:border-box"></div>'
+    +'<div class="fg" style="flex:1;min-width:0"><label>有效天數（0＝無期限）</label><input type="number" id="wcDays" value="'+(S.welcomeCoupon.days||0)+'" style="width:100%;box-sizing:border-box"></div></div>'
+    +'<div class="fg"><label>說明</label><input id="wcDesc" value="'+((S.welcomeCoupon.desc||'').replace(/"/g,'&quot;'))+'" style="width:100%;box-sizing:border-box" placeholder="新會員首購禮"></div>'
+    +'<button class="abtn pr" style="align-self:flex-start" onclick="saveWelcomeCoupon()">儲存設定</button></div>'
+    +'<div class="disc-card" style="flex-direction:column;align-items:stretch;gap:10px;margin-top:14px">'
+    +'<div style="font-weight:600;color:var(--cocoa);font-size:14px">📣 群發優惠券（週年慶／活動）</div>'
+    +'<p style="font-size:12px;color:var(--text-light);margin:0">一次發送給全部 '+mem.length+' 位會員，適合週年慶或節日活動。</p>'
+    +'<div style="display:flex;gap:10px"><div class="fg" style="flex:1;min-width:0"><label>金額</label><input type="number" id="bcAmount" style="width:100%;box-sizing:border-box" placeholder="100"></div>'
+    +'<div class="fg" style="flex:1;min-width:0"><label>有效天數（0＝無期限）</label><input type="number" id="bcDays" style="width:100%;box-sizing:border-box" placeholder="14"></div></div>'
+    +'<div class="fg"><label>說明</label><input id="bcDesc" style="width:100%;box-sizing:border-box" placeholder="週年慶優惠"></div>'
+    +'<button class="abtn pr" style="align-self:flex-start" onclick="broadcastCoupon()">發送給所有會員</button></div>'
     +(rows.length?'<div class="table-scroll"><table class="dtable" style="margin-top:14px"><thead><tr><th>會員</th><th>金額</th><th>使用期間</th><th>狀態</th></tr></thead><tbody>'+rows.join('')+'</tbody></table></div>':'<p style="font-size:13px;color:var(--text-light);margin-top:10px">尚未發放任何會員折扣</p>');
 }
 function issueCoupon(){
@@ -2009,7 +2042,31 @@ function issueCoupon(){
   var m=S.members.find(function(x){return x.id===mid;});if(!m)return;
   if(!m.coupons)m.coupons=[];
   m.coupons.push({id:Date.now(),amount:amt,desc:desc,from:from,until:until,used:false});
+  persistMember(m);
   renderMemberCoupons();showToast('已發放折扣給 '+m.name+'');
+}
+function welcomeCouponObj(){
+  var w=S.welcomeCoupon;if(!w||!w.enabled||!w.amount)return null;
+  var today=new Date();var from=today.toISOString().slice(0,10);var until='';
+  if(w.days>0){until=new Date(today.getTime()+w.days*86400000).toISOString().slice(0,10);}
+  return {id:Date.now(),amount:w.amount,desc:w.desc||'新會員首購禮',from:from,until:until,used:false};
+}
+function saveWelcomeCoupon(){
+  S.welcomeCoupon={enabled:document.getElementById('wcEnabled').checked,amount:parseInt(document.getElementById('wcAmount').value)||0,days:parseInt(document.getElementById('wcDays').value)||0,desc:document.getElementById('wcDesc').value.trim()||'新會員首購禮'};
+  if(window.FB&&window.FB.saveConfig){window.FB.saveConfig({welcomeCoupon:S.welcomeCoupon}).then(function(){showToast('新會員贈券設定已儲存');}).catch(function(e){showToast('儲存失敗：'+(e.code||e.message));});}else{showToast('已儲存（離線）');}
+}
+function broadcastCoupon(){
+  var amt=parseInt(document.getElementById('bcAmount').value)||0;
+  var desc=document.getElementById('bcDesc').value.trim()||'週年慶優惠';
+  var days=parseInt(document.getElementById('bcDays').value)||0;
+  if(!amt){showToast('請填寫折扣金額');return;}
+  var mem=S.members.filter(function(m){return !m.isAdmin;});
+  if(!mem.length){showToast('目前沒有會員');return;}
+  if(!confirm('確定發送 NT$ '+amt+' 優惠券給全部 '+mem.length+' 位會員？'))return;
+  var today=new Date();var from=today.toISOString().slice(0,10);var until='';
+  if(days>0){until=new Date(today.getTime()+days*86400000).toISOString().slice(0,10);}
+  mem.forEach(function(m){if(!m.coupons)m.coupons=[];m.coupons.push({id:Date.now()+Math.floor(Math.random()*100000),amount:amt,desc:desc,from:from,until:until,used:false});persistMember(m);});
+  renderMemberCoupons();showToast('已發送優惠券給 '+mem.length+' 位會員');
 }
 function searchCouponMember(q){
   var box=document.getElementById('couponSearchResults');if(!box)return;
@@ -2426,8 +2483,11 @@ function renderDiscs(){
     var dateLine=(d.start||d.end)?('<div style="font-size:11px;color:var(--text-light);margin-top:3px">期間：'+(d.start||'不限')+' ～ '+(d.end||'不限')+'</div>'):'';
     var ds=discActive(d);
     var stTag=ds==='before'?'<span style="font-size:10px;background:#EEE;color:#777;border-radius:8px;padding:1px 7px;margin-left:6px">未開始</span>':ds==='after'?'<span style="font-size:10px;background:#FDECEA;color:#C0392B;border-radius:8px;padding:1px 7px;margin-left:6px">已過期</span>':'';
-    return '<div class="disc-card"><div><div style="font-size:14px;font-weight:500;margin-bottom:4px">'+d.desc+stTag+'</div><div style="font-size:12px;color:var(--text-light)">'+d.code+'</div>'+dateLine+exLine+'</div>'
-      +'<div style="display:flex;align-items:center;gap:10px"><div class="disc-tag">-NT$ '+d.amount+'</div>'
+    var onceTag=d.once?'<span style="font-size:10px;background:#EAF3FB;color:#2F6DA0;border-radius:8px;padding:1px 7px;margin-left:6px">限用一次/帳號</span>':'';
+    return '<div class="disc-card"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:500;margin-bottom:4px">'+d.desc+stTag+onceTag+'</div><div style="font-size:12px;color:var(--text-light)">'+d.code+'</div>'+dateLine+exLine+'</div>'
+      +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end"><div class="disc-tag">-NT$ '+d.amount+'</div>'
+      +'<button class="abtn sc" onclick="openDiscountModal('+i+')">編輯</button>'
+      +'<button class="abtn sc" onclick="dupDisc('+i+')">複製</button>'
       +'<button class="abtn dg" onclick="delDisc('+i+')">刪除</button></div></div>';
   }).join('');
 }
@@ -2531,21 +2591,32 @@ function renderBanners(){
   html+='<div style="margin-top:10px;display:flex;flex-direction:column;gap:10px">';
   if(!S.ticker.length)html+='<p style="font-size:13px;color:var(--text-light)">尚未設定，首頁橫幅下方將不顯示跑馬燈。</p>';
   html+=S.ticker.map(function(t,i){
-    return '<div class="disc-card"><span style="font-size:13px;flex:1;'+(t.enabled?'':'color:var(--text-light);text-decoration:line-through')+'">'+t.text+'</span>'
-      +'<div style="display:flex;gap:6px;flex-shrink:0">'
+    if(S._tkEdit===i){
+      return '<div class="disc-card" style="flex-direction:column;align-items:stretch;gap:8px"><input id="tkEditText" value="'+(t.text||'').replace(/"/g,'&quot;')+'" style="width:100%;box-sizing:border-box">'
+        +'<div style="display:flex;gap:6px;justify-content:flex-end"><button class="abtn pr" onclick="saveTickerEdit('+i+')">儲存</button><button class="abtn sc" onclick="cancelTickerEdit()">取消</button></div></div>';
+    }
+    return '<div class="disc-card"><span style="font-size:13px;flex:1;min-width:0;'+(t.enabled?'':'color:var(--text-light);text-decoration:line-through')+'">'+t.text+'</span>'
+      +'<div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">'
+      +'<button class="abtn sc" onclick="editTickerMsg('+i+')">編輯</button>'
+      +'<button class="abtn sc" onclick="dupTickerMsg('+i+')">複製</button>'
       +'<button class="abtn sc" onclick="toggleTickerMsg('+i+')">'+(t.enabled?'停用':'啟用')+'</button>'
       +'<button class="abtn dg" onclick="delTickerMsg('+i+')">刪除</button></div></div>';
   }).join('');
   html+='</div>';
   el.innerHTML=html;
 }
+function persistTicker(){if(window.FB&&window.FB.saveConfig){window.FB.saveConfig({ticker:S.ticker}).catch(function(e){showToast('跑馬燈儲存失敗：'+(e.code||e.message));});}}
 function addTickerMsg(){
   var inp=document.getElementById('tkNewText');var v=(inp.value||'').trim();if(!v)return;
   S.ticker.push({text:v,enabled:true});inp.value='';
-  renderBanners();renderTicker();showToast('跑馬燈訊息已新增');
+  persistTicker();renderBanners();renderTicker();showToast('跑馬燈訊息已新增');
 }
-function toggleTickerMsg(i){S.ticker[i].enabled=!S.ticker[i].enabled;renderBanners();renderTicker();}
-function delTickerMsg(i){S.ticker.splice(i,1);renderBanners();renderTicker();showToast('已刪除');}
+function toggleTickerMsg(i){S.ticker[i].enabled=!S.ticker[i].enabled;persistTicker();renderBanners();renderTicker();}
+function delTickerMsg(i){if(!confirm('確定刪除此跑馬燈訊息？'))return;S.ticker.splice(i,1);if(S._tkEdit===i)S._tkEdit=null;persistTicker();renderBanners();renderTicker();showToast('已刪除');}
+function editTickerMsg(i){S._tkEdit=i;renderBanners();}
+function cancelTickerEdit(){S._tkEdit=null;renderBanners();}
+function saveTickerEdit(i){var inp=document.getElementById('tkEditText');var v=(inp&&inp.value||'').trim();if(!v){showToast('內容不可空白');return;}S.ticker[i].text=v;S._tkEdit=null;persistTicker();renderBanners();renderTicker();showToast('已更新');}
+function dupTickerMsg(i){var t=S.ticker[i];if(!t)return;S.ticker.splice(i+1,0,{text:t.text,enabled:t.enabled});persistTicker();renderBanners();renderTicker();showToast('已複製');}
 
 function renderPayment(){
   var lp=S.linePay||{};
@@ -2817,7 +2888,17 @@ function renderDiscExCats(sel){
     return '<label><input type="checkbox" class="dExCat" value="'+c+'" '+(sel.indexOf(c)>=0?'checked':'')+'>'+c+'</label>';
   }).join('');
 }
-function openDiscountModal(){['dCode','dAmount','dDesc','dStart','dEnd'].forEach(function(x){var e=document.getElementById(x);if(e)e.value='';});renderDiscExCats([]);document.getElementById('discountEditModal').classList.add('open');}
+function openDiscountModal(i){
+  S._discEdit=(typeof i==='number')?i:null;
+  var d=S._discEdit!=null?S.discounts[i]:null;
+  var sv=function(id,val){var e=document.getElementById(id);if(e)e.value=val;};
+  sv('dCode',d?d.code:'');sv('dAmount',d?d.amount:'');sv('dDesc',d?(d.desc||''):'');sv('dStart',d?(d.start||''):'');sv('dEnd',d?(d.end||''):'');
+  var oc=document.getElementById('dOnce');if(oc)oc.checked=!!(d&&d.once);
+  renderDiscExCats(d&&d.exCats?d.exCats:[]);
+  var ttl=document.getElementById('discModalTitle');if(ttl)ttl.textContent=d?'編輯折扣碼':'折扣設定';
+  var btn=document.getElementById('discSaveBtn');if(btn)btn.textContent=d?'儲存變更':'儲存折扣碼';
+  document.getElementById('discountEditModal').classList.add('open');
+}
 function persistDiscounts(){if(window.FB&&window.FB.saveConfig){window.FB.saveConfig({discounts:S.discounts}).catch(function(e){showToast('折扣儲存失敗：'+(e.code||e.message));});}}
 function saveDiscount(){
   var c=document.getElementById('dCode').value.trim().toUpperCase();
@@ -2828,12 +2909,27 @@ function saveDiscount(){
   var st=document.getElementById('dStart').value;
   var en=document.getElementById('dEnd').value;
   if(st&&en&&en<st){showToast('結束日期不可早於開始日期');return;}
-  var obj={code:c,amount:a,desc:d};if(ex.length)obj.exCats=ex;if(st)obj.start=st;if(en)obj.end=en;
-  S.discounts.push(obj);
+  var once=document.getElementById('dOnce')&&document.getElementById('dOnce').checked;
+  var dup=S.discounts.some(function(x,xi){return x.code===c&&xi!==S._discEdit;});
+  if(dup){showToast('折扣碼「'+c+'」已存在');return;}
+  var obj={code:c,amount:a,desc:d};if(ex.length)obj.exCats=ex;if(st)obj.start=st;if(en)obj.end=en;if(once)obj.once=true;
+  if(S._discEdit!=null){S.discounts[S._discEdit]=obj;S._discEdit=null;}else{S.discounts.push(obj);}
   persistDiscounts();
-  closeModal('discountEditModal');renderDiscs();showToast('折扣碼已新增');
+  closeModal('discountEditModal');renderDiscs();showToast('折扣碼已儲存');
 }
-function delDisc(i){S.discounts.splice(i,1);persistDiscounts();renderDiscs();showToast('折扣碼已刪除');}
+function delDisc(i){if(!confirm('確定刪除此折扣碼？'))return;S.discounts.splice(i,1);persistDiscounts();renderDiscs();showToast('折扣碼已刪除');}
+function dupDisc(i){
+  var d=S.discounts[i];if(!d)return;
+  var base=d.code+'-COPY',code=base,n=2;
+  while(S.discounts.some(function(x){return x.code===code;})){code=base+n;n++;}
+  var obj=JSON.parse(JSON.stringify(d));obj.code=code;
+  S.discounts.push(obj);persistDiscounts();renderDiscs();showToast('已複製為 '+code+'，可再編輯');
+}
+function discUsedByUser(d){
+  if(!d||!d.once||!S.currentUser)return false;
+  var uid=S.currentUser.id,uid2=S.currentUser.uid;
+  return (S.orders||[]).some(function(o){return o.discountCode===d.code&&o.status!=='cancelled'&&(o.userId===uid||o.userId===uid2);});
+}
 
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.moverlay').forEach(function(m){
