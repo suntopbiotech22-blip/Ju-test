@@ -543,6 +543,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
         <div class="fg"><label>電子郵件</label><input type="email" id="loginEmail" placeholder="your@email.com"></div>
         <div class="fg"><label>密碼</label><input type="password" id="loginPwd" placeholder="請輸入密碼"></div>
         <button class="sub-btn" onclick="doLogin()">登入</button>
+        <button onclick="doForgotPwd()" style="display:block;width:100%;background:none;border:none;color:var(--dusty-rose);font-size:13px;margin-top:10px;font-family:inherit;cursor:pointer">忘記密碼？</button>
       </div>
       <div id="registerForm" style="display:none">
         <div class="fg"><label>姓名</label><input type="text" id="regName" placeholder="您的姓名"></div>
@@ -622,7 +623,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
           <div style="margin-top:16px" id="adminProductList"></div>
         </div>
         <div class="adm-panel" id="panel-orders"><h2>訂單管理</h2><button class="abtn pr" style="margin-bottom:14px" onclick="exportOrders()"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 4 5-4M5 20h14"/></svg> 匯出 Excel</button><div id="adminOrderList"></div></div>
-        <div class="adm-panel" id="panel-members"><h2>會員資料</h2><button class="abtn pr" style="margin-bottom:14px" onclick="exportMembers()"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 4 5-4M5 20h14"/></svg> 匯出 Excel</button><div class="table-scroll"><table class="dtable" id="adminMemberTable"></table></div></div>
+        <div class="adm-panel" id="panel-members"><h2>會員資料</h2><button class="abtn pr" style="margin-bottom:14px" onclick="exportMembers()"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 4 5-4M5 20h14"/></svg> 匯出 Excel</button><div id="membSortBar" style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div><div class="table-scroll"><table class="dtable" id="adminMemberTable"></table></div></div>
         <div class="adm-panel" id="panel-inventory"><h2>庫存管理</h2><div id="inventoryList"></div></div>
         <div class="adm-panel" id="panel-discounts">
           <h2>折扣設定</h2>
@@ -697,7 +698,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0627c</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0627e</div>
 </footer>
 
 <!-- MODALS -->
@@ -730,6 +731,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
 </div>
 <div class="moverlay" id="productModal"><div class="modal"><button class="mclose" onclick="closeModal('productModal')">✕</button><div id="modalContent"></div></div></div>
 <div class="moverlay" id="orderDetailModal"><div class="modal"><button class="mclose" onclick="closeModal('orderDetailModal')">✕</button><div id="orderDetailContent"></div></div></div>
+<div class="moverlay" id="memberOrdersModal"><div class="modal"><button class="mclose" onclick="closeModal('memberOrdersModal')">✕</button><h3 style="margin-bottom:10px">會員訂單</h3><div id="memberOrdersBody"></div></div></div>
 <div class="moverlay" id="confirmModal"><div class="modal" style="max-width:340px;text-align:center"><p id="confirmMsg" style="margin:6px 0 20px;color:var(--cocoa);font-size:15px"></p><div style="display:flex;gap:10px"><button class="abtn" style="flex:1;border-radius:30px;background:#fff;border:1.5px solid var(--gold);color:var(--cocoa)" onclick="closeModal('confirmModal')">取消</button><button class="abtn pr" style="flex:1;border-radius:30px" id="confirmOkBtn">確定</button></div></div></div>
 <div class="moverlay" id="productEditModal">
   <div class="modal">
@@ -946,6 +948,33 @@ function doLogin(){
   }).catch(function(err){
     var c=err&&err.code;
     showToast((c==='auth/invalid-credential'||c==='auth/wrong-password'||c==='auth/user-not-found'||c==='auth/invalid-email')?'帳號或密碼錯誤':(c==='auth/too-many-requests'?'嘗試次數過多，請稍後再試':'登入失敗，請稍後再試'));
+  });
+}
+function doForgotPwd(){
+  var e=(document.getElementById('loginEmail').value||'').trim();
+  if(!e){showToast('請先輸入註冊用的 Email');return;}
+  if(!window.FB||!window.FB.sendReset){showToast('目前無法寄送，請稍後再試');return;}
+  window.FB.sendReset(e).then(function(){showToast('重設密碼信已寄出，請至信箱收信（含垃圾信匣）');}).catch(function(err){var c=err&&err.code;showToast(c==='auth/invalid-email'?'Email 格式不正確':(c==='auth/user-not-found'?'查無此 Email 的註冊紀錄':'寄送失敗，請稍後再試'));});
+}
+function deleteMyAccount(){
+  if(!S.currentUser){showToast('請先登入');return;}
+  if(S.currentUser.isAdmin){showToast('管理員帳號無法在此刪除');return;}
+  if(!confirm('確定要永久刪除帳號嗎？此動作無法復原，會員資料與專屬折扣將一併刪除。'))return;
+  if(!window.FB||!window.FB.deleteAccount){
+    S.members=S.members.filter(function(m){return String(m.id)!==String(S.currentUser.id);});
+    S.currentUser=null;var mb0=document.getElementById('memberBtn');if(mb0)mb0.textContent='會員';
+    showToast('帳號已刪除');showPage('home');return;
+  }
+  var pwd=window.prompt('為了安全，請再次輸入您的密碼以確認刪除：');
+  if(pwd==null)return; if(!pwd){showToast('請輸入密碼');return;}
+  window.FB.deleteAccount(pwd).then(function(){
+    if(S._unsubOrders){try{S._unsubOrders();}catch(e){}}
+    S.currentUser=null;S.orders=[];
+    var mb=document.getElementById('memberBtn');if(mb)mb.textContent='會員';
+    showToast('帳號已刪除，感謝您的使用');showPage('home');
+  }).catch(function(err){
+    var c=err&&err.code;
+    showToast((c==='auth/wrong-password'||c==='auth/invalid-credential')?'密碼錯誤，刪除失敗':(c==='auth/too-many-requests'?'嘗試次數過多，請稍後再試':(c==='auth/requires-recent-login'?'請先登出再重新登入後再試一次':'刪除失敗，請稍後再試')));
   });
 }
 function memberLogin(e,p){
@@ -1663,7 +1692,7 @@ function checkoutForm(total,hasC){
     +'<div class="pay-info" style="margin-bottom:10px"> 7-11 貨到付款採用賣貨便物流，下單完成後我們會私訊提供賣貨便下單連結，請記得追蹤粉專以免漏接訊息</div>'
     +'<div id="codBankInfo" style="display:none"><div class="pay-info"><strong> 客製作品付款說明</strong>訂金請先「銀行匯款」（台新銀行 812，帳號 20730100008145），尾款於商品完成後以「7-11 賣貨便貨到付款」</div></div>'
     +'</div></div>'
-    +'<div class="fsec" id="shipSection" style="display:none"><h3><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5h10v9H3zM13 9.5h4l3.5 3.5v2.5H13z"/><circle cx="7" cy="17.5" r="1.7"/><circle cx="17.5" cy="17.5" r="1.7"/></svg>寄送方式</h3>'
+    +'<div class="fsec" id="shipSection" style="display:'+((S.paymentMethod==='cod')?'none':'block')+'"><h3><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5h10v9H3zM13 9.5h4l3.5 3.5v2.5H13z"/><circle cx="7" cy="17.5" r="1.7"/><circle cx="17.5" cy="17.5" r="1.7"/></svg>寄送方式</h3>'
     +'<div class="radio-grp">'
     +'<label class="radio-opt" id="ship-711" onclick="selShip(\'711\')">'
     +'<input type="radio" name="ship" value="711" onchange="selShip(\'711\')"> 7-11 超商取貨</label>'
@@ -1751,7 +1780,7 @@ function selPay(t){
   /* 顯示對應區塊 */
   var prepaid=(t==='bank'||t==='linepay');
   var ps=document.getElementById('prepaidSection');if(ps)ps.style.display=prepaid?'block':'none';
-  var ss=document.getElementById('shipSection');if(ss)ss.style.display=prepaid?'block':'none';
+  var ss=document.getElementById('shipSection');if(ss)ss.style.display=(t==='cod')?'none':'block';
   var bi=document.getElementById('bankInfo');if(bi)bi.style.display=t==='bank'?'block':'none';
   var li=document.getElementById('linePayInfo');if(li)li.style.display=t==='linepay'?'block':'none';
   var cs=document.getElementById('codSection');if(cs)cs.style.display=t==='cod'?'block':'none';
@@ -2079,7 +2108,7 @@ function issueCoupon(){
   var from=document.getElementById('couponFrom').value||new Date().toISOString().slice(0,10);
   var until=document.getElementById('couponUntil').value;
   if(!mid||!amt){showToast('請選擇會員並填寫折扣金額');return;}
-  var m=S.members.find(function(x){return x.id===mid;});if(!m)return;
+  var m=S.members.find(function(x){return String(x.id)===String(mid);});if(!m)return;
   if(!m.coupons)m.coupons=[];
   m.coupons.push({id:Date.now(),amount:amt,desc:desc,from:from,until:until,used:false});
   persistMember(m);
@@ -2117,12 +2146,12 @@ function searchCouponMember(q){
   }).slice(0,8);
   if(!mem.length){box.innerHTML='<div style="font-size:12px;color:var(--text-light);padding:6px 0">找不到符合的會員</div>';return;}
   box.innerHTML=mem.map(function(m){
-    return '<div onclick="selectCouponMember('+m.id+')" style="padding:8px 10px;border:1px solid var(--linen);border-radius:8px;margin-top:6px;cursor:pointer;font-size:13px;background:var(--cream)">'+m.name+(m.ig?' · '+m.ig:'')+'<br><span style="font-size:11px;color:var(--text-light)">'+(m.email||'')+'</span></div>';
+    return '<div onclick="selectCouponMember(\''+m.id+'\')" style="padding:8px 10px;border:1px solid var(--linen);border-radius:8px;margin-top:6px;cursor:pointer;font-size:13px;background:var(--cream)">'+m.name+(m.ig?' · '+m.ig:'')+'<br><span style="font-size:11px;color:var(--text-light)">'+(m.email||'')+'</span></div>';
   }).join('');
 }
 function selectCouponMember(id){
   S._couponMemberId=id;
-  var m=S.members.find(function(x){return x.id===id;});
+  var m=S.members.find(function(x){return String(x.id)===String(id);});
   var sel=document.getElementById('couponSelected');if(sel&&m)sel.innerHTML='已選擇：<b>'+m.name+'</b>'+(m.ig?'（'+m.ig+'）':'');
   var box=document.getElementById('couponSearchResults');if(box)box.innerHTML='';
   var inp=document.getElementById('couponSearch');if(inp&&m)inp.value=m.name;
@@ -2474,11 +2503,48 @@ function batchDeleteOrders(){
 }
 
 function renderAdminMembs(){
-  document.getElementById('adminMemberTable').innerHTML='<thead><tr><th>姓名</th><th>Email</th><th>電話</th><th>IG</th><th>訂單數</th></tr></thead><tbody>'
-    +S.members.filter(function(m){return !m.isAdmin;}).map(function(m){
-      return '<tr><td>'+m.name+'</td><td>'+m.email+'</td><td>'+(m.phone||'—')+'</td><td>'+(m.ig||'—')+'</td>'
-        +'<td>'+S.orders.filter(function(o){return o.userId===m.id;}).length+'</td></tr>';
+  var sort=S._membSort||'recent';
+  var list=S.members.filter(function(m){return !m.isAdmin;}).map(function(m){
+    var os=S.orders.filter(function(o){return o.userId===m.id;});
+    var last=os.reduce(function(mx,o){var t=o.created||o.date||'';return t>mx?t:mx;},'');
+    return {m:m,count:os.length,last:last};
+  });
+  if(sort==='count')list.sort(function(a,b){return b.count-a.count||(b.last>a.last?1:b.last<a.last?-1:0);});
+  else if(sort==='recent')list.sort(function(a,b){return (b.last>a.last?1:b.last<a.last?-1:0)||b.count-a.count;});
+  var bar=document.getElementById('membSortBar');
+  if(bar){var chip=function(k,lbl){return '<button class="abtn '+(sort===k?'pr':'sc')+'" onclick="setMembSort(\''+k+'\')">'+lbl+'</button>';};
+    bar.innerHTML='<span style="font-size:12px;color:var(--text-light)">排序：</span>'+chip('recent','最近下單')+chip('count','下單數')+chip('default','預設');}
+  var fmt=function(l){if(!l)return '—';var d=new Date(l);return isNaN(d.getTime())?String(l).slice(0,10):(d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate());};
+  document.getElementById('adminMemberTable').innerHTML='<thead><tr><th>姓名</th><th>Email</th><th>電話</th><th>IG</th><th>訂單數</th><th>最近下單</th></tr></thead><tbody>'
+    +list.map(function(r){var m=r.m;
+      return '<tr style="cursor:pointer" onclick="showMemberOrders(\''+m.id+'\')"><td>'+m.name+' <span style="color:var(--dusty-rose)">›</span></td><td>'+m.email+'</td><td>'+(m.phone||'—')+'</td><td>'+(m.ig||'—')+'</td>'
+        +'<td>'+r.count+'</td><td style="font-size:12px;white-space:nowrap">'+fmt(r.last)+'</td></tr>';
     }).join('')+'</tbody>';
+}
+function setMembSort(k){S._membSort=k;renderAdminMembs();}
+function showMemberOrders(id){
+  var m=S.members.find(function(x){return String(x.id)===String(id);});if(!m)return;
+  var os=S.orders.filter(function(o){return String(o.userId)===String(m.id);}).slice().sort(function(a,b){return (b.id||0)-(a.id||0);});
+  var head='<div style="font-weight:600;color:var(--cocoa);font-size:15px">'+m.name+'</div><div style="font-size:12px;color:var(--text-light);margin-bottom:12px">'+(m.email||'')+'　共 '+os.length+' 筆訂單</div>';
+  var body=document.getElementById('memberOrdersBody');
+  if(!os.length){body.innerHTML=head+'<p style="font-size:13px;color:var(--text-light);text-align:center;padding:20px">此會員尚無訂單</p>';}
+  else{body.innerHTML=head+os.map(function(o){
+    return '<div class="ord-card" style="cursor:pointer;text-align:left;margin-bottom:10px" onclick="openOrderFromMember('+o.id+')">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:14px;font-weight:500">訂單 #'+o.id+'</div><div style="font-size:12px;color:var(--text-light)">'+o.date+'</div></div><span class="sbadge s-'+o.status+'">'+sLabel(o.status)+'</span></div>'
+      +'<div style="font-size:13px;color:var(--text-light);margin-top:6px">'+(o.items||[]).map(function(i){return i.name+'×'+i.qty;}).join('、')+'</div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span style="font-size:14px;font-weight:600;color:var(--cocoa)">合計 NT$ '+o.total+'</span><span style="font-size:12px;color:var(--dusty-rose)">查看明細 ›</span></div></div>';
+  }).join('');}
+  body.innerHTML+='<button class="abtn dg" style="width:100%;margin-top:14px" onclick="adminDeleteMember(\''+m.id+'\')">刪除此會員帳號資料</button>';
+  document.getElementById('memberOrdersModal').classList.add('open');
+}
+function openOrderFromMember(id){closeModal('memberOrdersModal');openOrderDetail(id,true);}
+function adminDeleteMember(id){
+  var m=S.members.find(function(x){return String(x.id)===String(id);});if(!m)return;
+  if(!confirm('確定刪除會員「'+m.name+'」的帳號資料嗎？此動作無法復原（訂單紀錄會保留）。'))return;
+  var uid=m.uid||m.id;
+  var done=function(){S.members=S.members.filter(function(x){return String(x.id)!==String(id);});closeModal('memberOrdersModal');renderAdminMembs();if(document.getElementById('memberCouponAdmin'))renderMemberCoupons();showToast('已刪除會員 '+m.name);};
+  if(window.FB&&window.FB.deleteMember){window.FB.deleteMember(uid).then(done).catch(function(e){showToast('刪除失敗：'+(e.code||e.message));});}
+  else{done();}
 }
 function renderInventory(){
   var el=document.getElementById('inventoryList');if(!el)return;
@@ -2524,8 +2590,9 @@ function renderDiscs(){
     var ds=discActive(d);
     var stTag=ds==='before'?'<span style="font-size:10px;background:#EEE;color:#777;border-radius:8px;padding:1px 7px;margin-left:6px">未開始</span>':ds==='after'?'<span style="font-size:10px;background:#FDECEA;color:#C0392B;border-radius:8px;padding:1px 7px;margin-left:6px">已過期</span>':'';
     var onceTag=d.once?'<span style="font-size:10px;background:#EAF3FB;color:#2F6DA0;border-radius:8px;padding:1px 7px;margin-left:6px">限用一次/帳號</span>':'';
-    return '<div class="disc-card"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:500;margin-bottom:4px">'+d.desc+stTag+onceTag+'</div><div style="font-size:12px;color:var(--text-light)">'+d.code+'</div>'+dateLine+exLine+'</div>'
-      +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end"><div class="disc-tag">-NT$ '+d.amount+'</div>'
+    return '<div class="disc-card" style="flex-direction:column;align-items:stretch;gap:10px">'
+      +'<div><div style="font-size:14px;font-weight:500;margin-bottom:4px">'+d.desc+stTag+onceTag+'</div><div style="font-size:12px;color:var(--text-light)">'+d.code+'</div>'+dateLine+exLine+'</div>'
+      +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div class="disc-tag">-NT$ '+d.amount+'</div><div style="flex:1"></div>'
       +'<button class="abtn sc" onclick="openDiscountModal('+i+')">編輯</button>'
       +'<button class="abtn sc" onclick="dupDisc('+i+')">複製</button>'
       +'<button class="abtn dg" onclick="delDisc('+i+')">刪除</button></div></div>';
@@ -2983,7 +3050,7 @@ function showToast(msg){
 </script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, getMultiFactorResolver, TotpMultiFactorGenerator, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, getMultiFactorResolver, TotpMultiFactorGenerator, onAuthStateChanged, signOut, sendPasswordResetEmail, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
 import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc, getDoc, query, where, runTransaction } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 import { getStorage, ref as storageRef, uploadString, getDownloadURL } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js';
 const firebaseConfig = {
@@ -3013,6 +3080,8 @@ window.FB={
     return resolver.resolveSignIn(assertion);
   },
   signOutAdmin:function(){return signOut(auth);},
+  sendReset:function(email){return sendPasswordResetEmail(auth,email);},
+  deleteAccount:function(pwd){var user=auth.currentUser;if(!user)return Promise.reject({code:'not-signed-in'});var uid=user.uid,email=user.email;var cred=EmailAuthProvider.credential(email,pwd);return reauthenticateWithCredential(user,cred).then(function(){return deleteDoc(doc(db,'members',uid)).catch(function(){});}).then(function(){return deleteUser(user);});},
   onAdmin:function(cb){onAuthStateChanged(auth,function(u){cb(!!u,u?u.email:'');});},
   onAuth:function(cb){onAuthStateChanged(auth,function(u){cb(u?{uid:u.uid,email:u.email}:null);});},
   registerUser:function(email,pwd){return createUserWithEmailAndPassword(auth,email,pwd).then(function(c){return c.user.uid;});},
