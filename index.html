@@ -627,6 +627,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
         <div class="adm-panel" id="panel-inventory"><h2>庫存管理</h2><div id="inventoryList"></div></div>
         <div class="adm-panel" id="panel-discounts">
           <h2>折扣設定</h2>
+          <div id="promoAdmin"></div>
           <button class="abtn pr" onclick="openDiscountModal()">＋ 新增折扣碼</button>
           <div style="margin-top:16px" id="discountList"></div>
           <div id="memberCouponAdmin"></div>
@@ -698,7 +699,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0627e</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0627g</div>
 </footer>
 
 <!-- MODALS -->
@@ -772,10 +773,13 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <button class="mclose" onclick="closeModal('discountEditModal')">✕</button>
     <h3 id="discModalTitle">折扣設定</h3><p class="msub">建立折扣碼優惠</p>
     <div class="fg"><label>折扣碼</label><input id="dCode" placeholder="例：JU2024"></div>
-    <div class="fg"><label>折扣金額 (NT$)</label><input type="number" id="dAmount" placeholder="50"></div>
+    <div class="fg"><label>折扣方式</label><div style="display:flex;gap:8px"><label style="flex:1;border:1.5px solid var(--linen);border-radius:10px;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;font-size:13px;margin:0"><input type="radio" name="dType" value="amount" checked onchange="onDiscTypeChange()" style="width:auto;margin:0">固定金額</label><label style="flex:1;border:1.5px solid var(--linen);border-radius:10px;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;font-size:13px;margin:0"><input type="radio" name="dType" value="percent" onchange="onDiscTypeChange()" style="width:auto;margin:0">折數</label></div></div>
+    <div class="fg" id="dAmountRow"><label>折扣金額 (NT$)</label><input type="number" id="dAmount" placeholder="50"></div>
+    <div class="fg" id="dPercentRow" style="display:none"><label>折數（例：9＝9折，85＝85折，5＝半價）</label><input type="number" id="dPercent" step="0.1" placeholder="9"></div>
     <div class="fg"><label>說明</label><input id="dDesc" placeholder="新會員優惠"></div>
     <div class="fg"><label>開始日期（留空＝即刻生效）</label><input type="date" id="dStart"></div>
     <div class="fg"><label>結束日期（留空＝永久有效）</label><input type="date" id="dEnd"></div>
+    <div class="fg"><label>適用分類（只勾選＝只折抵這些分類；全不勾＝全部商品）</label><div id="dIncCats" class="disc-excats"></div></div>
     <div class="fg"><label>排除分類（勾選的分類不參與此折扣）</label><div id="dExCats" class="disc-excats"></div></div>
     <div class="fg" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="dOnce" style="width:auto"><label style="margin-bottom:0">每個帳號限用一次</label></div>
     <button class="sub-btn" id="discSaveBtn" onclick="saveDiscount()">儲存折扣碼</button>
@@ -792,6 +796,8 @@ var S={
   nextOrderId:1001,nextProductId:7,orders:[],
   discounts:[{code:'JU2024',amount:50,desc:'新會員優惠'},{code:'SPRING',amount:100,desc:'春季促銷'}],
   welcomeCoupon:{enabled:false,amount:50,days:30,desc:'新會員首購禮'},
+  /* 分類促銷（後台直接套用，所選分類商品自動顯示折扣價，可選新品除外，不需折扣碼） */
+  promo:{enabled:false,cat:'全部',type:'percent',percent:9,amount:0,excludeNew:false,label:'限時優惠'},
   members:[
     {id:1,name:'小花媽媽',email:'mom@example.com',pwd:'123456',phone:'0912000001',ig:'@momflower',isAdmin:false}
   ],
@@ -842,6 +848,11 @@ function startFirebaseShop(){
     if(cfg&&cfg.welcomeCoupon&&typeof cfg.welcomeCoupon==='object'){
       S.welcomeCoupon=Object.assign({},S.welcomeCoupon,cfg.welcomeCoupon);
       if(document.getElementById('memberCouponAdmin'))renderMemberCoupons();
+    }
+    if(cfg&&cfg.promo&&typeof cfg.promo==='object'){
+      S.promo=Object.assign({},S.promo,cfg.promo);
+      renderHomeProducts();renderShopProducts();
+      if(document.getElementById('promoAdmin'))renderPromoAdmin();
     }
   });}
   if(window.FB.onAuth){window.FB.onAuth(handleAuthUser);}
@@ -1088,9 +1099,25 @@ function toggleFavFilter(){
   var c=document.getElementById('favChip');if(c)c.classList.toggle('on',S.favOnly);
   renderShopProducts();
 }
+function promoApplies(p){
+  var pr=S.promo;if(!pr||!pr.enabled||!p)return false;
+  if(p.isCustom)return false;
+  if(pr.cat&&pr.cat!=='全部'&&p.cat!==pr.cat)return false;
+  if(pr.excludeNew&&p.isNew)return false;
+  return true;
+}
+function promoPrice(base,p){
+  if(!promoApplies(p))return base;
+  var pr=S.promo;
+  if(pr.type==='amount')return Math.max(0,base-(pr.amount||0));
+  var r=discRate(pr.percent);if(r<=0||r>=1)return base;
+  return Math.round(base*r);
+}
 function pCard(p){
   var hs=p.original&&p.original>p.price;
   var pct=hs?Math.round((1-p.price/p.original)*100):0;
+  var pp=promoPrice(p.price,p);
+  var hasPromo=pp<p.price;
   var _t=p.imgThumb||p.imgData;
   var bgStyle=_t?(' style="background-image:url(\''+String(_t).replace(/'/g,"\\'")+'\')"'):'';
   var ph=_t?'':(p.emoji||IMG_PH);
@@ -1102,10 +1129,11 @@ function pCard(p){
     +(p.isCustom?'<div class="badge cb" style="top:'+((hs||p.isNew)?'34px':'10px')+'">客製</div>':'')
     +'</div><div class="product-info">'
     +'<div class="product-name">'+p.name+'</div>'
+    +(hasPromo?'<div style="margin:2px 0 4px"><span style="display:inline-block;background:var(--gold);color:#fff;font-size:11px;border-radius:12px;padding:1px 9px">'+((S.promo&&S.promo.label)||'優惠')+'</span></div>':'')
     +(p.inStock?'<div style="margin:2px 0 5px"><span style="display:inline-block;background:#E7F3EA;color:#2E6B3E;font-size:11px;border-radius:12px;padding:1px 9px">現貨</span></div>':'')
     +'<div class="product-price-row"><div>'
-    +'<div class="prc'+(hs?' sale':'')+'">NT$ '+p.price+'</div>'
-    +(hs?'<div class="prc-orig">NT$ '+p.original+'</div>':'')
+    +'<div class="prc'+((hs||hasPromo)?' sale':'')+'">NT$ '+(hasPromo?pp:p.price)+'</div>'
+    +(hasPromo?'<div class="prc-orig">NT$ '+p.price+'</div>':(hs?'<div class="prc-orig">NT$ '+p.original+'</div>':''))
     +'</div><button class="add-btn" onclick="event.preventDefault();event.stopPropagation();addToCart('+p.id+')">+ 加入</button>'
     +'</div></div></a>';
 }
@@ -1496,6 +1524,9 @@ function renderProductPage(id){
   var shownPrice=(sel0&&sel0.price)?sel0.price:p.price;
   var shownDep=(sel0&&sel0.deposit!==''&&sel0.deposit!=null)?sel0.deposit:p.deposit;
   var hs=p.original&&p.original>p.price;
+  var basePrice=shownPrice;
+  var promoDP=promoPrice(basePrice,p);
+  var hasPromo=promoDP<basePrice;
   var main=cover?('<img loading="lazy" id="detailMain" src="'+cover+'" alt="'+p.name+'" style="width:100%;border-radius:12px;margin-bottom:10px">'):'<div class="mimg">'+(p.emoji||IMG_PH)+'</div>';
   var thumbs=imgs.length>1?('<div style="display:flex;gap:8px;margin-bottom:16px">'+imgs.map(function(s,i){return '<img loading="lazy" src="'+s+'" onclick="setDetailImg('+id+','+i+')" style="width:56px;height:56px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid var(--linen)">';}).join('')+'</div>'):'';
   var specsHtml='';
@@ -1515,8 +1546,8 @@ function renderProductPage(id){
     +(p.material?'<p style="font-size:12px;color:var(--text-light);margin-bottom:16px"><span style="color:var(--cocoa);font-weight:500">材質：</span>'+p.material+'</p>':'')
     +specsHtml
     +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">'
-    +'<span id="detailPrice" style="font-size:22px;font-weight:600;color:var(--cocoa)">NT$ '+shownPrice+'</span>'
-    +(hs?'<span style="font-size:13px;color:var(--text-light);text-decoration:line-through">NT$ '+p.original+'</span>':'')
+    +'<span id="detailPrice" style="font-size:22px;font-weight:600;color:var(--cocoa)">NT$ '+(hasPromo?promoDP:shownPrice)+'</span>'
+    +(hasPromo?'<span style="font-size:13px;color:var(--text-light);text-decoration:line-through">NT$ '+basePrice+'</span>':(hs?'<span style="font-size:13px;color:var(--text-light);text-decoration:line-through">NT$ '+p.original+'</span>':''))
     +'</div><button class="sub-btn" onclick="addToCart('+p.id+',S._selSpec)">加入購物車</button>';
   document.querySelectorAll('.page').forEach(function(pg){pg.classList.remove('active');});
   document.getElementById('page-product').classList.add('active');
@@ -1550,7 +1581,7 @@ function selectSpec(id,i,el){
   var p=S.products.find(function(x){return x.id===id;});if(!p||!p.specs[i])return;
   var s=p.specs[i];S._selSpec=s.name;
   var c=document.getElementById('specChips').children;for(var k=0;k<c.length;k++)c[k].classList.remove('sel');el.classList.add('sel');
-  var pr=document.getElementById('detailPrice');if(pr)pr.textContent='NT$ '+((s.price)?s.price:p.price);
+  var pr=document.getElementById('detailPrice');if(pr){var _bp=(s.price)?s.price:p.price;pr.textContent='NT$ '+promoPrice(_bp,p);}
   var dep=document.getElementById('detailDep');if(dep)dep.textContent='NT$ '+((s.deposit!==''&&s.deposit!=null)?s.deposit:p.deposit);
   var m=document.getElementById('detailMain');
   if(m){var imgs=(p.images&&p.images.length)?p.images:(p.imgData?[p.imgData]:[]);var fs=(p.specs||[]).reduce(function(a,x){return a||x.img;},'');m.src=s.img||imgs[0]||fs||'';}
@@ -1560,7 +1591,7 @@ function addToCart(id,spec){
   var p=S.products.find(function(x){return x.id===id;});if(!p)return;
   spec=spec||'';
   var so=(p.specs||[]).find(function(s){return s.name===spec;});
-  var price=(so&&so.price)?so.price:p.price;
+  var price=promoPrice((so&&so.price)?so.price:p.price,p);
   var dep=(so&&so.deposit!==''&&so.deposit!=null)?so.deposit:p.deposit;
   var img=(so&&so.img)?so.img:(p.imgData||'');
   var ex=S.cart.find(function(x){return x.id===id&&(x.spec||'')===spec;});
@@ -1641,17 +1672,21 @@ function renderCart(){
 
 function discEligibleSub(disc){
   if(!disc)return 0;
-  var ex=disc.exCats||[];
-  return S.cart.reduce(function(s,i){return ex.indexOf(i.cat)>=0?s:s+i.price*i.qty;},0);
+  var inc=disc.incCats||[],ex=disc.exCats||[];
+  return S.cart.reduce(function(s,i){
+    if(inc.length&&inc.indexOf(i.cat)<0)return s;
+    if(ex.indexOf(i.cat)>=0)return s;
+    return s+i.price*i.qty;
+  },0);
 }
+function discRate(p){p=parseFloat(p)||0;if(p<=0)return 0;return p<10?p/10:p/100;}
 function appliedDiscAmt(){
   var disc=S.appliedDiscount;if(!disc)return 0;
+  var scoped=(disc.incCats&&disc.incCats.length)||(disc.exCats&&disc.exCats.length);
+  var base=scoped?discEligibleSub(disc):S.cart.reduce(function(s,i){return s+i.price*i.qty;},0);
+  if(disc.type==='percent'){var r=discRate(disc.percent);if(r<=0||r>=1)return 0;return Math.round(base*(1-r));}
   var amt=disc.amount||0;
-  if(disc.exCats&&disc.exCats.length){
-    var elig=discEligibleSub(disc);
-    if(elig<=0)return 0;
-    if(amt>elig)amt=elig;
-  }
+  if(scoped){if(base<=0)return 0;if(amt>base)amt=base;}
   return amt;
 }
 function discActive(d){
@@ -1668,7 +1703,7 @@ function applyDiscount(){
   var ds=discActive(f);
   if(ds==='before'){showToast('此折扣 '+f.start+' 起才能使用');return;}
   if(ds==='after'){showToast('此折扣碼已過期');return;}
-  if(f.exCats&&f.exCats.length&&discEligibleSub(f)<=0){showToast('購物車內商品不適用此折扣碼');return;}
+  if(((f.incCats&&f.incCats.length)||(f.exCats&&f.exCats.length))&&discEligibleSub(f)<=0){showToast('購物車內商品不適用此折扣碼');return;}
   if(discUsedByUser(f)){showToast('此折扣碼每個帳號限用一次，您已使用過');return;}
   S.appliedDiscount=f;var amt=appliedDiscAmt();showToast('折扣套用成功！折扣 NT$ '+amt+'');renderCart();
 }
@@ -1917,7 +1952,7 @@ function renderAdmin(){
     if(!S._authResolved){var _sg=document.getElementById('statsGrid');if(_sg)_sg.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--text-light);padding:40px">驗證管理員身分中…</div>';return;}
     showPage('home');return;
   }
-  renderDash();renderAdminProds();renderInventory();renderAdminOrds();renderAdminMembs();renderDiscs();renderPayment();renderSales();renderBanners();renderLookbookAdmin();renderMemberCoupons();updatePayAlerts();
+  renderDash();renderAdminProds();renderInventory();renderAdminOrds();renderAdminMembs();renderDiscs();renderPromoAdmin();renderPayment();renderSales();renderBanners();renderLookbookAdmin();renderMemberCoupons();updatePayAlerts();
   activateAdminPanel(S._adminPanel||'dashboard');
 }
 function renderCatSelect(){
@@ -2590,9 +2625,11 @@ function renderDiscs(){
     var ds=discActive(d);
     var stTag=ds==='before'?'<span style="font-size:10px;background:#EEE;color:#777;border-radius:8px;padding:1px 7px;margin-left:6px">未開始</span>':ds==='after'?'<span style="font-size:10px;background:#FDECEA;color:#C0392B;border-radius:8px;padding:1px 7px;margin-left:6px">已過期</span>':'';
     var onceTag=d.once?'<span style="font-size:10px;background:#EAF3FB;color:#2F6DA0;border-radius:8px;padding:1px 7px;margin-left:6px">限用一次/帳號</span>':'';
+    var incLine=(d.incCats&&d.incCats.length)?'<div style="font-size:11px;color:#2E6B3E;margin-top:3px">適用分類：'+d.incCats.join('、')+'</div>':'';
+    var valTag=(d.type==='percent')?(d.percent+'折'):('-NT$ '+d.amount);
     return '<div class="disc-card" style="flex-direction:column;align-items:stretch;gap:10px">'
-      +'<div><div style="font-size:14px;font-weight:500;margin-bottom:4px">'+d.desc+stTag+onceTag+'</div><div style="font-size:12px;color:var(--text-light)">'+d.code+'</div>'+dateLine+exLine+'</div>'
-      +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div class="disc-tag">-NT$ '+d.amount+'</div><div style="flex:1"></div>'
+      +'<div><div style="font-size:14px;font-weight:500;margin-bottom:4px">'+d.desc+stTag+onceTag+'</div><div style="font-size:12px;color:var(--text-light)">'+d.code+'</div>'+dateLine+incLine+exLine+'</div>'
+      +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><div class="disc-tag">'+valTag+'</div><div style="flex:1"></div>'
       +'<button class="abtn sc" onclick="openDiscountModal('+i+')">編輯</button>'
       +'<button class="abtn sc" onclick="dupDisc('+i+')">複製</button>'
       +'<button class="abtn dg" onclick="delDisc('+i+')">刪除</button></div></div>';
@@ -2986,40 +3023,105 @@ function delProd(id){
 
 
 
-function renderDiscExCats(sel){
+function renderDiscCats(boxId,cls,sel){
   sel=sel||[];
-  var box=document.getElementById('dExCats');if(!box)return;
+  var box=document.getElementById(boxId);if(!box)return;
   var cats=S.categories.filter(function(c){return c!=='全部';});
   if(!cats.length){box.innerHTML='<span style="font-size:12px;color:var(--text-light)">尚無分類</span>';return;}
-  box.innerHTML=cats.map(function(c){
-    return '<label><input type="checkbox" class="dExCat" value="'+c+'" '+(sel.indexOf(c)>=0?'checked':'')+'>'+c+'</label>';
-  }).join('');
+  box.innerHTML=cats.map(function(c){return '<label><input type="checkbox" class="'+cls+'" value="'+c+'" '+(sel.indexOf(c)>=0?'checked':'')+'>'+c+'</label>';}).join('');
 }
+function renderDiscExCats(sel){renderDiscCats('dExCats','dExCat',sel);}
 function openDiscountModal(i){
   S._discEdit=(typeof i==='number')?i:null;
   var d=S._discEdit!=null?S.discounts[i]:null;
   var sv=function(id,val){var e=document.getElementById(id);if(e)e.value=val;};
-  sv('dCode',d?d.code:'');sv('dAmount',d?d.amount:'');sv('dDesc',d?(d.desc||''):'');sv('dStart',d?(d.start||''):'');sv('dEnd',d?(d.end||''):'');
+  var isP=!!(d&&d.type==='percent');
+  var rad=document.querySelector('input[name="dType"][value="'+(isP?'percent':'amount')+'"]');if(rad)rad.checked=true;
+  sv('dCode',d?d.code:'');sv('dAmount',(d&&!isP)?d.amount:'');sv('dPercent',(d&&isP)?d.percent:'');sv('dDesc',d?(d.desc||''):'');sv('dStart',d?(d.start||''):'');sv('dEnd',d?(d.end||''):'');
   var oc=document.getElementById('dOnce');if(oc)oc.checked=!!(d&&d.once);
   renderDiscExCats(d&&d.exCats?d.exCats:[]);
+  renderDiscCats('dIncCats','dIncCat',d&&d.incCats?d.incCats:[]);
+  onDiscTypeChange();
   var ttl=document.getElementById('discModalTitle');if(ttl)ttl.textContent=d?'編輯折扣碼':'折扣設定';
   var btn=document.getElementById('discSaveBtn');if(btn)btn.textContent=d?'儲存變更':'儲存折扣碼';
   document.getElementById('discountEditModal').classList.add('open');
 }
+function renderPromoAdmin(){
+  var box=document.getElementById('promoAdmin');if(!box)return;
+  var pr=S.promo||{};
+  var opts=S.categories.map(function(c){return '<option value="'+c+'"'+(((pr.cat||'全部')===c)?' selected':'')+'>'+(c==='全部'?'全部商品':c)+'</option>';}).join('');
+  box.innerHTML=''
+    +'<div style="background:var(--warm-ivory);border:1.5px solid var(--gold);border-radius:14px;padding:16px;margin-bottom:18px">'
+    +'<div style="font-weight:600;color:var(--cocoa);margin-bottom:4px">分類促銷（自動特價）</div>'
+    +'<p style="font-size:12px;color:var(--text-light);margin-bottom:12px;line-height:1.7">啟用後，所選分類的商品會在店面直接顯示折扣價（不需折扣碼）。可勾選「新品除外」讓最新上架的商品維持原價。</p>'
+    +'<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px"><input type="checkbox" id="promoEnabled" '+(pr.enabled?'checked':'')+' style="width:auto">啟用分類促銷</label>'
+    +'<div class="fg"><label>適用分類</label><select id="promoCat" style="width:100%;box-sizing:border-box">'+opts+'</select></div>'
+    +'<div class="fg"><label>促銷方式</label><div style="display:flex;gap:8px">'
+    +'<label style="flex:1;border:1.5px solid var(--linen);border-radius:10px;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;font-size:13px;margin:0"><input type="radio" name="promoType" value="percent" '+((pr.type!=='amount')?'checked':'')+' onchange="onPromoTypeChange()" style="width:auto;margin:0">折數</label>'
+    +'<label style="flex:1;border:1.5px solid var(--linen);border-radius:10px;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;font-size:13px;margin:0"><input type="radio" name="promoType" value="amount" '+((pr.type==='amount')?'checked':'')+' onchange="onPromoTypeChange()" style="width:auto;margin:0">折固定金額</label>'
+    +'</div></div>'
+    +'<div class="fg" id="promoPercentRow"><label>折數（例：9＝9折，85＝85折）</label><input type="number" step="0.1" id="promoPercent" value="'+(pr.percent||'')+'" style="width:100%;box-sizing:border-box"></div>'
+    +'<div class="fg" id="promoAmountRow" style="display:none"><label>每件折抵金額 (NT$)</label><input type="number" id="promoAmount" value="'+(pr.amount||'')+'" style="width:100%;box-sizing:border-box"></div>'
+    +'<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px"><input type="checkbox" id="promoExNew" '+(pr.excludeNew?'checked':'')+' style="width:auto">新品除外（最新上架的商品不參與此促銷）</label>'
+    +'<div class="fg"><label>標籤文字（顯示在商品上）</label><input id="promoLabel" value="'+((pr.label||'').replace(/"/g,'&quot;'))+'" placeholder="限時優惠" style="width:100%;box-sizing:border-box"></div>'
+    +'<button class="abtn pr" onclick="savePromo()">儲存促銷設定</button>'
+    +'</div>';
+  onPromoTypeChange();
+}
+function onPromoTypeChange(){
+  var t=(document.querySelector('input[name="promoType"]:checked')||{}).value||'percent';
+  var pr=document.getElementById('promoPercentRow'),ar=document.getElementById('promoAmountRow');
+  if(pr)pr.style.display=(t==='amount')?'none':'';
+  if(ar)ar.style.display=(t==='amount')?'':'none';
+}
+function savePromo(){
+  var type=(document.querySelector('input[name="promoType"]:checked')||{}).value||'percent';
+  var promo={enabled:document.getElementById('promoEnabled').checked,cat:document.getElementById('promoCat').value||'全部',type:type,excludeNew:document.getElementById('promoExNew').checked,label:document.getElementById('promoLabel').value.trim()||'限時優惠'};
+  if(type==='percent'){
+    var pc=parseFloat(document.getElementById('promoPercent').value)||0;
+    if(promo.enabled){var r=discRate(pc);if(r<=0||r>=1){showToast('請輸入有效折數，例如 9（9折）或 85（85折）');return;}}
+    promo.percent=pc;promo.amount=0;
+  }else{
+    var a=parseInt(document.getElementById('promoAmount').value)||0;
+    if(promo.enabled&&!a){showToast('請填寫折抵金額');return;}
+    promo.amount=a;promo.percent=S.promo.percent||9;
+  }
+  S.promo=Object.assign({},S.promo,promo);
+  if(window.FB&&window.FB.saveConfig){window.FB.saveConfig({promo:S.promo}).then(function(){showToast('分類促銷設定已儲存');}).catch(function(e){showToast('儲存失敗：'+(e.code||e.message));});}else{showToast('已儲存（離線）');}
+  renderShopProducts();renderHomeProducts();renderPromoAdmin();
+}
+function onDiscTypeChange(){
+  var t=(document.querySelector('input[name="dType"]:checked')||{}).value||'amount';
+  var ar=document.getElementById('dAmountRow'),pr=document.getElementById('dPercentRow');
+  if(ar)ar.style.display=(t==='percent')?'none':'';
+  if(pr)pr.style.display=(t==='percent')?'':'none';
+  var rs=document.querySelectorAll('input[name="dType"]');for(var k=0;k<rs.length;k++){var lb=rs[k].parentNode;if(lb&&lb.tagName==='LABEL')lb.style.borderColor=rs[k].checked?'var(--gold)':'var(--linen)';}
+}
 function persistDiscounts(){if(window.FB&&window.FB.saveConfig){window.FB.saveConfig({discounts:S.discounts}).catch(function(e){showToast('折扣儲存失敗：'+(e.code||e.message));});}}
 function saveDiscount(){
   var c=document.getElementById('dCode').value.trim().toUpperCase();
-  var a=parseInt(document.getElementById('dAmount').value)||0;
   var d=document.getElementById('dDesc').value.trim();
-  if(!c||!a){showToast('請填寫折扣碼和金額');return;}
+  if(!c){showToast('請填寫折扣碼');return;}
+  var type=(document.querySelector('input[name="dType"]:checked')||{}).value||'amount';
+  var obj={code:c,desc:d};
+  if(type==='percent'){
+    var pc=parseFloat(document.getElementById('dPercent').value)||0;var r=discRate(pc);
+    if(r<=0||r>=1){showToast('請輸入有效折數，例如 9（9折）或 85（85折）');return;}
+    obj.type='percent';obj.percent=pc;
+  }else{
+    var a=parseInt(document.getElementById('dAmount').value)||0;
+    if(!a){showToast('請填寫折扣金額');return;}
+    obj.amount=a;
+  }
   var ex=Array.prototype.slice.call(document.querySelectorAll('.dExCat')).filter(function(x){return x.checked;}).map(function(x){return x.value;});
+  var inc=Array.prototype.slice.call(document.querySelectorAll('.dIncCat')).filter(function(x){return x.checked;}).map(function(x){return x.value;});
   var st=document.getElementById('dStart').value;
   var en=document.getElementById('dEnd').value;
   if(st&&en&&en<st){showToast('結束日期不可早於開始日期');return;}
   var once=document.getElementById('dOnce')&&document.getElementById('dOnce').checked;
   var dup=S.discounts.some(function(x,xi){return x.code===c&&xi!==S._discEdit;});
   if(dup){showToast('折扣碼「'+c+'」已存在');return;}
-  var obj={code:c,amount:a,desc:d};if(ex.length)obj.exCats=ex;if(st)obj.start=st;if(en)obj.end=en;if(once)obj.once=true;
+  if(ex.length)obj.exCats=ex;if(inc.length)obj.incCats=inc;if(st)obj.start=st;if(en)obj.end=en;if(once)obj.once=true;
   if(S._discEdit!=null){S.discounts[S._discEdit]=obj;S._discEdit=null;}else{S.discounts.push(obj);}
   persistDiscounts();
   closeModal('discountEditModal');renderDiscs();showToast('折扣碼已儲存');
