@@ -301,6 +301,17 @@ input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{fo
 .ship-box{margin-top:14px;padding:14px 14px 4px;border:1px solid var(--linen);border-radius:14px;background:var(--white);}
 .ship-box-h{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--cocoa);margin-bottom:10px;}
 .ship-box-h svg{flex-shrink:0;}
+.cpn-card{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--linen);border-radius:14px;padding:12px 14px;margin-bottom:10px;}
+.cpn-card.off{opacity:.5;}
+.cpn-amt{font-size:18px;font-weight:700;color:var(--cocoa);white-space:nowrap;border-right:1px dashed var(--taupe);padding-right:12px;line-height:1.1;}
+.cpn-body{flex:1;min-width:0;}
+.cpn-desc{font-size:14px;color:var(--text);font-weight:500;margin-bottom:3px;}
+.cpn-meta{font-size:11px;color:var(--text-light);}
+.cpn-tag{font-size:10px;border-radius:8px;padding:1px 7px;margin-left:6px;display:inline-block;}
+.cpn-tag.ok{background:#E7F3EA;color:#2E6B3E;}
+.cpn-tag.used{background:#ECECEC;color:#888;}
+.cpn-tag.exp{background:#FDECEA;color:#C0392B;}
+.cpn-tag.soon{background:#FBF3E2;color:#9A7B2E;}
 /* 藝廊 lookbook */
 .lookbook{max-width:1100px;margin:0 auto;padding:36px 20px 8px;}
 .lookbook .car-slide>img{height:340px;}
@@ -554,6 +565,8 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
       <p id="memberIG" style="font-size:12px;color:var(--dusty-rose);margin-top:2px"></p>
     </div>
     <div id="memberDefaults" class="ord-card" style="text-align:left;margin-bottom:18px"></div>
+    <p class="section-title" style="text-align:left;margin-bottom:12px;font-size:16px">我的折扣</p>
+    <div id="memberCoupons" style="margin-bottom:22px"></div>
     <p class="section-title" style="text-align:left;margin-bottom:16px;font-size:16px">我的訂單</p>
     <div id="memberOrders"></div>
     <button class="sub-btn" style="background:var(--warm-ivory);color:var(--text);margin-top:10px" onclick="doLogout()">登出</button>
@@ -684,7 +697,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0627b</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0627c</div>
 </footer>
 
 <!-- MODALS -->
@@ -858,6 +871,7 @@ function handleAuthUser(user){
       S.orders=list.slice().sort(function(a,b){return (b.id||0)-(a.id||0);});
       var mx=S.orders.reduce(function(m,o){return Math.max(m,o.id||0);},1000);
       S.nextOrderId=Math.max(S.nextOrderId||1001,mx+1);
+      if(window.FB.ensureOrderCounter)window.FB.ensureOrderCounter(mx);
       updatePayAlerts();
       var pa=document.getElementById('page-admin');if(pa&&pa.classList.contains('active'))renderAdmin();
     });}
@@ -1767,6 +1781,7 @@ function selShip(t){
 }
 
 function placeOrder(total){
+  if(S._placing)return;
   if(!S.paymentMethod){showToast('請選擇付款方式');return;}
   if((S.paymentMethod==='bank'||S.paymentMethod==='linepay')&&!S.shippingMethod){showToast('請選擇寄送方式');return;}
   if(S.appliedDiscount&&discUsedByUser(S.appliedDiscount)){showToast('此折扣碼每個帳號限用一次，您已使用過');S.appliedDiscount=null;renderCart();return;}
@@ -1788,7 +1803,9 @@ function placeOrder(total){
   }
   var ci=S.cart.filter(function(i){return i.isCustom;});
   var td=ci.reduce(function(s,i){return s+i.deposit*i.qty;},0);
-  var o={id:S.nextOrderId++,userId:S.currentUser.id,userName:S.currentUser.name,
+  S._placing=true;
+  function finish(oid){
+  var o={id:oid,userId:S.currentUser.id,userName:S.currentUser.name,
     items:S.cart.slice(),subtotal:S.cart.reduce(function(s,i){return s+i.price*i.qty;},0),
     shipping:calcShip(),discount:appliedDiscAmt(),
     discountCode:S.appliedDiscount?S.appliedDiscount.code:'',total:total,
@@ -1829,7 +1846,11 @@ function placeOrder(total){
   document.getElementById('successOrderId').textContent='訂單編號：#'+o.id;
   S._lastOrder=o;renderSuccessEmailBox(o);
   showPage('success');
+  S._placing=false;
+  }
+  if(window.FB&&window.FB.nextOrderId){window.FB.nextOrderId().then(finish).catch(function(){finish(localOrderId());});}else{finish(localOrderId());}
 }
+function localOrderId(){var mx=S.orders.reduce(function(m,o){return Math.max(m,o.id||0);},1000);var n=Math.max(S.nextOrderId||1001,mx+1);S.nextOrderId=n+1;return n;}
 
 function renderMemberProfile(){
   var u=S.currentUser;if(!u)return;
@@ -1837,6 +1858,7 @@ function renderMemberProfile(){
   document.getElementById('memberEmail').textContent=u.email;
   document.getElementById('memberIG').textContent=u.ig||'';
   renderMemberDefaults();
+  var _mc=document.getElementById('memberCoupons');if(_mc)_mc.innerHTML=memberCouponList();
   var my=S.orders.filter(function(o){return o.userId===u.id;});
   var el=document.getElementById('memberOrders');
   if(!my.length){el.innerHTML='<div class="empty-st"><span class="emo"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.3v9.4L12 21l-8-4.3V7.3z"/><path d="M4 7.3 12 11l8-3.7M12 11v10"/></svg></span>還沒有訂單</div>';return;}
@@ -1983,6 +2005,24 @@ function refreshTotals(){
   var tr=document.querySelector('.sum-row.total span:last-child');
   if(tr)tr.textContent='NT$ '+(sub+ship-d);
   updateDepositSummary();updateCodBank();
+}
+function couponUsable(c,today){today=today||new Date().toISOString().slice(0,10);return !c.used&&(!c.from||c.from<=today)&&(!c.until||today<=c.until);}
+function memberCouponList(){
+  var u=S.currentUser;if(!u)return '';
+  var cps=(u.coupons||[]);
+  if(!cps.length)return '<div class="ord-card" style="text-align:center;color:var(--text-light);font-size:13px;padding:18px">目前還沒有折扣</div>';
+  var today=new Date().toISOString().slice(0,10);
+  return cps.slice().sort(function(a,b){return (couponUsable(a,today)?0:1)-(couponUsable(b,today)?0:1);}).map(function(c){
+    var usable=couponUsable(c,today);
+    var expired=!c.used&&c.until&&today>c.until;
+    var notStarted=!c.used&&c.from&&today<c.from;
+    var tag=c.used?'<span class="cpn-tag used">已使用</span>':expired?'<span class="cpn-tag exp">已過期</span>':notStarted?'<span class="cpn-tag soon">尚未開始</span>':'<span class="cpn-tag ok">可使用</span>';
+    var period=c.until?('有效至 '+c.until):'無使用期限';
+    if(notStarted)period=c.from+' 起可用';
+    var meta=period+(c.used&&c.usedOrderId?(' ・已用於訂單 #'+c.usedOrderId):'');
+    return '<div class="cpn-card'+(usable?'':' off')+'"><div class="cpn-amt">NT$ '+c.amount+'</div>'
+      +'<div class="cpn-body"><div class="cpn-desc">'+c.desc+tag+'</div><div class="cpn-meta">'+meta+'</div></div></div>';
+  }).join('')+'<p style="font-size:11px;color:var(--text-light);text-align:center;margin-top:4px">可使用的折扣會在購物車結帳時出現，點「套用」即可折抵</p>';
 }
 function memberCouponsBlock(){
   if(!S.currentUser)return '';
@@ -2944,7 +2984,7 @@ function showToast(msg){
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, getMultiFactorResolver, TotpMultiFactorGenerator, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
-import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc, getDoc, query, where } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc, getDoc, query, where, runTransaction } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 import { getStorage, ref as storageRef, uploadString, getDownloadURL } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js';
 const firebaseConfig = {
   apiKey: "AIzaSyAETCZAk1fOUsFMPt5eb2q3DlrQlkr5GUc",
@@ -2993,6 +3033,8 @@ window.FB={
   },
   subscribeOrders:function(cb){return onSnapshot(collection(db,'orders'),function(snap){cb(snap.docs.map(function(d){var o=d.data();o._docId=d.id;return o;}));},function(err){console.error('orders subscribe error',err);});},
   saveOrder:function(order){var data=Object.assign({},order);var id=data._docId;delete data._docId;if(id){return updateDoc(doc(db,'orders',id),data).then(function(){return id;});}return addDoc(collection(db,'orders'),data).then(function(ref){return ref.id;});},
+  nextOrderId:function(){var cref=doc(db,'counters','orders');return runTransaction(db,function(tx){return tx.get(cref).then(function(snap){var cur=(snap.exists()&&typeof snap.data().value==='number')?snap.data().value:1001;var next=cur+1;if(snap.exists())tx.update(cref,{value:next});else tx.set(cref,{value:next});return next;});});},
+  ensureOrderCounter:function(minVal){var cref=doc(db,'counters','orders');return runTransaction(db,function(tx){return tx.get(cref).then(function(snap){var cur=(snap.exists()&&typeof snap.data().value==='number')?snap.data().value:0;var v=Math.max(cur,minVal||0);if(snap.exists())tx.update(cref,{value:v});else tx.set(cref,{value:v});return v;});});},
   deleteOrder:function(docId){return deleteDoc(doc(db,'orders',docId));},
   subscribeMembers:function(cb){return onSnapshot(collection(db,'members'),function(snap){cb(snap.docs.map(function(d){var o=d.data();o._docId=d.id;return o;}));},function(err){console.error('members subscribe error',err);});},
   saveMember:function(m){var data=Object.assign({},m);delete data._docId;var id=String(m.id);return setDoc(doc(db,'members',id),data,{merge:true}).then(function(){return id;});},
