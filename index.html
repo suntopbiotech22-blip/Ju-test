@@ -684,7 +684,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0627a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0627b</div>
 </footer>
 
 <!-- MODALS -->
@@ -988,20 +988,20 @@ function doRegister(){
     var _wc0=welcomeCouponObj();if(_wc0)u0.coupons.push(_wc0);
     S.members.push(u0);S.currentUser=u0;
     var mb0=document.getElementById('memberBtn');if(mb0)mb0.textContent=u0.name;
-    showToast('註冊成功，歡迎加入 Ju');showPage('home');return;
+    S._justRegistered=true;
+    showToast('註冊成功，歡迎加入 Ju！');showPage('home');return;
   }
   S._registering=true;
   window.FB.registerUser(email,pwd).then(function(uid){
     var u={id:uid,uid:uid,name:name,email:email,phone:phone,ig:ig,isAdmin:false,coupons:[],favs:getFavs()};
     var _wc=welcomeCouponObj();if(_wc)u.coupons.push(_wc);
-    return window.FB.saveMember(u).then(function(){
-      S.currentUser=u;
-      var mb=document.getElementById('memberBtn');if(mb)mb.textContent=u.name;
-      var ab=document.getElementById('adminBtn');if(ab)ab.style.display='none';
-      if(window.FB.subscribeMyOrders){if(S._unsubOrders){try{S._unsubOrders();}catch(e){}}S._unsubOrders=window.FB.subscribeMyOrders(uid,function(list){if(Array.isArray(list)){S.orders=list.slice().sort(function(a,b){return (b.id||0)-(a.id||0);});var pm=document.getElementById('page-member');if(pm&&pm.classList.contains('active'))renderMemberProfile();}});}
-      S._registering=false;
-      showToast('註冊成功，歡迎加入 Ju');showPage('home');
-    });
+    S.currentUser=u;
+    var mb=document.getElementById('memberBtn');if(mb)mb.textContent=u.name;
+    var ab=document.getElementById('adminBtn');if(ab)ab.style.display='none';
+    if(window.FB.subscribeMyOrders){if(S._unsubOrders){try{S._unsubOrders();}catch(e){}}S._unsubOrders=window.FB.subscribeMyOrders(uid,function(list){if(Array.isArray(list)){S.orders=list.slice().sort(function(a,b){return (b.id||0)-(a.id||0);});var pm=document.getElementById('page-member');if(pm&&pm.classList.contains('active'))renderMemberProfile();}});}
+    S._justRegistered=true;
+    showToast('註冊成功，歡迎加入 Ju！');showPage('home');
+    return window.FB.saveMember(u).then(function(){S._registering=false;}).catch(function(){S._registering=false;});
   }).catch(function(err){
     S._registering=false;
     var c=err&&err.code;
@@ -1644,8 +1644,12 @@ function checkoutForm(total,hasC){
     +'<div id="prepaidSection" style="display:none;margin-top:14px">'
     +'<div id="bankInfo" style="display:none"><div class="pay-info"><strong> 台新銀行（812）</strong>帳號：20730100008145<br>訂單成立後請 48 小時內匯款，並至「會員 → 訂單」上傳付款截圖通知付款</div></div>'
     +'<div id="linePayInfo" style="display:none">'+linePayBlock()+'</div>'
-    +'<div class="ship-box">'
-    +'<div class="ship-box-h"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5h10v9H3zM13 9.5h4l3.5 3.5v2.5H13z"/><circle cx="7" cy="17.5" r="1.7"/><circle cx="17.5" cy="17.5" r="1.7"/></svg>選擇寄送方式</div>'
+    +'</div>'
+    +'<div id="codSection" style="display:none;margin-top:14px">'
+    +'<div class="pay-info" style="margin-bottom:10px"> 7-11 貨到付款採用賣貨便物流，下單完成後我們會私訊提供賣貨便下單連結，請記得追蹤粉專以免漏接訊息</div>'
+    +'<div id="codBankInfo" style="display:none"><div class="pay-info"><strong> 客製作品付款說明</strong>訂金請先「銀行匯款」（台新銀行 812，帳號 20730100008145），尾款於商品完成後以「7-11 賣貨便貨到付款」</div></div>'
+    +'</div></div>'
+    +'<div class="fsec" id="shipSection" style="display:none"><h3><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5h10v9H3zM13 9.5h4l3.5 3.5v2.5H13z"/><circle cx="7" cy="17.5" r="1.7"/><circle cx="17.5" cy="17.5" r="1.7"/></svg>寄送方式</h3>'
     +'<div class="radio-grp">'
     +'<label class="radio-opt" id="ship-711" onclick="selShip(\'711\')">'
     +'<input type="radio" name="ship" value="711" onchange="selShip(\'711\')"> 7-11 超商取貨</label>'
@@ -1655,11 +1659,6 @@ function checkoutForm(total,hasC){
     +'<div id="field-711" style="display:none;margin-top:10px" class="fg"><label>7-11 店名或店號</label><input id="storeInput" value="'+(S.currentUser&&S.currentUser.defaultStore?S.currentUser.defaultStore:'')+'" placeholder="例：台北市大安區信義門市"></div>'
     +'<div id="field-home" style="display:none;margin-top:10px" class="fg"><label>收件地址</label><input id="addrInput" value="'+(S.currentUser&&S.currentUser.defaultAddr?S.currentUser.defaultAddr:'')+'" placeholder="縣市、鄉鎮市區、詳細地址"></div>'
     +'</div>'
-    +'</div>'
-    +'<div id="codSection" style="display:none;margin-top:14px">'
-    +'<div class="pay-info" style="margin-bottom:10px"> 7-11 貨到付款採用賣貨便物流，下單完成後我們會私訊提供賣貨便下單連結，請記得追蹤粉專以免漏接訊息</div>'
-    +'<div id="codBankInfo" style="display:none"><div class="pay-info"><strong> 客製作品付款說明</strong>訂金請先「銀行匯款」（台新銀行 812，帳號 20730100008145），尾款於商品完成後以「7-11 賣貨便貨到付款」</div></div>'
-    +'</div></div>'
     +'<div class="fsec"><h3><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.3v9.4L12 21l-8-4.3V7.3z"/><path d="M4 7.3 12 11l8-3.7M12 11v10"/></svg>收件人資訊</h3>'
     +'<div class="fg"><label>姓名</label><input id="rcvName" placeholder="收件人姓名" value="'+(S.currentUser?(S.currentUser.defaultName||S.currentUser.name):'')+'"></div>'
     +'<div class="fg"><label>電話</label><input id="rcvPhone" placeholder="0912-345-678" value="'+(S.currentUser?(S.currentUser.defaultPhone||S.currentUser.phone||''):'')+'"></div>'
@@ -1738,6 +1737,7 @@ function selPay(t){
   /* 顯示對應區塊 */
   var prepaid=(t==='bank'||t==='linepay');
   var ps=document.getElementById('prepaidSection');if(ps)ps.style.display=prepaid?'block':'none';
+  var ss=document.getElementById('shipSection');if(ss)ss.style.display=prepaid?'block':'none';
   var bi=document.getElementById('bankInfo');if(bi)bi.style.display=t==='bank'?'block':'none';
   var li=document.getElementById('linePayInfo');if(li)li.style.display=t==='linepay'?'block':'none';
   var cs=document.getElementById('codSection');if(cs)cs.style.display=t==='cod'?'block':'none';
@@ -1833,7 +1833,7 @@ function placeOrder(total){
 
 function renderMemberProfile(){
   var u=S.currentUser;if(!u)return;
-  document.getElementById('memberName').textContent=u.name+'您好！歡迎回來！';
+  document.getElementById('memberName').textContent=u.name+(S._justRegistered?' 您好，歡迎加入 Ju！':'您好！歡迎回來！');S._justRegistered=false;
   document.getElementById('memberEmail').textContent=u.email;
   document.getElementById('memberIG').textContent=u.ig||'';
   renderMemberDefaults();
