@@ -699,7 +699,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0628b</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0628d</div>
 </footer>
 
 <!-- MODALS -->
@@ -759,6 +759,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
       <div class="fg" style="display:flex;align-items:center;gap:10px"><input type="checkbox" id="editHot" style="width:auto"><label style="margin-bottom:0">熱銷商品</label></div>
       <div class="fg" style="display:flex;align-items:center;gap:10px"><input type="checkbox" id="editNew" style="width:auto"><label style="margin-bottom:0">新品標籤</label></div>
       <div class="fg" style="display:flex;align-items:center;gap:10px"><input type="checkbox" id="editInStock" style="width:auto"><label style="margin-bottom:0">現貨（有現貨可立即出貨）</label></div>
+      <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editNoDiscount" style="width:auto"><label style="margin-bottom:0">禁止使用所有折扣（此作品不參與折扣碼、會員優惠與分類促銷）</label></div>
       <div class="fg"><label>庫存數量（可留空）</label><input type="number" id="editStock" placeholder="例：5"></div>
       <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editCanCustom" style="width:auto"><label style="margin-bottom:0">可客製（可改顏色／字樣，不需訂金）</label></div>
       <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editCustom" style="width:auto" onchange="toggleDeposit()"><label style="margin-bottom:0">客製作品</label></div>
@@ -1102,6 +1103,7 @@ function toggleFavFilter(){
 function promoApplies(p){
   var pr=S.promo;if(!pr||!pr.enabled||!p)return false;
   if(p.isCustom)return false;
+  if(p.noDiscount)return false;
   if(pr.cat&&pr.cat!=='全部'&&p.cat!==pr.cat)return false;
   if(pr.excludeNew&&p.isNew)return false;
   return true;
@@ -1679,6 +1681,13 @@ function discEligibleSub(disc){
     return s+i.price*i.qty;
   },0);
 }
+function discIneligibleItems(disc){
+  if(!disc)return [];
+  var inc=disc.incCats||[],ex=disc.exCats||[];
+  if(!inc.length&&!ex.length)return [];
+  return S.cart.filter(function(i){return (inc.length&&inc.indexOf(i.cat)<0)||ex.indexOf(i.cat)>=0;});
+}
+function cartNoDiscNames(){var nd=S.cart.filter(function(i){return i.noDiscount;});return nd.map(function(i){return i.name;}).filter(function(n,ix,a){return a.indexOf(n)===ix;});}
 function discRate(p){p=parseFloat(p)||0;if(p<=0)return 0;return p<10?p/10:p/100;}
 function appliedDiscAmt(){
   var disc=S.appliedDiscount;if(!disc)return 0;
@@ -1703,7 +1712,10 @@ function applyDiscount(){
   var ds=discActive(f);
   if(ds==='before'){showToast('此折扣 '+f.start+' 起才能使用');return;}
   if(ds==='after'){showToast('此折扣碼已過期');return;}
-  if(((f.incCats&&f.incCats.length)||(f.exCats&&f.exCats.length))&&discEligibleSub(f)<=0){showToast('購物車內商品不適用此折扣碼');return;}
+  var _ndn=cartNoDiscNames();
+  if(_ndn.length){showToast('「'+_ndn.join('、')+'」不適用任何折扣，請移除後再使用優惠');return;}
+  var _bad=discIneligibleItems(f);
+  if(_bad.length){var _nm=_bad.map(function(i){return i.name;}).filter(function(n,ix,a){return a.indexOf(n)===ix;});showToast('「'+_nm.join('、')+'」非此折扣適用品項，請移除後再使用此折扣');return;}
   if(discUsedByUser(f)){showToast('此折扣碼每個帳號限用一次，您已使用過');return;}
   S.appliedDiscount=f;var amt=appliedDiscAmt();showToast('折扣套用成功！折扣 NT$ '+amt+'');renderCart();
 }
@@ -2101,6 +2113,8 @@ function memberCouponsBlock(){
 }
 function applyMemberCoupon(id){
   var c=(S.currentUser.coupons||[]).find(function(x){return x.id===id;});if(!c)return;
+  var _ndn=cartNoDiscNames();
+  if(_ndn.length){showToast('「'+_ndn.join('、')+'」不適用任何折扣，請移除後再使用優惠');return;}
   S.appliedDiscount={code:c.desc,amount:c.amount||0,type:c.type,percent:c.percent,_couponId:c.id};
   showToast('已套用專屬折扣 '+cpnLabel(c)+'');renderCart();
 }
@@ -2994,6 +3008,7 @@ function openProductModal(id){
     document.getElementById('editHot').checked=p.hot;
     document.getElementById('editNew').checked=p.isNew;
     document.getElementById('editInStock').checked=!!p.inStock;
+    document.getElementById('editNoDiscount').checked=!!p.noDiscount;
     document.getElementById('editStock').value=(p.stock!=null?p.stock:'');
     document.getElementById('editCustom').checked=p.isCustom;
     document.getElementById('editDeposit').value=p.deposit||'';
@@ -3004,7 +3019,7 @@ function openProductModal(id){
     S.editSpecs=p.specs?p.specs.map(function(s){return {name:s.name,price:s.price||'',deposit:(s.deposit===0?0:(s.deposit||'')),img:s.img||''};}):[];
   }else{
     ['editName','editPrice','editOriginal','editDesc','editMaterial','editDeposit','editStock'].forEach(function(x){document.getElementById(x).value='';});
-    ['editHot','editNew','editCustom','editCanCustom','editDraft','editInStock'].forEach(function(x){document.getElementById(x).checked=false;});
+    ['editHot','editNew','editCustom','editCanCustom','editDraft','editInStock','editNoDiscount'].forEach(function(x){document.getElementById(x).checked=false;});
     S.editImages=[];S.editThumbs=[];S.editSpecs=[];
   }
   S._galSel=null;renderGalleryEditor();renderSpecEditor();
@@ -3031,6 +3046,7 @@ function saveProduct(){
     hot:document.getElementById('editHot').checked,
     isNew:document.getElementById('editNew').checked,
     inStock:document.getElementById('editInStock').checked,
+    noDiscount:document.getElementById('editNoDiscount').checked,
     stock:(document.getElementById('editStock').value===''?null:(parseInt(document.getElementById('editStock').value)||0)),
     isCustom:isC,deposit:isC?(parseInt(document.getElementById('editDeposit').value)||0):0,
     draft:document.getElementById('editDraft').checked,
