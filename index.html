@@ -699,7 +699,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0627g</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0628a</div>
 </footer>
 
 <!-- MODALS -->
@@ -2071,6 +2071,7 @@ function refreshTotals(){
   updateDepositSummary();updateCodBank();
 }
 function couponUsable(c,today){today=today||new Date().toISOString().slice(0,10);return !c.used&&(!c.from||c.from<=today)&&(!c.until||today<=c.until);}
+function cpnLabel(c){return c.type==='percent'?(c.percent+'折'):('NT$ '+c.amount);}
 function memberCouponList(){
   var u=S.currentUser;if(!u)return '';
   var cps=(u.coupons||[]);
@@ -2084,7 +2085,7 @@ function memberCouponList(){
     var period=c.until?('有效至 '+c.until):'無使用期限';
     if(notStarted)period=c.from+' 起可用';
     var meta=period+(c.used&&c.usedOrderId?(' ・已用於訂單 #'+c.usedOrderId):'');
-    return '<div class="cpn-card'+(usable?'':' off')+'"><div class="cpn-amt">NT$ '+c.amount+'</div>'
+    return '<div class="cpn-card'+(usable?'':' off')+'"><div class="cpn-amt">'+cpnLabel(c)+'</div>'
       +'<div class="cpn-body"><div class="cpn-desc">'+c.desc+tag+'</div><div class="cpn-meta">'+meta+'</div></div></div>';
   }).join('')+'<p style="font-size:11px;color:var(--text-light);text-align:center;margin-top:4px">可使用的折扣會在購物車結帳時出現，點「套用」即可折抵</p>';
 }
@@ -2095,13 +2096,13 @@ function memberCouponsBlock(){
   if(!cs.length)return '';
   return '<div class="fsec"><h3><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"/><path d="M15 6v12" stroke-dasharray="2 2"/></svg>我的專屬折扣</h3>'+cs.map(function(c){
     var applied=S.appliedDiscount&&S.appliedDiscount._couponId===c.id;
-    return '<div class="disc-row" style="justify-content:space-between;align-items:center"><span style="font-size:13px">'+c.desc+' －NT$ '+c.amount+'<br><span style="font-size:11px;color:var(--text-light)">'+(c.until?'有效至 '+c.until:'無使用期限')+'</span></span><button class="apply-btn" onclick="applyMemberCoupon('+c.id+')">'+(applied?'已套用':'套用')+'</button></div>';
+    return '<div class="disc-row" style="justify-content:space-between;align-items:center"><span style="font-size:13px">'+c.desc+' '+(c.type==='percent'?(c.percent+'折'):('－NT$ '+c.amount))+'<br><span style="font-size:11px;color:var(--text-light)">'+(c.until?'有效至 '+c.until:'無使用期限')+'</span></span><button class="apply-btn" onclick="applyMemberCoupon('+c.id+')">'+(applied?'已套用':'套用')+'</button></div>';
   }).join('')+'</div>';
 }
 function applyMemberCoupon(id){
   var c=(S.currentUser.coupons||[]).find(function(x){return x.id===id;});if(!c)return;
-  S.appliedDiscount={code:c.desc,amount:c.amount,_couponId:c.id};
-  showToast('已套用專屬折扣 NT$ '+c.amount+'');renderCart();
+  S.appliedDiscount={code:c.desc,amount:c.amount||0,type:c.type,percent:c.percent,_couponId:c.id};
+  showToast('已套用專屬折扣 '+cpnLabel(c)+'');renderCart();
 }
 function renderMemberCoupons(){
   var el=document.getElementById('memberCouponAdmin');if(!el)return;
@@ -2110,13 +2111,18 @@ function renderMemberCoupons(){
   var opts=mem.map(function(m){return '<option value="'+m.id+'">'+m.name+'（'+m.email+'）</option>';}).join('');
   var rows=[];
   mem.forEach(function(m){(m.coupons||[]).forEach(function(c){
-    rows.push('<tr><td>'+m.name+'</td><td>NT$ '+c.amount+'</td><td style="font-size:11px">'+(c.from||'—')+'<br>~ '+(c.until||'無期限')+'</td><td>'+(c.used?'<span style="color:#2e7d32">已使用'+(c.usedOrderId?' #'+c.usedOrderId:'')+'</span>':'<span style="color:var(--dusty-rose)">未使用</span>')+'</td></tr>');
+    rows.push('<tr><td>'+m.name+'</td><td>'+cpnLabel(c)+'</td><td style="font-size:11px">'+(c.from||'—')+'<br>~ '+(c.until||'無期限')+'</td><td>'+(c.used?'<span style="color:#2e7d32">已使用'+(c.usedOrderId?' #'+c.usedOrderId:'')+'</span>':'<span style="color:var(--dusty-rose)">未使用</span>')+'</td></tr>');
   });});
   el.innerHTML='<h3 style="font-size:15px;color:var(--cocoa);margin:26px 0 10px"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"/><path d="M15 6v12" stroke-dasharray="2 2"/></svg>會員專屬折扣</h3>'
     +'<div class="disc-card" style="flex-direction:column;align-items:stretch;gap:10px">'
     +'<div class="fg"><label>搜尋會員（姓名或 IG）</label><input id="couponSearch" oninput="searchCouponMember(this.value)" placeholder="輸入姓名或 @IG" style="width:100%;box-sizing:border-box"><div id="couponSearchResults" style="margin-top:6px"></div><div id="couponSelected" style="font-size:13px;color:var(--cocoa);margin-top:6px"></div></div>'
-    +'<div style="display:flex;gap:10px"><div class="fg" style="flex:1;min-width:0"><label>折扣金額</label><input type="number" id="couponAmount" style="width:100%;box-sizing:border-box" placeholder="50"></div>'
-    +'<div class="fg" style="flex:1;min-width:0"><label>說明</label><input id="couponDesc" style="width:100%;box-sizing:border-box" placeholder="生日禮"></div></div>'
+    +'<div class="fg"><label>折扣方式</label><div style="display:flex;gap:8px">'
+    +'<label style="flex:1;border:1.5px solid var(--linen);border-radius:10px;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;font-size:13px;margin:0"><input type="radio" name="cpnType" value="amount" checked onchange="onCpnTypeChange()" style="width:auto;margin:0">固定金額</label>'
+    +'<label style="flex:1;border:1.5px solid var(--linen);border-radius:10px;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;font-size:13px;margin:0"><input type="radio" name="cpnType" value="percent" onchange="onCpnTypeChange()" style="width:auto;margin:0">折數</label>'
+    +'</div></div>'
+    +'<div class="fg" id="cpnAmountRow"><label>折扣金額 (NT$)</label><input type="number" id="couponAmount" style="width:100%;box-sizing:border-box" placeholder="50"></div>'
+    +'<div class="fg" id="cpnPercentRow" style="display:none"><label>折數（例：9＝9折，85＝85折）</label><input type="number" step="0.1" id="couponPercent" style="width:100%;box-sizing:border-box" placeholder="9"></div>'
+    +'<div class="fg"><label>說明</label><input id="couponDesc" style="width:100%;box-sizing:border-box" placeholder="生日禮"></div>'
     +'<div class="fg"><label>開始日期</label><input type="date" id="couponFrom" style="width:100%;box-sizing:border-box"></div>'
     +'<div class="fg"><label>結束日期（留空＝無期限）</label><input type="date" id="couponUntil" style="width:100%;box-sizing:border-box"></div>'
     +'<button class="abtn pr" style="align-self:flex-start" onclick="issueCoupon()">發放折扣</button></div>'
@@ -2129,23 +2135,42 @@ function renderMemberCoupons(){
     +'<button class="abtn pr" style="align-self:flex-start" onclick="saveWelcomeCoupon()">儲存設定</button></div>'
     +'<div class="disc-card" style="flex-direction:column;align-items:stretch;gap:10px;margin-top:14px">'
     +'<div style="font-weight:600;color:var(--cocoa);font-size:14px">📣 群發優惠券（週年慶／活動）</div>'
-    +'<p style="font-size:12px;color:var(--text-light);margin:0">一次發送給全部 '+mem.length+' 位會員，適合週年慶或節日活動。</p>'
-    +'<div style="display:flex;gap:10px"><div class="fg" style="flex:1;min-width:0"><label>金額</label><input type="number" id="bcAmount" style="width:100%;box-sizing:border-box" placeholder="100"></div>'
+    +'<p style="font-size:12px;color:var(--text-light);margin:0">發送優惠券給選定對象，適合週年慶或節日活動。</p>'
+    +'<div class="fg"><label>發送對象</label><select id="bcAudience" style="width:100%;box-sizing:border-box"><option value="all">全部會員（'+mem.length+' 位）</option><option value="vip">僅 VIP 會員（'+mem.filter(function(m){return m.vip;}).length+' 位）</option></select></div>'
+    +'<div class="fg"><label>折扣方式</label><div style="display:flex;gap:8px">'
+    +'<label style="flex:1;border:1.5px solid var(--linen);border-radius:10px;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;font-size:13px;margin:0"><input type="radio" name="bcType" value="amount" checked onchange="onBcTypeChange()" style="width:auto;margin:0">固定金額</label>'
+    +'<label style="flex:1;border:1.5px solid var(--linen);border-radius:10px;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;font-size:13px;margin:0"><input type="radio" name="bcType" value="percent" onchange="onBcTypeChange()" style="width:auto;margin:0">折數</label>'
+    +'</div></div>'
+    +'<div style="display:flex;gap:10px"><div class="fg" style="flex:1;min-width:0" id="bcAmountRow"><label>金額 (NT$)</label><input type="number" id="bcAmount" style="width:100%;box-sizing:border-box" placeholder="100"></div>'
+    +'<div class="fg" id="bcPercentRow" style="flex:1;min-width:0;display:none"><label>折數</label><input type="number" step="0.1" id="bcPercent" style="width:100%;box-sizing:border-box" placeholder="9"></div>'
     +'<div class="fg" style="flex:1;min-width:0"><label>有效天數（0＝無期限）</label><input type="number" id="bcDays" style="width:100%;box-sizing:border-box" placeholder="14"></div></div>'
     +'<div class="fg"><label>說明</label><input id="bcDesc" style="width:100%;box-sizing:border-box" placeholder="週年慶優惠"></div>'
-    +'<button class="abtn pr" style="align-self:flex-start" onclick="broadcastCoupon()">發送給所有會員</button></div>'
+    +'<button class="abtn pr" style="align-self:flex-start" onclick="broadcastCoupon()">發送優惠券</button></div>'
     +(rows.length?'<div class="table-scroll"><table class="dtable" style="margin-top:14px"><thead><tr><th>會員</th><th>金額</th><th>使用期間</th><th>狀態</th></tr></thead><tbody>'+rows.join('')+'</tbody></table></div>':'<p style="font-size:13px;color:var(--text-light);margin-top:10px">尚未發放任何會員折扣</p>');
 }
+function onCpnTypeChange(){var t=(document.querySelector('input[name="cpnType"]:checked')||{}).value||'amount';var a=document.getElementById('cpnAmountRow'),p=document.getElementById('cpnPercentRow');if(a)a.style.display=(t==='percent')?'none':'';if(p)p.style.display=(t==='percent')?'':'none';}
+function onBcTypeChange(){var t=(document.querySelector('input[name="bcType"]:checked')||{}).value||'amount';var a=document.getElementById('bcAmountRow'),p=document.getElementById('bcPercentRow');if(a)a.style.display=(t==='percent')?'none':'';if(p)p.style.display=(t==='percent')?'':'none';}
+function toggleVip(id){var m=S.members.find(function(x){return String(x.id)===String(id);});if(!m)return;m.vip=!m.vip;persistMember(m);showMemberOrders(id);renderAdminMembs();if(document.getElementById('memberCouponAdmin'))renderMemberCoupons();showToast(m.vip?(m.name+' 已設為 VIP'):(m.name+' 已取消 VIP'));}
 function issueCoupon(){
   var mid=S._couponMemberId;
-  var amt=parseInt(document.getElementById('couponAmount').value)||0;
+  var type=(document.querySelector('input[name="cpnType"]:checked')||{}).value||'amount';
   var desc=document.getElementById('couponDesc').value.trim()||'專屬折扣';
   var from=document.getElementById('couponFrom').value||new Date().toISOString().slice(0,10);
   var until=document.getElementById('couponUntil').value;
-  if(!mid||!amt){showToast('請選擇會員並填寫折扣金額');return;}
+  if(!mid){showToast('請先選擇會員');return;}
   var m=S.members.find(function(x){return String(x.id)===String(mid);});if(!m)return;
   if(!m.coupons)m.coupons=[];
-  m.coupons.push({id:Date.now(),amount:amt,desc:desc,from:from,until:until,used:false});
+  var cpn={id:Date.now(),desc:desc,from:from,until:until,used:false};
+  if(type==='percent'){
+    var pc=parseFloat(document.getElementById('couponPercent').value)||0;var r=discRate(pc);
+    if(r<=0||r>=1){showToast('請輸入有效折數，例如 9（9折）或 85（85折）');return;}
+    cpn.type='percent';cpn.percent=pc;cpn.amount=0;
+  }else{
+    var amt=parseInt(document.getElementById('couponAmount').value)||0;
+    if(!amt){showToast('請填寫折扣金額');return;}
+    cpn.amount=amt;
+  }
+  m.coupons.push(cpn);
   persistMember(m);
   renderMemberCoupons();showToast('已發放折扣給 '+m.name+'');
 }
@@ -2160,16 +2185,28 @@ function saveWelcomeCoupon(){
   if(window.FB&&window.FB.saveConfig){window.FB.saveConfig({welcomeCoupon:S.welcomeCoupon}).then(function(){showToast('新會員贈券設定已儲存');}).catch(function(e){showToast('儲存失敗：'+(e.code||e.message));});}else{showToast('已儲存（離線）');}
 }
 function broadcastCoupon(){
-  var amt=parseInt(document.getElementById('bcAmount').value)||0;
-  var desc=document.getElementById('bcDesc').value.trim()||'週年慶優惠';
+  var type=(document.querySelector('input[name="bcType"]:checked')||{}).value||'amount';
+  var desc=document.getElementById('bcDesc').value.trim()||'會員優惠';
   var days=parseInt(document.getElementById('bcDays').value)||0;
-  if(!amt){showToast('請填寫折扣金額');return;}
+  var aud=(document.getElementById('bcAudience')||{}).value||'all';
   var mem=S.members.filter(function(m){return !m.isAdmin;});
-  if(!mem.length){showToast('目前沒有會員');return;}
-  if(!confirm('確定發送 NT$ '+amt+' 優惠券給全部 '+mem.length+' 位會員？'))return;
+  if(aud==='vip')mem=mem.filter(function(m){return m.vip;});
+  if(!mem.length){showToast(aud==='vip'?'目前沒有 VIP 會員':'目前沒有會員');return;}
+  var base={used:false,desc:desc};
+  if(type==='percent'){
+    var pc=parseFloat(document.getElementById('bcPercent').value)||0;var r=discRate(pc);
+    if(r<=0||r>=1){showToast('請輸入有效折數，例如 9（9折）或 85（85折）');return;}
+    base.type='percent';base.percent=pc;base.amount=0;
+  }else{
+    var amt=parseInt(document.getElementById('bcAmount').value)||0;
+    if(!amt){showToast('請填寫折扣金額');return;}
+    base.amount=amt;
+  }
+  var label=type==='percent'?(base.percent+'折'):('NT$ '+base.amount);
+  if(!confirm('確定發送 '+label+' 優惠券給'+(aud==='vip'?(' '+mem.length+' 位 VIP 會員'):('全部 '+mem.length+' 位會員'))+'？'))return;
   var today=new Date();var from=today.toISOString().slice(0,10);var until='';
   if(days>0){until=new Date(today.getTime()+days*86400000).toISOString().slice(0,10);}
-  mem.forEach(function(m){if(!m.coupons)m.coupons=[];m.coupons.push({id:Date.now()+Math.floor(Math.random()*100000),amount:amt,desc:desc,from:from,until:until,used:false});persistMember(m);});
+  mem.forEach(function(m){if(!m.coupons)m.coupons=[];m.coupons.push(Object.assign({id:Date.now()+Math.floor(Math.random()*100000),from:from,until:until},base));persistMember(m);});
   renderMemberCoupons();showToast('已發送優惠券給 '+mem.length+' 位會員');
 }
 function searchCouponMember(q){
@@ -2552,7 +2589,7 @@ function renderAdminMembs(){
   var fmt=function(l){if(!l)return '—';var d=new Date(l);return isNaN(d.getTime())?String(l).slice(0,10):(d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate());};
   document.getElementById('adminMemberTable').innerHTML='<thead><tr><th>姓名</th><th>Email</th><th>電話</th><th>IG</th><th>訂單數</th><th>最近下單</th></tr></thead><tbody>'
     +list.map(function(r){var m=r.m;
-      return '<tr style="cursor:pointer" onclick="showMemberOrders(\''+m.id+'\')"><td>'+m.name+' <span style="color:var(--dusty-rose)">›</span></td><td>'+m.email+'</td><td>'+(m.phone||'—')+'</td><td>'+(m.ig||'—')+'</td>'
+      return '<tr style="cursor:pointer" onclick="showMemberOrders(\''+m.id+'\')"><td>'+(m.vip?'<span style="display:inline-block;background:var(--gold);color:#fff;font-size:10px;border-radius:8px;padding:1px 6px;margin-right:5px">VIP</span>':'')+m.name+' <span style="color:var(--dusty-rose)">›</span></td><td>'+m.email+'</td><td>'+(m.phone||'—')+'</td><td>'+(m.ig||'—')+'</td>'
         +'<td>'+r.count+'</td><td style="font-size:12px;white-space:nowrap">'+fmt(r.last)+'</td></tr>';
     }).join('')+'</tbody>';
 }
@@ -2560,7 +2597,7 @@ function setMembSort(k){S._membSort=k;renderAdminMembs();}
 function showMemberOrders(id){
   var m=S.members.find(function(x){return String(x.id)===String(id);});if(!m)return;
   var os=S.orders.filter(function(o){return String(o.userId)===String(m.id);}).slice().sort(function(a,b){return (b.id||0)-(a.id||0);});
-  var head='<div style="font-weight:600;color:var(--cocoa);font-size:15px">'+m.name+'</div><div style="font-size:12px;color:var(--text-light);margin-bottom:12px">'+(m.email||'')+'　共 '+os.length+' 筆訂單</div>';
+  var head='<div style="font-weight:600;color:var(--cocoa);font-size:15px">'+(m.vip?'<span style="display:inline-block;background:var(--gold);color:#fff;font-size:11px;border-radius:8px;padding:1px 7px;margin-right:6px;vertical-align:middle">VIP</span>':'')+m.name+'</div><div style="font-size:12px;color:var(--text-light);margin-bottom:12px">'+(m.email||'')+'　共 '+os.length+' 筆訂單</div>';
   var body=document.getElementById('memberOrdersBody');
   if(!os.length){body.innerHTML=head+'<p style="font-size:13px;color:var(--text-light);text-align:center;padding:20px">此會員尚無訂單</p>';}
   else{body.innerHTML=head+os.map(function(o){
@@ -2569,7 +2606,8 @@ function showMemberOrders(id){
       +'<div style="font-size:13px;color:var(--text-light);margin-top:6px">'+(o.items||[]).map(function(i){return i.name+'×'+i.qty;}).join('、')+'</div>'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span style="font-size:14px;font-weight:600;color:var(--cocoa)">合計 NT$ '+o.total+'</span><span style="font-size:12px;color:var(--dusty-rose)">查看明細 ›</span></div></div>';
   }).join('');}
-  body.innerHTML+='<button class="abtn dg" style="width:100%;margin-top:14px" onclick="adminDeleteMember(\''+m.id+'\')">刪除此會員帳號資料</button>';
+  body.innerHTML+='<button class="abtn" style="width:100%;margin-top:14px" onclick="toggleVip(\''+m.id+'\')">'+(m.vip?'★ 取消 VIP 資格':'☆ 設為 VIP 會員')+'</button>';
+  body.innerHTML+='<button class="abtn dg" style="width:100%;margin-top:10px" onclick="adminDeleteMember(\''+m.id+'\')">刪除此會員帳號資料</button>';
   document.getElementById('memberOrdersModal').classList.add('open');
 }
 function openOrderFromMember(id){closeModal('memberOrdersModal');openOrderDetail(id,true);}
