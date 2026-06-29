@@ -699,7 +699,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0628f</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0629a</div>
 </footer>
 
 <!-- MODALS -->
@@ -1602,7 +1602,8 @@ function addToCart(id,spec){
     delete item.images;delete item.specs;
     S.cart.push(item);
   }
-  updateCartBadge();showToast('已加入：'+p.name+(spec?'（'+spec+'）':'')+'');
+  updateCartBadge();
+  if(revalidateDiscount()){renderCart();}else{showToast('已加入：'+p.name+(spec?'（'+spec+'）':'')+'');}
 }
 
 function updateCartBadge(){
@@ -1627,6 +1628,7 @@ function calcShip(){
 }
 
 function renderCart(){
+  revalidateDiscount();
   var el=document.getElementById('cartContent');
   if(!S.cart.length){el.innerHTML='<div class="empty-st"><span class="emo"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg></span>購物車是空的<br><br><button class="hero-cta" onclick="showPage(\'shop\')">去逛逛</button></div>';return;}
   var sub=S.cart.reduce(function(s,i){return s+i.price*i.qty;},0);
@@ -1688,6 +1690,14 @@ function discIneligibleItems(disc){
   return S.cart.filter(function(i){return (inc.length&&inc.indexOf(i.cat)<0)||ex.indexOf(i.cat)>=0;});
 }
 function cartNoDiscNames(){var nd=S.cart.filter(function(i){return i.noDiscount;});return nd.map(function(i){return i.name;}).filter(function(n,ix,a){return a.indexOf(n)===ix;});}
+function revalidateDiscount(){
+  if(!S.appliedDiscount)return false;
+  var ndn=cartNoDiscNames();
+  if(ndn.length){S.appliedDiscount=null;showToast('「'+ndn.join('、')+'」不適用任何折扣，已為您取消優惠');return true;}
+  var bad=discIneligibleItems(S.appliedDiscount);
+  if(bad.length){var nm=bad.map(function(i){return i.name;}).filter(function(n,ix,a){return a.indexOf(n)===ix;});S.appliedDiscount=null;showToast('「'+nm.join('、')+'」非此折扣適用品項，已為您取消優惠');return true;}
+  return false;
+}
 function discRate(p){p=parseFloat(p)||0;if(p<=0)return 0;return p<10?p/10:p/100;}
 function appliedDiscAmt(){
   var disc=S.appliedDiscount;if(!disc)return 0;
@@ -1861,6 +1871,7 @@ function placeOrder(total){
   if(!S.paymentMethod){showToast('請選擇付款方式');return;}
   if((S.paymentMethod==='bank'||S.paymentMethod==='linepay')&&!S.shippingMethod){showToast('請選擇寄送方式');return;}
   if(S.appliedDiscount&&discUsedByUser(S.appliedDiscount)){showToast('此折扣碼每個帳號限用一次，您已使用過');S.appliedDiscount=null;renderCart();return;}
+  if(revalidateDiscount()){renderCart();return;}
   var nm=(document.getElementById('rcvName')||{}).value||'';
   var ph=(document.getElementById('rcvPhone')||{}).value||'';
   if(!nm.trim()||!ph.trim()){showToast('請填寫收件人資訊');return;}
