@@ -699,7 +699,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0629b</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0629c</div>
 </footer>
 
 <!-- MODALS -->
@@ -798,7 +798,7 @@ var S={
   discounts:[{code:'JU2024',amount:50,desc:'新會員優惠'},{code:'SPRING',amount:100,desc:'春季促銷'}],
   welcomeCoupon:{enabled:false,amount:50,days:30,desc:'新會員首購禮'},
   /* 分類促銷（後台直接套用，所選分類商品自動顯示折扣價，可選新品除外，不需折扣碼） */
-  promo:{enabled:false,cat:'全部',type:'percent',percent:9,amount:0,excludeNew:false,label:'限時優惠'},
+  promo:{enabled:false,cat:'全部',type:'percent',percent:9,amount:0,excludeNew:false,label:'限時優惠',start:'',end:''},
   members:[
     {id:1,name:'小花媽媽',email:'mom@example.com',pwd:'123456',phone:'0912000001',ig:'@momflower',isAdmin:false}
   ],
@@ -1102,6 +1102,7 @@ function toggleFavFilter(){
 }
 function promoApplies(p){
   var pr=S.promo;if(!pr||!pr.enabled||!p)return false;
+  if(discActive(pr)!=='ok')return false;
   if(p.isCustom)return false;
   if(p.noDiscount)return false;
   if(pr.cat&&pr.cat!=='全部'&&p.cat!==pr.cat)return false;
@@ -3128,6 +3129,7 @@ function renderPromoAdmin(){
   box.innerHTML=''
     +'<div style="background:var(--warm-ivory);border:1.5px solid var(--gold);border-radius:14px;padding:16px;margin-bottom:18px">'
     +'<div style="font-weight:600;color:var(--cocoa);margin-bottom:4px">分類促銷（自動特價）</div>'
+    +(function(){if(!pr.enabled)return '<div style="font-size:12px;color:var(--text-light);margin-bottom:6px">目前狀態：未啟用</div>';var st=discActive(pr);var lbl=st==='before'?('尚未開始（'+pr.start+' 起生效）'):st==='after'?('已結束（'+pr.end+'）'):'進行中';var col=st==='ok'?'#3a8a5a':'var(--dusty-rose)';return '<div style="font-size:12px;font-weight:600;color:'+col+';margin-bottom:6px">目前狀態：'+lbl+'</div>';})()
     +'<p style="font-size:12px;color:var(--text-light);margin-bottom:12px;line-height:1.7">啟用後，所選分類的商品會在店面直接顯示折扣價（不需折扣碼）。可勾選「新品除外」讓最新上架的商品維持原價。</p>'
     +'<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px"><input type="checkbox" id="promoEnabled" '+(pr.enabled?'checked':'')+' style="width:auto">啟用分類促銷</label>'
     +'<div class="fg"><label>適用分類</label><select id="promoCat" style="width:100%;box-sizing:border-box">'+opts+'</select></div>'
@@ -3138,6 +3140,8 @@ function renderPromoAdmin(){
     +'<div class="fg" id="promoPercentRow"><label>折數（例：9＝9折，85＝85折）</label><input type="number" step="0.1" id="promoPercent" value="'+(pr.percent||'')+'" style="width:100%;box-sizing:border-box"></div>'
     +'<div class="fg" id="promoAmountRow" style="display:none"><label>每件折抵金額 (NT$)</label><input type="number" id="promoAmount" value="'+(pr.amount||'')+'" style="width:100%;box-sizing:border-box"></div>'
     +'<label style="display:flex;align-items:center;gap:8px;font-size:13px;margin-bottom:12px"><input type="checkbox" id="promoExNew" '+(pr.excludeNew?'checked':'')+' style="width:auto">新品除外（最新上架的商品不參與此促銷）</label>'
+    +'<div class="fg"><label>開始日期（留空＝即刻生效）</label><input type="date" id="promoStart" value="'+(pr.start||'')+'" style="width:100%;box-sizing:border-box"></div>'
+    +'<div class="fg"><label>結束日期（留空＝永久有效）</label><input type="date" id="promoEnd" value="'+(pr.end||'')+'" style="width:100%;box-sizing:border-box"></div>'
     +'<div class="fg"><label>標籤文字（顯示在商品上）</label><input id="promoLabel" value="'+((pr.label||'').replace(/"/g,'&quot;'))+'" placeholder="限時優惠" style="width:100%;box-sizing:border-box"></div>'
     +'<button class="abtn pr" onclick="savePromo()">儲存促銷設定</button>'
     +'</div>';
@@ -3151,7 +3155,7 @@ function onPromoTypeChange(){
 }
 function savePromo(){
   var type=(document.querySelector('input[name="promoType"]:checked')||{}).value||'percent';
-  var promo={enabled:document.getElementById('promoEnabled').checked,cat:document.getElementById('promoCat').value||'全部',type:type,excludeNew:document.getElementById('promoExNew').checked,label:document.getElementById('promoLabel').value.trim()||'限時優惠'};
+  var promo={enabled:document.getElementById('promoEnabled').checked,cat:document.getElementById('promoCat').value||'全部',type:type,excludeNew:document.getElementById('promoExNew').checked,label:document.getElementById('promoLabel').value.trim()||'限時優惠',start:document.getElementById('promoStart').value||'',end:document.getElementById('promoEnd').value||''};
   if(type==='percent'){
     var pc=parseFloat(document.getElementById('promoPercent').value)||0;
     if(promo.enabled){var r=discRate(pc);if(r<=0||r>=1){showToast('請輸入有效折數，例如 9（9折）或 85（85折）');return;}}
@@ -3161,6 +3165,7 @@ function savePromo(){
     if(promo.enabled&&!a){showToast('請填寫折抵金額');return;}
     promo.amount=a;promo.percent=S.promo.percent||9;
   }
+  if(promo.start&&promo.end&&promo.start>promo.end){showToast('結束日期不可早於開始日期');return;}
   S.promo=Object.assign({},S.promo,promo);
   if(window.FB&&window.FB.saveConfig){window.FB.saveConfig({promo:S.promo}).then(function(){showToast('分類促銷設定已儲存');}).catch(function(e){showToast('儲存失敗：'+(e.code||e.message));});}else{showToast('已儲存（離線）');}
   renderShopProducts();renderHomeProducts();renderPromoAdmin();
