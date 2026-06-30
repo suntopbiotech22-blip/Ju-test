@@ -699,7 +699,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0630a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0630c</div>
 </footer>
 
 <!-- MODALS -->
@@ -795,20 +795,18 @@ var S={
   customDepositChoice:null,customRemainChoice:null,
   selectedCat:'全部',shopPage:1,searchQuery:'',favOnly:false,lookbook:[],editingProductId:null,editingImgData:null,_prodsReady:false,
   nextOrderId:1001,nextProductId:7,orders:[],
-  discounts:[{code:'JU2024',amount:50,desc:'新會員優惠'},{code:'SPRING',amount:100,desc:'春季促銷'}],
+  discounts:[],
   welcomeCoupon:{enabled:false,amount:50,days:30,desc:'新會員首購禮'},
   /* 分類促銷（後台直接套用，所選分類商品自動顯示折扣價，可選新品除外，不需折扣碼） */
   promo:{enabled:false,cat:'全部',type:'percent',percent:9,amount:0,excludeNew:false,label:'限時優惠',start:'',end:''},
-  members:[
-    {id:1,name:'小花媽媽',email:'mom@example.com',pwd:'123456',phone:'0912000001',ig:'@momflower',isAdmin:false}
-  ],
+  members:[],
   products:[],
-  categories:['全部','髮飾','項鍊','耳環','手環','特殊訂製'],
+  categories:['全部'],
   /* LINE Pay 收款設定：qrImage 貼上收款碼圖片(網址或 data:image base64)即永久顯示；也可在後台「收款設定」臨時上傳 */
   linePay:{qrImage:'',link:'',note:'掃描 QR 後以 LINE Pay 付款，完成後請至訂單頁面上傳付款截圖通知'},
   /* 首頁輪播宣傳圖片（後台可上傳；要永久固定可直接放圖片網址或 base64） */
   /* 首頁跑馬燈訊息（後台可新增/停用/刪除，自動輪播顯示於首圖橫幅按鈕下方） */
-  ticker:[{text:' 新會員首購輸入 JU2024 折 $50',enabled:true},{text:'消費滿 NT$1,000　銀行匯款宅配 / 7-11 取貨免運',enabled:true}],
+  ticker:[],
   salesScope:'month',salesBy:'month',
   /* EmailJS 訂單通知設定：到 emailjs.com 申請後填入；留空則不寄信 */
   emailjs:{publicKey:'0fDgbRNsr5gYK1db6',serviceId:'service_v1zwgeo',templateSeller:'template_7fudb3h',templateCustomer:'template_lg542mk',notifyEmail:''}
