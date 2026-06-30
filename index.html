@@ -699,7 +699,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0629c</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0630a</div>
 </footer>
 
 <!-- MODALS -->
@@ -1103,7 +1103,6 @@ function toggleFavFilter(){
 function promoApplies(p){
   var pr=S.promo;if(!pr||!pr.enabled||!p)return false;
   if(discActive(pr)!=='ok')return false;
-  if(p.isCustom)return false;
   if(p.noDiscount)return false;
   if(pr.cat&&pr.cat!=='全部'&&p.cat!==pr.cat)return false;
   if(pr.excludeNew&&p.isNew)return false;
@@ -1801,7 +1800,7 @@ function customBox(){
 
 function depositTotal(){return S.cart.filter(function(i){return i.isCustom;}).reduce(function(s,i){return s+i.deposit*i.qty;},0);}
 function orderTotal(){var sub=S.cart.reduce(function(s,i){return s+i.price*i.qty;},0);var d=appliedDiscAmt();return sub+calcShip()-d;}
-function customRemainder(){return S.cart.filter(function(i){return i.isCustom;}).reduce(function(s,i){return s+(i.price-i.deposit)*i.qty;},0);}
+function customRemainder(){return S.cart.filter(function(i){return i.isCustom;}).reduce(function(s,i){return s+Math.max(0,i.price-i.deposit)*i.qty;},0);}
 function payableNow(){return (S.cart.some(function(i){return i.isCustom;})&&S.customDepositChoice==='deposit')?(orderTotal()-customRemainder()-calcShip()):orderTotal();}
 function updateDepositSummary(){
   var total=orderTotal(),remainder=customRemainder()+calcShip(),payNow=total-remainder;
