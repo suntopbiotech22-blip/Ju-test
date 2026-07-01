@@ -699,7 +699,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0701a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0701c</div>
 </footer>
 
 <!-- MODALS -->
@@ -853,6 +853,8 @@ function startFirebaseShop(){
       renderHomeProducts();renderShopProducts();
       if(document.getElementById('promoAdmin'))renderPromoAdmin();
     }
+    var _ppg=document.getElementById('page-product');
+    if(_ppg&&_ppg.classList.contains('active')&&S._pendingProduct==null&&S._openProductId!=null)renderProductPage(S._openProductId);
   });}
   if(window.FB.onAuth){window.FB.onAuth(handleAuthUser);}
 }
@@ -1246,7 +1248,7 @@ function renderShopProducts(){
   var per=12,pages=Math.max(1,Math.ceil(f.length/per));
   if(S.shopPage>pages)S.shopPage=pages;if(S.shopPage<1)S.shopPage=1;
   var start=(S.shopPage-1)*per,pageItems=f.slice(start,start+per);
-  var emptyMsg=S.favOnly?'還沒有加入最愛的作品，點作品上的愛心收藏吧':(q?('找不到符合「'+S.searchQuery+'」的作品'):'這個分類暫時沒有作品');
+  var emptyMsg=(!S._prodsReady&&!S.favOnly&&!q)?'作品載入中…':(S.favOnly?'還沒有加入最愛的作品，點作品上的愛心收藏吧':(q?('找不到符合「'+S.searchQuery+'」的作品'):'這個分類暫時沒有作品'));
   document.getElementById('shopProducts').innerHTML=f.length?pageItems.map(pCard).join(''):'<div class="empty-st"><span class="emo"></span>'+emptyMsg+'</div>';
   renderShopPager(pages);
   saveShopState();
@@ -1515,7 +1517,7 @@ function renderProductPage(id){
     document.documentElement.removeAttribute('data-routing');
     return;
   }
-  S._pendingProduct=null;
+  S._pendingProduct=null;S._openProductId=id;
   var imgs=(p.images&&p.images.length)?p.images:(p.imgData?[p.imgData]:[]);
   var firstSpecImg=(p.specs||[]).reduce(function(a,s){return a||s.img;},'');
   var cover=imgs[0]||firstSpecImg||'';
@@ -1595,12 +1597,13 @@ function addToCart(id,spec){
   if(prodTracksStock(p)){var _left=prodStockNum(p)-cartQtyOf(id);if(_left<=0){showToast(prodStockNum(p)<=0?'此商品已售完':'已達庫存上限，僅剩 '+prodStockNum(p)+' 件');return;}}
   spec=spec||'';
   var so=(p.specs||[]).find(function(s){return s.name===spec;});
-  var price=promoPrice((so&&so.price)?so.price:p.price,p);
+  var base=(so&&so.price)?so.price:p.price;
+  var price=promoPrice(base,p);
   var dep=(so&&so.deposit!==''&&so.deposit!=null)?so.deposit:p.deposit;
   var img=(so&&so.img)?so.img:(p.imgData||'');
   var ex=S.cart.find(function(x){return x.id===id&&(x.spec||'')===spec;});
   if(ex){ex.qty++;}else{
-    var item=Object.assign({},p,{qty:1,spec:spec,price:price,deposit:dep,imgData:img,cid:'c'+Date.now()+Math.floor(Math.random()*1000)});
+    var item=Object.assign({},p,{qty:1,spec:spec,price:price,origPrice:base,promoLabel:(price<base?((S.promo&&S.promo.label)||'限時優惠'):''),deposit:dep,imgData:img,cid:'c'+Date.now()+Math.floor(Math.random()*1000)});
     delete item.images;delete item.specs;
     S.cart.push(item);
   }
@@ -1643,9 +1646,9 @@ function renderCart(){
   var items=S.cart.map(function(item){
     var img=item.imgData?('<img loading="lazy" src="'+item.imgData+'" style="width:100%;height:100%;object-fit:cover;border-radius:10px">'):(item.emoji||IMG_PH);
     return '<div class="cart-item"><div class="cart-item-img" style="cursor:pointer" onclick="openDetail('+item.id+')">'+img+'</div>'
-      +'<div class="ci-info"><div class="ci-name" style="cursor:pointer" onclick="openDetail('+item.id+')">'+item.name+(item.isCustom?'':'')+'</div>'
+      +'<div class="ci-info"><div class="ci-name" style="cursor:pointer" onclick="openDetail('+item.id+')">'+item.name+((item.origPrice&&item.price<item.origPrice)?' <span style="color:var(--dusty-rose);font-weight:700">＊</span>':'')+(item.isCustom?'':'')+'</div>'
       +(item.spec?'<div style="font-size:12px;color:var(--text-light)">規格：'+item.spec+'</div>':'')
-      +'<div class="ci-price">NT$ '+item.price+'</div>'
+      +'<div class="ci-price">NT$ '+item.price+((item.origPrice&&item.price<item.origPrice)?' <span style="font-size:12px;color:var(--text-light);text-decoration:line-through;font-weight:400">NT$ '+item.origPrice+'</span>':'')+'</div>'
       +'<div class="qty-ctrl" style="margin-top:6px">'
       +'<button class="qty-btn" onclick="changeQty(\''+item.cid+'\',-1)">−</button>'
       +'<span class="qty-n">'+item.qty+'</span>'
@@ -1654,7 +1657,11 @@ function renderCart(){
   }).join('');
 
   var slbl=S.paymentMethod==='cod'?'7-11貨到付款運費':ship===0?'運費（滿千免運）':'運費';
+  var _plabels=[];
+  S.cart.forEach(function(i){if(i.origPrice&&i.price<i.origPrice){var _l=i.promoLabel||'限時優惠';if(_plabels.indexOf(_l)<0)_plabels.push(_l);}});
+  var promoNote=_plabels.length?'<div style="font-size:12px;color:var(--dusty-rose);margin:2px 2px 14px;line-height:1.7">＊ 已套用'+_plabels.map(function(l){return '「'+l+'」';}).join('、')+'優惠（標示 ＊ 的作品已折扣）</div>':'';
   el.innerHTML=items
+    +promoNote
     +(hasC?customBox():'')
     +'<div class="order-sum">'
     +'<div class="sum-row"><span>商品小計</span><span>NT$ '+sub+'</span></div>'
