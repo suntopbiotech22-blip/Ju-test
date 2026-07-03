@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>try{var _h=(location.hash||'').replace(/^#\/?/,'');if(_h&&_h!=='home')document.documentElement.setAttribute('data-routing','');}catch(e){}</script>
-<script>function onRecaptchaApiReady(){S._recaptchaApiReady=true;renderCaptchaWidgets();}</script>
-<script src="https://www.google.com/recaptcha/api.js?onload=onRecaptchaApiReady&render=explicit" async defer></script>
+<script>function grc(){return (window.grecaptcha&&window.grecaptcha.enterprise)?window.grecaptcha.enterprise:window.grecaptcha;}function onRecaptchaApiReady(){S._recaptchaApiReady=true;renderCaptchaWidgets();}</script>
+<script src="https://www.google.com/recaptcha/enterprise.js?onload=onRecaptchaApiReady&render=explicit" async defer></script>
 <title>啾手作 Ju Accessories｜手繪質感・乾燥花兒童手作飾品</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -702,7 +702,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0703d</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0703e</div>
 </footer>
 
 <!-- MODALS -->
@@ -955,17 +955,17 @@ function handleMemberNav(){S.currentUser?showPage('member'):showPage('auth');}
 var S_CAPTCHA_IDS={reg:null,pay:null};
 function renderCaptchaWidgets(){
   var key=S.emailjs&&S.emailjs.recaptchaSiteKey;
-  if(!key||!window.grecaptcha||!S._recaptchaApiReady)return;
+  if(!key||!grc()||!S._recaptchaApiReady)return;
   renderOneCaptcha('reg','regCaptchaBox','regCaptchaWidget',key);
   renderOneCaptcha('pay','payCaptchaBox','payCaptchaWidget',key);
 }
 function renderOneCaptcha(slot,boxId,widgetElId,key){
   var box=document.getElementById(boxId),el=document.getElementById(widgetElId);
   if(!box||!el)return;
-  if(S_CAPTCHA_IDS[slot]!==null){try{grecaptcha.reset(S_CAPTCHA_IDS[slot]);box.style.display='block';return;}catch(e){/* widget node was replaced (e.g. cart re-render), fall through and re-render */}}
+  if(S_CAPTCHA_IDS[slot]!==null){try{grc().reset(S_CAPTCHA_IDS[slot]);box.style.display='block';return;}catch(e){/* widget node was replaced (e.g. cart re-render), fall through and re-render */}}
   try{
     el.innerHTML='';
-    S_CAPTCHA_IDS[slot]=grecaptcha.render(widgetElId,{sitekey:key});
+    S_CAPTCHA_IDS[slot]=grc().render(widgetElId,{sitekey:key});
     box.style.display='block';
   }catch(e){
     /* Render failed (wrong key type / blocked script / network issue). Fail-safe: leave box hidden
@@ -976,13 +976,13 @@ function renderOneCaptcha(slot,boxId,widgetElId,key){
   }
 }
 function captchaToken(slot){
-  if(S_CAPTCHA_IDS[slot]===null||!window.grecaptcha)return '';
-  try{return grecaptcha.getResponse(S_CAPTCHA_IDS[slot])||'';}catch(e){return '';}
+  if(S_CAPTCHA_IDS[slot]===null||!grc())return '';
+  try{return grc().getResponse(S_CAPTCHA_IDS[slot])||'';}catch(e){return '';}
 }
 function captchaVerified(slot){if(S_CAPTCHA_IDS[slot]===null)return true;/* widget never rendered: fail-safe, don't block */return !!captchaToken(slot);}
 function resetCaptcha(slot){
-  if(S_CAPTCHA_IDS[slot]===null||!window.grecaptcha)return;
-  try{grecaptcha.reset(S_CAPTCHA_IDS[slot]);}catch(e){}
+  if(S_CAPTCHA_IDS[slot]===null||!grc())return;
+  try{grc().reset(S_CAPTCHA_IDS[slot]);}catch(e){}
 }
 
 function switchAuthTab(tab,btn){
