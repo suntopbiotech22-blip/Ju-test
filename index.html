@@ -702,7 +702,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0703b</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0703d</div>
 </footer>
 
 <!-- MODALS -->
@@ -814,7 +814,7 @@ var S={
   /* EmailJS 訂單通知設定：到 emailjs.com 申請後填入；留空則不寄信 */
   emailjs:{publicKey:'0fDgbRNsr5gYK1db6',serviceId:'service_v1zwgeo',templateSeller:'template_7fudb3h',templateCustomer:'template_lg542mk',notifyEmail:''},
   /* Google reCAPTCHA v2「我不是機器人」核取方塊 Site Key，到 google.com/recaptcha/admin 申請後填入；留空則不啟用機器人驗證 */
-  recaptchaSiteKey:'6LcZqUItAAAAAFS7Gfp1qIpnqsq-6tet610JXS7v'
+  recaptchaSiteKey:'6LeePEItAAAAAMcEpujIHZ3v7eheEtftxrJLi5yB'
 };
 
 var ADMIN_EMAILS=['turisms09@gmail.com','suntop.biotech22@gmail.com'];
@@ -962,18 +962,24 @@ function renderCaptchaWidgets(){
 function renderOneCaptcha(slot,boxId,widgetElId,key){
   var box=document.getElementById(boxId),el=document.getElementById(widgetElId);
   if(!box||!el)return;
-  box.style.display='block';
-  if(S_CAPTCHA_IDS[slot]!==null){try{grecaptcha.reset(S_CAPTCHA_IDS[slot]);return;}catch(e){/* widget node was replaced (e.g. cart re-render), fall through and re-render */}}
+  if(S_CAPTCHA_IDS[slot]!==null){try{grecaptcha.reset(S_CAPTCHA_IDS[slot]);box.style.display='block';return;}catch(e){/* widget node was replaced (e.g. cart re-render), fall through and re-render */}}
   try{
     el.innerHTML='';
     S_CAPTCHA_IDS[slot]=grecaptcha.render(widgetElId,{sitekey:key});
-  }catch(e){/* already rendered on this exact node */}
+    box.style.display='block';
+  }catch(e){
+    /* Render failed (wrong key type / blocked script / network issue). Fail-safe: leave box hidden
+       and leave S_CAPTCHA_IDS[slot] as null so the checkout/registration gate below does NOT block
+       real customers just because our bot-check couldn't load. Losing real orders is worse than
+       occasionally missing a bot check. */
+    console.warn('reCAPTCHA 渲染失敗，本次不擋單：',e);
+  }
 }
 function captchaToken(slot){
   if(S_CAPTCHA_IDS[slot]===null||!window.grecaptcha)return '';
   try{return grecaptcha.getResponse(S_CAPTCHA_IDS[slot])||'';}catch(e){return '';}
 }
-function captchaVerified(slot){return !!captchaToken(slot);}
+function captchaVerified(slot){if(S_CAPTCHA_IDS[slot]===null)return true;/* widget never rendered: fail-safe, don't block */return !!captchaToken(slot);}
 function resetCaptcha(slot){
   if(S_CAPTCHA_IDS[slot]===null||!window.grecaptcha)return;
   try{grecaptcha.reset(S_CAPTCHA_IDS[slot]);}catch(e){}
