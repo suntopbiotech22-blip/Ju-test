@@ -707,7 +707,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0704a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0705a</div>
 </footer>
 
 <!-- MODALS -->
@@ -1488,12 +1488,12 @@ function openOrderDetail(id,isAdmin){
     html+='<div class="pay-info" style="margin-top:14px"> 7-11 賣貨便貨到付款　'+(depOnly?'餘款（含運費）NT$ '+remainder+' 取貨時付款':'取貨時付款 NT$ '+o.total)+'</div>';
   }
   html+='<div style="font-size:13px;color:var(--text-light);margin-top:12px;line-height:1.9">寄送方式：'+(o.shippingMethod==='711'?'7-11 超商取貨':o.shippingMethod==='home'?'宅配到府':'7-11 賣貨便貨到付款')
-    +'<br>取貨/地址：'+(o.address||'—')+'<br>收件人：'+o.receiver+'　'+o.phone+(o.ig?'　IG '+o.ig:'')+(o.note?'<br>備註：'+o.note:'')+'</div>';
+    +'<br>取貨/地址：'+esc(o.address||'—')+'<br>收件人：'+esc(o.receiver)+'　'+esc(o.phone)+(o.ig?'　IG '+esc(o.ig):'')+(o.note?'<br>備註：'+esc(o.note):'')+'</div>';
   if(o.payment!=='cod'||depOnly){
     var reported=o.paymentProof||o.paymentNote;
     if(isAdmin){
       html+='<div style="margin-top:16px"><p style="font-size:13px;font-weight:600;color:var(--cocoa);margin-bottom:6px"> 顧客付款回報</p>';
-      if(o.paymentNote)html+='<div class="pay-info" style="margin-top:0"> 顧客留言：'+o.paymentNote+'</div>';
+      if(o.paymentNote)html+='<div class="pay-info" style="margin-top:0"> 顧客留言：'+esc(o.paymentNote)+'</div>';
       if(o.paymentProof)html+='<img loading="lazy" src="'+o.paymentProof+'" style="width:100%;max-width:240px;border-radius:10px;border:1px solid var(--linen);display:block;margin-top:8px">';
       if(!reported)html+='<p style="font-size:13px;color:var(--text-light);margin:0">顧客尚未回報付款</p>';
       html+='</div>';
@@ -1501,7 +1501,7 @@ function openOrderDetail(id,isAdmin){
       html+='<div style="margin-top:16px"><p style="font-size:13px;font-weight:600;color:var(--cocoa);margin-bottom:4px"> 付款回報</p>'
         +'<p style="font-size:12px;color:var(--text-light);margin-bottom:10px">完成付款後，上傳截圖或留言告訴我們（擇一即可）</p>';
       if(reported)html+='<p style="font-size:13px;color:#2e7d32;font-weight:600;margin-bottom:8px">✓ 已回報付款，等待賣家確認</p>';
-      html+='<textarea id="payNoteInput" placeholder="例如：已匯款，帳號末五碼 12345" style="width:100%;box-sizing:border-box;min-height:64px;padding:10px;border:1.5px solid var(--linen);border-radius:10px;font-family:inherit;font-size:16px">'+(o.paymentNote||'')+'</textarea>'
+      html+='<textarea id="payNoteInput" placeholder="例如：已匯款，帳號末五碼 12345" style="width:100%;box-sizing:border-box;min-height:64px;padding:10px;border:1.5px solid var(--linen);border-radius:10px;font-family:inherit;font-size:16px">'+esc(o.paymentNote||'')+'</textarea>'
         +'<button class="abtn" style="margin-top:8px" onclick="submitPaymentNote('+o.id+')">送出留言</button>';
       if(o.paymentProof){
         html+='<img loading="lazy" src="'+o.paymentProof+'" style="width:100%;max-width:240px;border-radius:10px;border:1px solid var(--linen);display:block;margin-top:12px">'
@@ -2314,13 +2314,13 @@ function searchCouponMember(q){
   }).slice(0,8);
   if(!mem.length){box.innerHTML='<div style="font-size:12px;color:var(--text-light);padding:6px 0">找不到符合的會員</div>';return;}
   box.innerHTML=mem.map(function(m){
-    return '<div onclick="selectCouponMember(\''+m.id+'\')" style="padding:8px 10px;border:1px solid var(--linen);border-radius:8px;margin-top:6px;cursor:pointer;font-size:13px;background:var(--cream)">'+m.name+(m.ig?' · '+m.ig:'')+'<br><span style="font-size:11px;color:var(--text-light)">'+(m.email||'')+'</span></div>';
+    return '<div onclick="selectCouponMember(\''+m.id+'\')" style="padding:8px 10px;border:1px solid var(--linen);border-radius:8px;margin-top:6px;cursor:pointer;font-size:13px;background:var(--cream)">'+esc(m.name)+(m.ig?' · '+esc(m.ig):'')+'<br><span style="font-size:11px;color:var(--text-light)">'+esc(m.email||'')+'</span></div>';
   }).join('');
 }
 function selectCouponMember(id){
   S._couponMemberId=id;
   var m=S.members.find(function(x){return String(x.id)===String(id);});
-  var sel=document.getElementById('couponSelected');if(sel&&m)sel.innerHTML='已選擇：<b>'+m.name+'</b>'+(m.ig?'（'+m.ig+'）':'');
+  var sel=document.getElementById('couponSelected');if(sel&&m)sel.innerHTML='已選擇：<b>'+esc(m.name)+'</b>'+(m.ig?'（'+esc(m.ig)+'）':'');
   var box=document.getElementById('couponSearchResults');if(box)box.innerHTML='';
   var inp=document.getElementById('couponSearch');if(inp&&m)inp.value=m.name;
 }
@@ -2690,7 +2690,7 @@ function renderAdminMembs(){
   var fmt=function(l){if(!l)return '—';var d=new Date(l);return isNaN(d.getTime())?String(l).slice(0,10):(d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate());};
   document.getElementById('adminMemberTable').innerHTML='<thead><tr><th>姓名</th><th>Email</th><th>電話</th><th>IG</th><th>訂單數</th><th>總消費</th><th>最近下單</th></tr></thead><tbody>'
     +list.map(function(r){var m=r.m;
-      return '<tr style="cursor:pointer" onclick="showMemberOrders(\''+m.id+'\')"><td>'+(m.vip?'<span style="display:inline-block;background:var(--gold);color:#fff;font-size:10px;border-radius:8px;padding:1px 6px;margin-right:5px">VIP</span>':'')+m.name+' <span style="color:var(--dusty-rose)">›</span></td><td>'+m.email+'</td><td>'+(m.phone||'—')+'</td><td>'+(m.ig||'—')+'</td>'
+      return '<tr style="cursor:pointer" onclick="showMemberOrders(\''+m.id+'\')"><td>'+(m.vip?'<span style="display:inline-block;background:var(--gold);color:#fff;font-size:10px;border-radius:8px;padding:1px 6px;margin-right:5px">VIP</span>':'')+esc(m.name)+' <span style="color:var(--dusty-rose)">›</span></td><td>'+esc(m.email)+'</td><td>'+esc(m.phone||'—')+'</td><td>'+esc(m.ig||'—')+'</td>'
         +'<td>'+r.count+'</td><td style="white-space:nowrap">NT$ '+r.spend+'</td><td style="font-size:12px;white-space:nowrap">'+fmt(r.last)+'</td></tr>';
     }).join('')+'</tbody>';
 }
@@ -2698,13 +2698,13 @@ function setMembSort(k){S._membSort=k;renderAdminMembs();}
 function showMemberOrders(id){
   var m=S.members.find(function(x){return String(x.id)===String(id);});if(!m)return;
   var os=S.orders.filter(function(o){return String(o.userId)===String(m.id);}).slice().sort(function(a,b){return (b.id||0)-(a.id||0);});
-  var head='<div style="font-weight:600;color:var(--cocoa);font-size:15px">'+(m.vip?'<span style="display:inline-block;background:var(--gold);color:#fff;font-size:11px;border-radius:8px;padding:1px 7px;margin-right:6px;vertical-align:middle">VIP</span>':'')+m.name+'</div><div style="font-size:12px;color:var(--text-light);margin-bottom:12px">'+(m.email||'')+'　共 '+os.length+' 筆訂單　總消費 NT$ '+os.reduce(function(s2,o){return s2+(o.status==='cancelled'?0:(o.total||0));},0)+'</div>';
+  var head='<div style="font-weight:600;color:var(--cocoa);font-size:15px">'+(m.vip?'<span style="display:inline-block;background:var(--gold);color:#fff;font-size:11px;border-radius:8px;padding:1px 7px;margin-right:6px;vertical-align:middle">VIP</span>':'')+esc(m.name)+'</div><div style="font-size:12px;color:var(--text-light);margin-bottom:12px">'+esc(m.email||'')+'　共 '+os.length+' 筆訂單　總消費 NT$ '+os.reduce(function(s2,o){return s2+(o.status==='cancelled'?0:(o.total||0));},0)+'</div>';
   var body=document.getElementById('memberOrdersBody');
   if(!os.length){body.innerHTML=head+'<p style="font-size:13px;color:var(--text-light);text-align:center;padding:20px">此會員尚無訂單</p>';}
   else{body.innerHTML=head+os.map(function(o){
     return '<div class="ord-card" style="cursor:pointer;text-align:left;margin-bottom:10px" onclick="openOrderFromMember('+o.id+')">'
       +'<div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:14px;font-weight:500">訂單 #'+o.id+'</div><div style="font-size:12px;color:var(--text-light)">'+o.date+'</div></div><span class="sbadge s-'+o.status+'">'+sLabel(o.status)+'</span></div>'
-      +'<div style="font-size:13px;color:var(--text-light);margin-top:6px">'+(o.items||[]).map(function(i){return i.name+'×'+i.qty;}).join('、')+'</div>'
+      +'<div style="font-size:13px;color:var(--text-light);margin-top:6px">'+(o.items||[]).map(function(i){return esc(i.name)+'×'+i.qty;}).join('、')+'</div>'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px"><span style="font-size:14px;font-weight:600;color:var(--cocoa)">合計 NT$ '+o.total+'</span><span style="font-size:12px;color:var(--dusty-rose)">查看明細 ›</span></div></div>';
   }).join('');}
   body.innerHTML+='<button class="abtn" style="width:100%;margin-top:14px" onclick="toggleVip(\''+m.id+'\')">'+(m.vip?'★ 取消 VIP 資格':'☆ 設為 VIP 會員')+'</button>';
@@ -2832,6 +2832,7 @@ function setSalesScope(s){S.salesScope=s;renderSales();}
 function setSalesBy(b){S.salesBy=b;renderSales();}
 function downloadCSV(filename,rows){
   var csv=rows.map(function(r){return r.map(function(c){c=(c==null?'':''+c);
+    if(/^[=+\-@\t\r]/.test(c))c="'"+c;
     if(/[",\n]/.test(c))c='"'+c.replace(/"/g,'""')+'"';return c;}).join(',');}).join('\r\n');
   var content='\ufeff'+csv;
   try{
