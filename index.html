@@ -602,8 +602,9 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <p style="margin-bottom:20px;font-size:14px;color:var(--text-light)" id="successMsg"></p>
     <div class="pay-info" style="text-align:left;max-width:380px;margin:0 auto 20px" id="successPayInfo"></div>
     <div id="successOrderId" style="font-size:12px;color:var(--text-light);margin-bottom:16px"></div>
+    <div id="successPayNotify" style="max-width:380px;margin:0 auto 20px;text-align:left"></div>
     <div id="successEmailBox" style="max-width:380px;margin:0 auto 22px"></div>
-    <button class="hero-cta" style="background:#fff;color:var(--cocoa);border:1.5px solid var(--gold);margin-bottom:10px" onclick="showPage('member')">查看訂單 / 上傳付款截圖</button>
+    <button id="successMemberBtn" class="hero-cta" style="background:#fff;color:var(--cocoa);border:1.5px solid var(--gold);margin-bottom:10px" onclick="showPage('member')">查看訂單 / 上傳付款截圖</button>
     <button class="hero-cta" onclick="showPage('home')">繼續逛逛</button>
   </div>
 </div>
@@ -719,7 +720,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0706a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0708a</div>
 </footer>
 
 <!-- MODALS -->
@@ -811,7 +812,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
 var IMG_PH='<div class="product-img-ph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2.4"/><path d="M12 9.6V4M12 14.4V20M9.6 12H4M14.4 12H20M9.4 9.4 6 6M14.6 14.6 18 18M14.6 9.4 18 6M9.4 14.6 6 18"/></svg></div>';
 var S={
   currentUser:null,cart:[],appliedDiscount:null,_authResolved:false,_adminPanel:"dashboard",
-  paymentMethod:null,shippingMethod:null,
+  paymentMethod:null,shippingMethod:null,guestCheckout:false,_guestUid:null,
   customDepositChoice:null,customRemainChoice:null,
   selectedCat:'全部',shopPage:1,searchQuery:'',favOnly:false,lookbook:[],editingProductId:null,editingImgData:null,_prodsReady:false,
   nextOrderId:1001,nextProductId:7,orders:[],
@@ -888,12 +889,20 @@ function handleAuthUser(user){
   if(S._unsubOrders){try{S._unsubOrders();}catch(e){}S._unsubOrders=null;}
   if(S._unsubMembers){try{S._unsubMembers();}catch(e){}S._unsubMembers=null;}
   if(!user){
-    S.currentUser=null;S.orders=[];
+    S.currentUser=null;S.orders=[];S.appliedDiscount=null;
     var mb0=document.getElementById('memberBtn');if(mb0)mb0.textContent='會員';
     var ab0=document.getElementById('adminBtn');if(ab0)ab0.style.display='none';
     var pm0=document.getElementById('page-member');if(pm0&&pm0.classList.contains('active'))showPage('home');
     var pa0=document.getElementById('page-admin');if(pa0&&pa0.classList.contains('active'))showPage('home');
     refreshAuthUI();
+    return;
+  }
+  if(user.anon){
+    /* 訪客（匿名登入）：介面維持未登入狀態，僅記住 uid 供訂單使用；不重繪購物車以免下單中的表單被清空 */
+    S._guestUid=user.uid;
+    S.currentUser=null;
+    var mbA=document.getElementById('memberBtn');if(mbA)mbA.textContent='會員';
+    var abA=document.getElementById('adminBtn');if(abA)abA.style.display='none';
     return;
   }
   if(isAdminEmail(user.email)){
@@ -1501,7 +1510,7 @@ function openOrderDetail(id,isAdmin){
   var payNow=depOnly?(o.total-remainder):o.total;
   var lines=o.items.map(function(i){return '<div style="display:flex;justify-content:space-between;font-size:13px;margin:5px 0"><span>'+i.name+(i.spec?'（'+i.spec+'）':'')+(i.isCustom?'':'')+' ×'+i.qty+'</span><span>NT$ '+(i.price*i.qty)+'</span></div>';}).join('');
   var html='<h3 style="margin-bottom:4px">訂單 #'+o.id+'</h3>'
-    +'<p class="msub" style="margin-bottom:12px">'+o.date+'　<span class="sbadge s-'+o.status+'">'+sLabel(o.status)+'</span></p>'
+    +'<p class="msub" style="margin-bottom:12px">'+o.date+'　<span class="sbadge s-'+o.status+'">'+sLabel(o.status)+'</span>'+(o.guest?'　<span class="sbadge" style="background:var(--warm-ivory);color:var(--cocoa)">訪客</span>':'')+'</p>'
     +'<div class="order-sum">'+lines
     +'<div class="sum-row"><span>運費</span><span>'+(o.shipping===0?'免費':'NT$ '+o.shipping)+'</span></div>'
     +(o.discount?'<div class="sum-row" style="color:var(--dusty-rose)"><span>折扣</span><span>-NT$ '+o.discount+'</span></div>':'')
@@ -1523,7 +1532,7 @@ function openOrderDetail(id,isAdmin){
     html+='<div class="pay-info" style="margin-top:14px"> 7-11 賣貨便貨到付款　'+(depOnly?'餘款（含運費）NT$ '+remainder+' 取貨時付款':'取貨時付款 NT$ '+o.total)+'</div>';
   }
   html+='<div style="font-size:13px;color:var(--text-light);margin-top:12px;line-height:1.9">寄送方式：'+(o.shippingMethod==='711'?'7-11 超商取貨':o.shippingMethod==='home'?'宅配到府':'7-11 賣貨便貨到付款')
-    +'<br>取貨/地址：'+esc(o.address||'—')+'<br>收件人：'+esc(o.receiver)+'　'+esc(o.phone)+(o.ig?'　IG '+esc(o.ig):'')+(o.note?'<br>備註：'+esc(o.note):'')+'</div>';
+    +'<br>取貨/地址：'+esc(o.address||'—')+'<br>收件人：'+esc(o.receiver)+'　'+esc(o.phone)+(o.ig?'　IG '+esc(o.ig):'')+(o.guest&&o.email?'<br>Email：'+esc(o.email):'')+(o.note?'<br>備註：'+esc(o.note):'')+'</div>';
   if(o.payment!=='cod'||depOnly){
     var reported=o.paymentProof||o.paymentNote;
     if(isAdmin){
@@ -1783,13 +1792,13 @@ function renderCart(){
     +'<div class="free-bar"><span style="white-space:nowrap">'+((sub-d)>=1000?' 已達免運！':'距免運還差 NT$ '+(1000-(sub-d)))+'</span>'
     +'<div class="free-prog"><div class="free-fill" style="width:'+pct+'%"></div></div></div>'
     +'</div>'
-    +'<div class="fsec"><h3><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.6 12.6 20a2 2 0 0 1-2.8 0L3 13.2a2 2 0 0 1 0-2.8L10.4 3H20v9z"/><circle cx="15" cy="8" r="1.2" fill="currentColor" stroke="none"/></svg>折扣碼</h3>'
+    +(S.currentUser?'<div class="fsec"><h3><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.6 12.6 20a2 2 0 0 1-2.8 0L3 13.2a2 2 0 0 1 0-2.8L10.4 3H20v9z"/><circle cx="15" cy="8" r="1.2" fill="currentColor" stroke="none"/></svg>折扣碼</h3>'
     +(S.appliedDiscount
       ?'<div class="disc-row" style="justify-content:space-between;align-items:center;background:var(--warm-ivory);border-radius:10px;padding:10px 12px"><span style="font-size:13px;color:var(--cocoa)">已套用「'+S.appliedDiscount.code+'」　折抵 NT$ '+d+'</span><button class="apply-btn" style="background:var(--dusty-rose)" onclick="removeDiscount()">取消</button></div>'
       :'<div class="disc-row"><input id="discountInput" placeholder="輸入折扣碼"><button class="apply-btn" onclick="applyDiscount()">套用</button></div>')
-    +'</div>'
+    +'</div>':'')
     +memberCouponsBlock()
-    +(S.currentUser?checkoutForm(total,hasC):'<div class="login-prompt"><p>請先登入會員才能結帳</p><button class="hero-cta" onclick="showPage(\'auth\')">登入 / 註冊</button></div>');
+    +(S.currentUser?checkoutForm(total,hasC):(S.guestCheckout&&!hasC?checkoutForm(total,hasC):guestGate(hasC)));
   if(S.currentUser&&hasC&&S.customDepositChoice){
     var rb=document.querySelector('input[name="custDep"][value="'+S.customDepositChoice+'"]');if(rb)rb.checked=true;
     if(S.customRemainChoice){var rr=document.querySelector('input[name="custRemain"][value="'+S.customRemainChoice+'"]');if(rr)rr.checked=true;}
@@ -1860,19 +1869,36 @@ function removeDiscount(){
   renderCart();
 }
 
+function guestGate(hasC){
+  /* 未登入結帳入口：登入 或 訪客結帳（購物車含客製作品時僅能登入） */
+  return '<div class="login-prompt"><p>登入會員即可結帳，享折扣碼、會員優惠券、訂單查詢與 7-11 貨到付款</p>'
+    +'<button class="hero-cta" onclick="showPage(\'auth\')">登入 / 註冊</button>'
+    +(hasC
+      ?'<p style="font-size:12px;color:var(--text-light);margin-top:12px">購物車內含客製作品，需登入會員才能下單</p>'
+      :'<p style="font-size:12px;color:var(--text-light);margin:12px 0 8px">— 或 —</p>'
+        +'<button class="hero-cta" style="background:#fff;color:var(--cocoa);border:1.5px solid var(--gold)" onclick="startGuestCheckout()">以訪客身分結帳</button>'
+        +'<p style="font-size:12px;color:var(--text-light);margin-top:8px">訪客結帳僅提供「銀行匯款」與「LINE Pay」</p>')
+    +'</div>';
+}
+function startGuestCheckout(){
+  S.guestCheckout=true;renderCart();
+  setTimeout(function(){var el=document.getElementById('pay-bank');if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},80);
+}
 function checkoutForm(total,hasC){
-  /* 付款方式：銀行匯款 or 7-11貨到付款，使用onclick在label上，radio自動跟著選 */
-  return '<div class="fsec"><h3><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/><path d="M2.5 9.5h19"/></svg>付款方式</h3>'
+  /* 付款方式：銀行匯款 or 7-11貨到付款，使用onclick在label上，radio自動跟著選；訪客(guest)僅提供匯款與 LINE Pay */
+  var guest=!S.currentUser;
+  return (guest?'<div class="pay-info" style="margin-bottom:14px"><strong>以訪客身分結帳</strong>免註冊即可下單，付款方式僅提供「銀行匯款」與「LINE Pay」。如需 7-11 貨到付款、折扣碼或訂單查詢，請 <a href="#" onclick="showPage(\'auth\');return false" style="color:var(--dusty-rose)">登入 / 註冊會員</a>。</div>':'')
+    +'<div class="fsec"><h3><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/><path d="M2.5 9.5h19"/></svg>付款方式</h3>'
     +'<div class="radio-grp">'
     +'<label class="radio-opt" id="pay-bank" onclick="selPay(\'bank\')">'
     +'<input type="radio" name="pay" value="bank" onchange="selPay(\'bank\')"> 銀行匯款</label>'
     +'<label class="radio-opt" id="pay-linepay" onclick="selPay(\'linepay\')">'
     +'<input type="radio" name="pay" value="linepay" onchange="selPay(\'linepay\')"> LINE Pay</label>'
-    +'<label class="radio-opt" id="pay-cod" onclick="selPay(\'cod\')">'
-    +'<input type="radio" name="pay" value="cod" onchange="selPay(\'cod\')"> 7-11 賣貨便（貨到付款 NT$ 38）</label>'
+    +(guest?'':'<label class="radio-opt" id="pay-cod" onclick="selPay(\'cod\')">'
+      +'<input type="radio" name="pay" value="cod" onchange="selPay(\'cod\')"> 7-11 賣貨便（貨到付款 NT$ 38）</label>')
     +'</div>'
     +'<div id="prepaidSection" style="display:none;margin-top:14px">'
-    +'<div id="bankInfo" style="display:none"><div class="pay-info"><strong> 台新銀行（812）</strong>帳號：20730100008145<br>訂單成立後請 48 小時內匯款，並至「會員 → 訂單」上傳付款截圖通知付款</div></div>'
+    +'<div id="bankInfo" style="display:none"><div class="pay-info"><strong> 台新銀行（812）</strong>帳號：20730100008145<br>訂單成立後請 48 小時內匯款，'+(guest?'完成後可直接在訂單成立頁面上傳付款截圖通知賣家':'並至「會員 → 訂單」上傳付款截圖通知付款')+'</div></div>'
     +'<div id="linePayInfo" style="display:none">'+linePayBlock()+'</div>'
     +'</div>'
     +'<div id="codSection" style="display:none;margin-top:14px">'
@@ -1892,6 +1918,7 @@ function checkoutForm(total,hasC){
     +'<div class="fsec"><h3><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.3v9.4L12 21l-8-4.3V7.3z"/><path d="M4 7.3 12 11l8-3.7M12 11v10"/></svg>收件人資訊</h3>'
     +'<div class="fg"><label>姓名</label><input id="rcvName" placeholder="收件人姓名" value="'+(S.currentUser?(S.currentUser.defaultName||S.currentUser.name):'')+'"></div>'
     +'<div class="fg"><label>電話</label><input id="rcvPhone" placeholder="0912-345-678" value="'+(S.currentUser?(S.currentUser.defaultPhone||S.currentUser.phone||''):'')+'"></div>'
+    +(guest?'<div class="fg"><label>電子郵件（必填，寄送訂單通知）</label><input id="rcvEmail" type="email" placeholder="your@email.com"></div>':'')
     +'<div class="fg"><label>Instagram 帳號</label><input id="rcvIG" placeholder="@yourname" value="'+(S.currentUser?(S.currentUser.defaultIG||S.currentUser.ig||''):'')+'"></div>'
     +'</div>'
     +'<div class="fg" style="margin-top:14px"><label>備註</label>'
@@ -2001,6 +2028,7 @@ function placeOrder(total){
   if(S._placing)return;
   if(S.emailjs&&S.emailjs.recaptchaSiteKey&&!captchaVerified('pay')){showToast('請先完成「我不是機器人」驗證');return;}
   if(!S.paymentMethod){showToast('請選擇付款方式');return;}
+  if(!S.currentUser&&S.paymentMethod==='cod'){showToast('訪客結帳僅提供銀行匯款與 LINE Pay，貨到付款請先登入會員');return;}
   if((S.paymentMethod==='bank'||S.paymentMethod==='linepay')&&!S.shippingMethod){showToast('請選擇寄送方式');return;}
   if(S.appliedDiscount&&discUsedByUser(S.appliedDiscount)){showToast('此折扣碼每個帳號限用一次，您已使用過');S.appliedDiscount=null;renderCart();return;}
   if(revalidateDiscount()){renderCart();return;}
@@ -2013,6 +2041,14 @@ function placeOrder(total){
   if(S.paymentMethod==='cod'){addr='7-11 賣貨便（下單後提供取貨資訊）';}
   if(S.paymentMethod!=='cod'&&!addr){showToast('請填寫取貨地址或店名');return;}
   var hasC=S.cart.some(function(i){return i.isCustom;});
+  if(!S.currentUser&&hasC){showToast('客製作品需登入會員才能下單');return;}
+  var gEmail='';
+  if(!S.currentUser){
+    var ge=document.getElementById('rcvEmail');gEmail=ge?ge.value.trim():'';
+    if(!gEmail||gEmail.indexOf('@')<1||gEmail.indexOf('.')<0){showToast('請填寫正確的電子郵件，以便寄送訂單通知');return;}
+  }
+  var noteV=(document.getElementById('orderNote')||{}).value||'';
+  var igV=(document.getElementById('rcvIG')||{}).value||'';
   if(hasC&&!S.customDepositChoice){showToast('請選擇客製訂金匯款方式');return;}
   if(hasC&&S.customDepositChoice==='deposit'&&!S.customRemainChoice){
     /* 讀取已勾選的 radio */
@@ -2024,16 +2060,17 @@ function placeOrder(total){
   var td=ci.reduce(function(s,i){return s+i.deposit*i.qty;},0);
   S._placing=true;
   function finish(oid){
-  var o={id:oid,userId:S.currentUser.id,userName:S.currentUser.name,
+  var o={id:oid,userId:(S.currentUser?S.currentUser.id:(S._guestUid||'guest')),userName:(S.currentUser?S.currentUser.name:'訪客'),
     items:S.cart.slice(),subtotal:S.cart.reduce(function(s,i){return s+i.price*i.qty;},0),
     shipping:calcShip(),discount:appliedDiscAmt(),
     discountCode:S.appliedDiscount?S.appliedDiscount.code:'',total:total,
     payment:S.paymentMethod,shippingMethod:(S.paymentMethod==='bank'||S.paymentMethod==='linepay')?S.shippingMethod:'711cod',
-    address:addr,receiver:nm.trim(),phone:ph.trim(),ig:(document.getElementById('rcvIG')||{}).value||'',
-    note:(document.getElementById('orderNote')||{}).value||'',
+    address:addr,receiver:nm.trim(),phone:ph.trim(),ig:igV,
+    note:noteV,
     hasCustom:hasC,customDepositChoice:S.customDepositChoice,
     customRemainChoice:S.customRemainChoice,totalDeposit:td,depositPaid:false,balancePaid:false,
     status:'pending',date:new Date().toLocaleDateString('zh-TW'),created:new Date().toISOString()};
+  if(!S.currentUser){o.guest=true;o.email=gEmail;}
   applyOrderStock(o,-1);o.stockApplied=true;
   S.orders.unshift(o);persistOrder(o);
   if(S.appliedDiscount&&S.appliedDiscount._couponId&&S.currentUser){var _cid=S.appliedDiscount._couponId,_cc=(S.currentUser.coupons||[]).find(function(x){return x.id===_cid;});if(_cc){_cc.used=true;_cc.usedOrderId=o.id;_cc.usedDate=o.date;persistMember(S.currentUser);}}
@@ -2060,13 +2097,28 @@ function placeOrder(total){
       pi='取貨時付款 NT$ '+total+'，感謝您的購買';
     }
   }
+  if(o.guest)pi+='<br><span style="font-size:12px;color:var(--text-light)">※ 訪客訂單免登入，付款完成後請直接在下方通知賣家，並記下訂單編號</span>';
   document.getElementById('successMsg').textContent=msg;
   document.getElementById('successPayInfo').innerHTML=pi;
   document.getElementById('successOrderId').textContent='訂單編號：#'+o.id;
-  S._lastOrder=o;renderSuccessEmailBox(o);
+  var smb=document.getElementById('successMemberBtn');if(smb)smb.style.display=o.guest?'none':'inline-block';
+  S._lastOrder=o;renderSuccessEmailBox(o);renderSuccessPayNotify(o);
   showPage('success');
   S._placing=false;
   resetCaptcha('pay');
+  }
+  if(!S.currentUser){
+    /* 訪客：先匿名登入取得 uid，失敗則中止（否則訂單無法寫入雲端） */
+    if(!(window.FB&&window.FB.signInGuest)){S._placing=false;showToast('訪客結帳暫時無法使用，請先登入會員');return;}
+    window.FB.signInGuest().then(function(uid){
+      S._guestUid=uid;
+      return window.FB.nextOrderId?window.FB.nextOrderId().catch(function(){return localOrderId();}):localOrderId();
+    }).then(finish).catch(function(e){
+      console.error('guest signin',e&&(e.code||e.message));
+      S._placing=false;
+      showToast('訪客結帳暫時無法使用，請先登入會員或稍後再試');
+    });
+    return;
   }
   if(window.FB&&window.FB.nextOrderId){window.FB.nextOrderId().then(finish).catch(function(){finish(localOrderId());});}else{finish(localOrderId());}
 }
@@ -2170,6 +2222,40 @@ function saveCats(){
   if(window.FB&&window.FB.saveConfig){
     window.FB.saveConfig(payload).then(function(){showToast('分類已更新');}).catch(function(e){showToast('儲存失敗：'+(e.code||e.message));});
   }else{showToast('分類已更新（本機）');}
+}
+function renderSuccessPayNotify(o){
+  /* 訪客訂單專用：在訂單成立頁直接上傳付款截圖/留言（免登入）。會員訂單維持原「會員→訂單」流程 */
+  var box=document.getElementById('successPayNotify');if(!box)return;
+  if(!o||!o.guest){box.innerHTML='';return;}
+  box.innerHTML='<div class="se-box">'
+    +'<p style="font-size:13px;font-weight:600;color:var(--cocoa);margin-bottom:8px">完成付款了嗎？直接在這裡通知賣家（免登入）</p>'
+    +'<textarea id="guestPayNote" placeholder="例如：已匯款，帳號末五碼 12345" style="width:100%;box-sizing:border-box;min-height:60px;padding:10px;border:1.5px solid var(--linen);border-radius:10px;font-family:inherit;font-size:16px"></textarea>'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
+    +'<button class="apply-btn" onclick="guestNotifyPayment()">送出付款留言</button>'
+    +'<label class="apply-btn" style="background:var(--dusty-rose);cursor:pointer;display:inline-block">上傳付款截圖<input type="file" accept="image/*" style="display:none" onchange="guestUploadProof(this)"></label>'
+    +'</div><div id="guestPayStatus"></div></div>';
+}
+function guestNotifyPayment(){
+  var o=S._lastOrder;if(!o){showToast('找不到訂單資料');return;}
+  var el=document.getElementById('guestPayNote');var note=el?el.value.trim():'';
+  if(!note){showToast('請先輸入留言內容');return;}
+  if(!o._docId){showToast('訂單同步中，請過幾秒再試一次');return;}
+  o.paymentNote=note;o.paymentNotified=true;o.paymentReportedAt=new Date().toISOString();
+  persistOrder(o);
+  showToast('已送出付款留言，將通知賣家 ✓');
+}
+function guestUploadProof(input){
+  var f=input.files[0];if(!f)return;
+  var o=S._lastOrder;if(!o){showToast('找不到訂單資料');return;}
+  if(!o._docId){showToast('訂單同步中，請過幾秒再試一次');input.value='';return;}
+  showToast('上傳處理中…');
+  compressImage(f,900,0.6,function(dataURL){
+    o.paymentProof=dataURL;o.paymentNotified=true;o.paymentReportedAt=new Date().toISOString();
+    persistOrder(o);
+    showToast('已上傳付款截圖，將通知賣家 ✓');
+    var st=document.getElementById('guestPayStatus');
+    if(st)st.innerHTML='<img src="'+dataURL+'" style="width:100%;max-width:200px;border-radius:10px;border:1px solid var(--linen);display:block;margin-top:10px">';
+  });
 }
 function renderSuccessEmailBox(o){
   var box=document.getElementById('successEmailBox');if(!box)return;
@@ -3423,7 +3509,7 @@ function showToast(msg){
 </script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, getMultiFactorResolver, TotpMultiFactorGenerator, onAuthStateChanged, signOut, sendPasswordResetEmail, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, getMultiFactorResolver, TotpMultiFactorGenerator, onAuthStateChanged, signOut, sendPasswordResetEmail, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
 import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc, getDoc, query, where, runTransaction } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 import { getStorage, ref as storageRef, uploadString, getDownloadURL } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js';
 const firebaseConfig = {
@@ -3456,8 +3542,9 @@ window.FB={
   sendReset:function(email){return sendPasswordResetEmail(auth,email);},
   deleteAccount:function(pwd){var user=auth.currentUser;if(!user)return Promise.reject({code:'not-signed-in'});var uid=user.uid,email=user.email;var cred=EmailAuthProvider.credential(email,pwd);return reauthenticateWithCredential(user,cred).then(function(){return deleteDoc(doc(db,'members',uid)).catch(function(){});}).then(function(){return deleteUser(user);});},
   onAdmin:function(cb){onAuthStateChanged(auth,function(u){cb(!!u,u?u.email:'');});},
-  onAuth:function(cb){onAuthStateChanged(auth,function(u){cb(u?{uid:u.uid,email:u.email}:null);});},
+  onAuth:function(cb){onAuthStateChanged(auth,function(u){cb(u?{uid:u.uid,email:u.email,anon:!!u.isAnonymous}:null);});},
   registerUser:function(email,pwd){return createUserWithEmailAndPassword(auth,email,pwd).then(function(c){return c.user.uid;});},
+  signInGuest:function(){if(auth.currentUser&&auth.currentUser.isAnonymous)return Promise.resolve(auth.currentUser.uid);return signInAnonymously(auth).then(function(c){return c.user.uid;});},
   getMember:function(uid){return getDoc(doc(db,'members',uid)).then(function(s){return s.exists()?s.data():null;});},
   subscribeMyOrders:function(uid,cb){return onSnapshot(query(collection(db,'orders'),where('userId','==',uid)),function(snap){cb(snap.docs.map(function(d){var o=d.data();o._docId=d.id;return o;}));},function(err){console.error('myorders subscribe error',err);});},
   subscribeProducts:function(cb){
