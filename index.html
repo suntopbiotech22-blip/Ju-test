@@ -730,7 +730,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0708b</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0708c</div>
 </footer>
 
 <!-- MODALS -->
@@ -2631,11 +2631,12 @@ function sendOrderEmail(o){
       customer_name:o.receiver,customer_phone:o.phone,member_email:memberEmail,
       customer_ig:(o.ig||(S.currentUser&&(S.currentUser.defaultIG||S.currentUser.ig))||'')||'未提供',
       items:items,total:o.total,deposit:o.totalDeposit||0,payment:pay,shipping:ship,address:o.address,note:o.note||''};
+    /* reCAPTCHA token 驗證一次即作廢：只附在「賣家信」上（賣家模板開啟驗證），
+       顧客信不帶 token（顧客模板需在 EmailJS 後台關閉 reCAPTCHA 驗證），否則會 timeout-or-duplicate */
     var tok=cfg.recaptchaSiteKey?captchaToken('pay'):'';
-    if(tok)params['g-recaptcha-response']=tok;
-    /* EmailJS 免費方案有每秒 1 封的速率限制：兩封信同時寄出時第二封常被 429 擋掉。
-       改為賣家信先寄、顧客信 1.8 秒後寄，且失敗時最多自動重試 2 次 */
-    if(cfg.templateSeller){sendMailSafe(cfg,cfg.templateSeller,params,'seller');}
+    var sellerParams=Object.assign({},params);
+    if(tok)sellerParams['g-recaptcha-response']=tok;
+    if(cfg.templateSeller){sendMailSafe(cfg,cfg.templateSeller,sellerParams,'seller');}
     if(cfg.templateCustomer&&memberEmail){
       var cp=Object.assign({},params,{to_email:memberEmail});
       setTimeout(function(){sendMailSafe(cfg,cfg.templateCustomer,cp,'customer');},1800);
@@ -2646,8 +2647,10 @@ function sendMailSafe(cfg,tpl,params,label,attempt){
   attempt=attempt||1;
   try{
     emailjs.send(cfg.serviceId,tpl,params).then(function(){console.log('email sent:',label);}).catch(function(e){
-      console.error('email failed:',label,'attempt',attempt,e&&(e.status||e.text||e.message||e));
-      if(attempt<3)setTimeout(function(){sendMailSafe(cfg,tpl,params,label,attempt+1);},3000*attempt);
+      var st=e&&e.status;
+      console.error('email failed:',label,'attempt',attempt,st,e&&(e.text||e.message||e));
+      /* 400/403 屬於重試也不會成功的錯（如 reCAPTCHA token 作廢、參數錯誤），不重試以免浪費額度 */
+      if(st!==400&&st!==403&&attempt<3)setTimeout(function(){sendMailSafe(cfg,tpl,params,label,attempt+1);},3000*attempt);
     });
   }catch(e){console.error('email send error:',label,e);}
 }
