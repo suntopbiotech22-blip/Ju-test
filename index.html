@@ -736,7 +736,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0709a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0709c</div>
 </footer>
 
 <!-- MODALS -->
@@ -1004,7 +1004,12 @@ function renderCaptchaWidgets(){
   var key=S.emailjs&&S.emailjs.recaptchaSiteKey;
   if(!key||!grc()||!S._recaptchaApiReady)return;
   renderOneCaptcha('reg','regCaptchaBox','regCaptchaWidget',key);
-  renderOneCaptcha('pay','payCaptchaBox','payCaptchaWidget',key);
+  /* 結帳驗證只給「訪客」：會員已通過帳密登入這道門檻，重複驗證徒增下單阻力 */
+  if(!S.currentUser){
+    renderOneCaptcha('pay','payCaptchaBox','payCaptchaWidget',key);
+  }else{
+    var pb=document.getElementById('payCaptchaBox');if(pb)pb.style.display='none';
+  }
 }
 function renderOneCaptcha(slot,boxId,widgetElId,key){
   var box=document.getElementById(boxId),el=document.getElementById(widgetElId);
@@ -1560,6 +1565,10 @@ function openOrderDetail(id,isAdmin){
   }
   html+='<div style="font-size:13px;color:var(--text-light);margin-top:12px;line-height:1.9">寄送方式：'+(o.shippingMethod==='711'?'7-11 超商取貨':o.shippingMethod==='home'?'宅配到府':'7-11 賣貨便貨到付款')
     +'<br>取貨/地址：'+esc(o.address||'—')+'<br>收件人：'+esc(o.receiver)+'　'+esc(o.phone)+(o.ig?'　IG '+esc(o.ig):'')+(o.guest&&o.email?'<br>Email：'+esc(o.email):'')+(o.note?'<br>備註：'+esc(o.note):'')+'</div>';
+  if(!isAdmin&&o.shipLink){
+    html+='<a href="'+esc(o.shipLink)+'" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--cocoa);color:#fff;padding:11px;border-radius:24px;font-size:14px;text-decoration:none;margin-top:14px">前往 7-11 賣貨便 ›</a>'
+      +'<p style="font-size:12px;color:var(--text-light);text-align:center;margin-top:6px">賣家已為您建立賣貨便訂單，請點上方按鈕完成取貨設定</p>';
+  }
   if(o.payment!=='cod'||depOnly){
     var reported=o.paymentProof||o.paymentNote;
     if(isAdmin){
@@ -1584,6 +1593,14 @@ function openOrderDetail(id,isAdmin){
     }
   }
   if(isAdmin){
+    html+='<div style="margin-top:16px;border-top:1px dashed var(--taupe);padding-top:14px">'
+      +'<p style="font-size:13px;font-weight:600;color:var(--cocoa);margin-bottom:8px">7-11 賣貨便出貨</p>'
+      +'<button class="abtn sc" style="border-radius:24px" onclick="copyShipInfo('+o.id+')">複製賣貨便出貨資料</button>'
+      +'<div style="display:flex;gap:8px;margin-top:10px;align-items:center">'
+      +'<input id="shipLinkInput" placeholder="貼上賣貨便連結後按儲存" value="'+esc(o.shipLink||'')+'" style="flex:1;min-width:0;padding:9px 10px;border:1.5px solid var(--linen);border-radius:10px;font-family:inherit;font-size:13px;background:var(--cream)">'
+      +'<button class="abtn" onclick="saveShipLink('+o.id+')">儲存</button></div>'
+      +'<p style="font-size:12px;color:var(--text-light);margin-top:6px">'+(o.shipLink?'已儲存 ✓ 顧客訂單頁會顯示「前往賣貨便」按鈕；清空後儲存可移除':'儲存後，顧客的訂單頁會出現「前往賣貨便」按鈕')+'</p>'
+      +'</div>';
     html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;border-top:1px dashed var(--taupe);padding-top:14px">';
     if(o.status==='cancelled'){
       html+='<button class="abtn pr" style="border-radius:24px" onclick="restoreOrder('+o.id+')">恢復訂單</button>'
@@ -1696,6 +1713,35 @@ function fallbackCopy(text,cb){
   var t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.focus();t.select();
   try{document.execCommand('copy');if(cb)cb();}catch(e){showToast('複製失敗，請手動複製網址');}
   document.body.removeChild(t);
+}
+function copyShipInfo(id){
+  /* 依賣貨便填單順序整理出貨資料並複製 */
+  var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
+  var itemLines=o.items.map(function(i){return i.name+(i.spec?'（'+i.spec+'）':'')+' ×'+i.qty;}).join('\n');
+  var depOnly=o.hasCustom&&o.customDepositChoice==='deposit';
+  var remainder=(o.items||[]).filter(function(i){return i.isCustom;}).reduce(function(s,i){return s+(i.price-i.deposit)*i.qty;},0)+(o.shipping||0);
+  var payLine=o.payment==='cod'
+    ?('貨到付款，取貨付 NT$ '+(depOnly?remainder:o.total))
+    :(o.payment==='linepay'?'已於官網 LINE Pay 付款，賣貨便請選純取貨':'已於官網匯款，賣貨便請選純取貨');
+  var t='訂單 #'+o.id
+    +'\n收件人：'+(o.receiver||'')
+    +'\n電話：'+(o.phone||'')
+    +'\n取貨門市：'+(o.address||'')
+    +'\n──────────\n'+itemLines
+    +'\n合計：NT$ '+o.total+(o.shipping?('（含運費 NT$ '+o.shipping+'）'):'')
+    +'\n付款：'+payLine
+    +(o.note?('\n備註：'+o.note):'');
+  function done(){showToast('出貨資料已複製，可直接貼到賣貨便 ✓');}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done).catch(function(){fallbackCopy(t,done);});}else{fallbackCopy(t,done);}
+}
+function saveShipLink(id){
+  var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
+  var el=document.getElementById('shipLinkInput');var v=el?el.value.trim():'';
+  if(v&&v.indexOf('http')!==0){showToast('連結格式不正確，需以 http 開頭');return;}
+  o.shipLink=v;
+  persistOrder(o);
+  showToast(v?'賣貨便連結已儲存 ✓':'已移除賣貨便連結');
+  openOrderDetail(id,true);
 }
 function setDetailImg(id,i){var p=S.products.find(function(x){return x.id===id;});if(!p)return;var imgs=(p.images&&p.images.length)?p.images:(p.imgData?[p.imgData]:[]);var m=document.getElementById('detailMain');if(m&&imgs[i])m.src=imgs[i];}
 function selectSpec(id,i,el){
@@ -2054,7 +2100,7 @@ function selShip(t){
 
 function placeOrder(total){
   if(S._placing)return;
-  if(S.emailjs&&S.emailjs.recaptchaSiteKey&&!captchaVerified('pay')){showToast('請先完成「我不是機器人」驗證');return;}
+  if(!S.currentUser&&S.emailjs&&S.emailjs.recaptchaSiteKey&&!captchaVerified('pay')){showToast('請先完成「我不是機器人」驗證');return;}
   if(!S.paymentMethod){showToast('請選擇付款方式');return;}
   if(!S.currentUser&&S.paymentMethod==='cod'){showToast('訪客結帳僅提供銀行匯款與 LINE Pay，貨到付款請先登入會員');return;}
   if((S.paymentMethod==='bank'||S.paymentMethod==='linepay')&&!S.shippingMethod){showToast('請選擇寄送方式');return;}
