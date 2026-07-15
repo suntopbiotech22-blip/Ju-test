@@ -736,7 +736,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0715b</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0715c</div>
 </footer>
 
 <!-- MODALS -->
@@ -1541,7 +1541,7 @@ function openOrderDetail(id,isAdmin){
   var remainder=(o.items||[]).filter(function(i){return i.isCustom;}).reduce(function(s,i){return s+(i.price-i.deposit)*i.qty;},0)+(o.shipping||0);
   var depOnly=o.hasCustom&&o.customDepositChoice==='deposit';
   var payNow=depOnly?(o.total-remainder):o.total;
-  var lines=o.items.map(function(i){return '<div style="display:flex;justify-content:space-between;font-size:13px;margin:5px 0"><span>'+i.name+(i.spec?'（'+i.spec+'）':'')+(i.isCustom?'':'')+' ×'+i.qty+'</span><span>NT$ '+(i.price*i.qty)+'</span></div>';}).join('');
+  var lines=o.items.map(function(i){return '<div style="display:flex;justify-content:space-between;font-size:13px;margin:5px 0"><span>'+esc(i.name)+(i.spec?'（'+esc(i.spec)+'）':'')+(i.isCustom?'':'')+' ×'+i.qty+'</span><span>NT$ '+(i.price*i.qty)+'</span></div>';}).join('');
   var html='<h3 style="margin-bottom:4px">訂單 #'+o.id+'</h3>'
     +'<p class="msub" style="margin-bottom:12px">'+o.date+'　<span class="sbadge s-'+o.status+'">'+sLabel(o.status)+'</span>'+(o.guest?'　<span class="sbadge" style="background:var(--warm-ivory);color:var(--cocoa)">訪客</span>':'')+'</p>'
     +'<div class="order-sum">'+lines
@@ -1815,7 +1815,7 @@ function renderCart(){
   var items=S.cart.map(function(item){
     var img=item.imgData?('<img loading="lazy" src="'+item.imgData+'" style="width:100%;height:100%;object-fit:cover;border-radius:10px">'):(item.emoji||IMG_PH);
     return '<div class="cart-item"><div class="cart-item-img" style="cursor:pointer" onclick="openDetail('+item.id+')">'+img+'</div>'
-      +'<div class="ci-info"><div class="ci-name" style="cursor:pointer" onclick="openDetail('+item.id+')">'+item.name+((item.origPrice&&item.price<item.origPrice)?' <span style="color:var(--dusty-rose);font-weight:700">＊</span>':'')+(item.isCustom?'':'')+'</div>'
+      +'<div class="ci-info"><div class="ci-name" style="cursor:pointer" onclick="openDetail('+item.id+')">'+esc(item.name)+((item.origPrice&&item.price<item.origPrice)?' <span style="color:var(--dusty-rose);font-weight:700">＊</span>':'')+(item.isCustom?'':'')+'</div>'
       +(item.spec?'<div style="font-size:12px;color:var(--text-light)">規格：'+item.spec+'</div>':'')
       +'<div class="ci-price">NT$ '+item.price+((item.origPrice&&item.price<item.origPrice)?' <span style="font-size:12px;color:var(--text-light);text-decoration:line-through;font-weight:400">NT$ '+item.origPrice+'</span>':'')+'</div>'
       +'<div class="qty-ctrl" style="margin-top:6px">'
@@ -1983,7 +1983,7 @@ function customBox(){
   var ci=S.cart.filter(function(i){return i.isCustom;});
   var td=ci.reduce(function(s,i){return s+i.deposit*i.qty;},0);
   return '<div class="custom-box"><h4><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-1 2-2 0-1.3-1-1.6-1-2.6 0-.8.7-1.4 1.6-1.4H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"/><circle cx="8" cy="11" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="10" r="1" fill="currentColor" stroke="none"/></svg>您的訂單包含客製作品</h4><ul>'
-    +ci.map(function(i){return '<li>'+i.name+' — 訂金 NT$ '+i.deposit+'</li>';}).join('')
+    +ci.map(function(i){return '<li>'+esc(i.name)+' — 訂金 NT$ '+i.deposit+'</li>';}).join('')
     +'</ul><p style="margin-top:8px;font-size:12px;color:var(--text-light)">客製作品需先匯款訂金，確認後才開始製作</p>'
     +'<p style="font-weight:500;margin-top:6px">請選擇匯款金額：</p>'
     +'<div class="opt-row">'
@@ -2418,10 +2418,10 @@ function renderMemberCoupons(){
   var el=document.getElementById('memberCouponAdmin');if(!el)return;
   S._couponMemberId=null;
   var mem=S.members.filter(function(m){return !m.isAdmin;});
-  var opts=mem.map(function(m){return '<option value="'+m.id+'">'+m.name+'（'+m.email+'）</option>';}).join('');
+  var opts=mem.map(function(m){return '<option value="'+m.id+'">'+esc(m.name)+'（'+esc(m.email)+'）</option>';}).join('');
   var rows=[];
   mem.forEach(function(m){(m.coupons||[]).forEach(function(c){
-    rows.push('<tr><td>'+m.name+'</td><td>'+cpnLabel(c)+'</td><td style="font-size:11px">'+(c.from||'—')+'<br>~ '+(c.until||'無期限')+'</td><td>'+(c.used?'<span style="color:#2e7d32">已使用'+(c.usedOrderId?' #'+c.usedOrderId:'')+'</span>':'<span style="color:var(--dusty-rose)">未使用</span>')+'</td></tr>');
+    rows.push('<tr><td>'+esc(m.name)+'</td><td>'+cpnLabel(c)+'</td><td style="font-size:11px">'+(c.from||'—')+'<br>~ '+(c.until||'無期限')+'</td><td>'+(c.used?'<span style="color:#2e7d32">已使用'+(c.usedOrderId?' #'+c.usedOrderId:'')+'</span>':'<span style="color:var(--dusty-rose)">未使用</span>')+'</td></tr>');
   });});
   el.innerHTML='<h3 style="font-size:15px;color:var(--cocoa);margin:26px 0 10px"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"/><path d="M15 6v12" stroke-dasharray="2 2"/></svg>會員專屬折扣</h3>'
     +'<div class="disc-card" style="flex-direction:column;align-items:stretch;gap:10px">'
@@ -2703,7 +2703,7 @@ function renderDash(){
   document.getElementById('recentOrders').innerHTML='<thead><tr><th>訂單</th><th>會員</th><th>金額</th><th>狀態</th><th>操作</th></tr></thead><tbody>'
     +S.orders.slice(0,5).map(function(o){
       return '<tr><td>#'+o.id+'<br><span style="font-size:11px;color:var(--text-light)">'+o.date+'</span></td>'
-        +'<td>'+o.userName+'</td><td>NT$ '+o.total+'</td>'
+        +'<td>'+esc(o.userName)+'</td><td>NT$ '+o.total+'</td>'
         +'<td><span class="sbadge s-'+o.status+'">'+sLabel(o.status)+'</span></td>'
         +'<td><button class="abtn sc" onclick="updStatus('+o.id+',\'paid\')">確認收款</button>'
         +'<button class="abtn pr" onclick="updStatus('+o.id+',\'shipped\')">出貨</button></td></tr>';
@@ -2893,7 +2893,7 @@ function renderAdminOrds(){
     return '<tr style="'+rowStyle+'" onclick="openOrderDetail('+o.id+',true)">'
       +'<td onclick="event.stopPropagation()"><input type="checkbox" class="ordSel" onclick="toggleSelOrder('+o.id+',this)" '+(ck?'checked':'')+'></td>'
       +'<td>#'+o.id+(awaiting?'<br><span class="await-chip">已匯款待確認</span>':'')+'<br><span style="font-size:11px;color:var(--text-light)">'+o.date+'</span></td>'
-      +'<td>'+o.userName+'</td><td style="font-size:12px">'+payLbl+'</td><td>NT$ '+o.total+'</td>'
+      +'<td>'+esc(o.userName)+'</td><td style="font-size:12px">'+payLbl+'</td><td>NT$ '+o.total+'</td>'
       +'<td>'+payCell+'</td>'
       +'<td>'+(cancelled?'—':btn(shipped,shipped?('cancelStatus('+o.id+",'shipped')"):('updStatus('+o.id+",'shipped')"),shipped?'✓ 已出貨':'確認出貨'))+'</td>'
       +'<td><span class="sbadge s-'+o.status+'">'+sLabel(o.status)+'</span></td></tr>';
