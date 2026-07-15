@@ -736,7 +736,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0715c</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0715e</div>
 </footer>
 
 <!-- MODALS -->
@@ -802,6 +802,8 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
       <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editCustom" style="width:auto" onchange="toggleDeposit()"><label style="margin-bottom:0">客製作品</label></div>
       <div class="fg" id="depositField" style="grid-column:1/-1;display:none"><label>訂金金額 (NT$)</label><input type="number" id="editDeposit" placeholder="例：200"></div>
       <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editDraft" style="width:auto"><label style="margin-bottom:0">存為隱藏草稿（先不上架，稍後在後台手動上架）</label></div>
+      <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editPreview" style="width:auto" onchange="document.getElementById('previewNoteField').style.display=this.checked?'block':'none'"><label style="margin-bottom:0">搶先預覽（顧客可看介紹與價格，但暫不開放下單）</label></div>
+      <div class="fg" id="previewNoteField" style="grid-column:1/-1;display:none"><label>預計開放購買時間（顯示給顧客，可留空）</label><input id="editPreviewNote" placeholder="例：預計 8/1 中午 12:00 開放"></div>
     </div>
     <button class="sub-btn" onclick="saveProduct()">儲存作品</button>
   </div>
@@ -1244,7 +1246,9 @@ function pCard(p){
     ?('<div class="prc'+(hasPromo?' sale':'')+'">NT$ '+ppMin+'~'+ppMax+'</div>')
     :('<div class="prc'+((hs||hasPromo)?' sale':'')+'">NT$ '+(hasPromo?ppMin:priceMin)+'</div>'
       +(hasPromo?'<div class="prc-orig">NT$ '+priceMin+'</div>':(hs?'<div class="prc-orig">NT$ '+p.original+'</div>':'')));
-  var btnHtml=soldOut
+  var btnHtml=p.preview
+    ?'</div><button class="add-btn" onclick="event.preventDefault();event.stopPropagation();openDetail('+p.id+')">搶先看</button>'
+    :soldOut
     ?'</div><button class="add-btn" disabled style="opacity:.45;cursor:not-allowed" onclick="event.preventDefault();event.stopPropagation()">售完</button>'
     :(hasSpecs
       ?'</div><button class="add-btn" onclick="event.preventDefault();event.stopPropagation();openDetail('+p.id+')">選規格</button>'
@@ -1252,8 +1256,8 @@ function pCard(p){
   return '<a class="product-card" href="#product/'+p.id+'" onclick="event.preventDefault();openDetail('+p.id+')">'
     +'<div class="product-img'+(_t?' has-bg':'')+'"'+bgStyle+'>'+ph
     +'<button class="fav-btn'+(isFav(p.id)?' on':'')+'" data-fid="'+p.id+'" aria-label="加入最愛" onclick="event.preventDefault();event.stopPropagation();toggleFav('+p.id+',this)">'+HEART_SVG+'</button>'
-    +(hs?'<div class="badge">-'+pct+'%</div>':'')
-    +(p.isNew&&!hs?'<div class="badge nb">NEW</div>':'')
+    +(p.preview?'<div class="badge" style="background:var(--cocoa)">搶先預覽</div>':(hs?'<div class="badge">-'+pct+'%</div>':''))
+    +(p.isNew&&!hs&&!p.preview?'<div class="badge nb">NEW</div>':'')
     +(p.isCustom?'<div class="badge cb" style="top:'+((hs||p.isNew)?'34px':'10px')+'">客製</div>':'')
     +'</div><div class="product-info">'
     +'<div class="product-name">'+p.name+'</div>'
@@ -1733,6 +1737,10 @@ function stockBadgeHtml(p,spec){
   return '';
 }
 function addCartBtnHtml(p,spec){
+  if(p.preview){
+    return '<div style="background:var(--warm-ivory);border:1.5px dashed var(--taupe);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--cocoa);text-align:center;margin-bottom:4px"> 搶先預覽中，尚未開放購買'+(p.previewNote?'<br><strong>'+esc(p.previewNote)+'</strong>':'')+'</div>'
+      +'<button class="sub-btn" disabled style="opacity:.5;cursor:not-allowed">尚未開放購買</button>';
+  }
   var soldOut=stockTracksFor(p,spec)&&stockNumFor(p,spec)<=0;
   if(soldOut)return '<button class="sub-btn" disabled style="opacity:.5;cursor:not-allowed">已售完</button>';
   return '<button class="sub-btn" onclick="addToCart('+p.id+',S._selSpec)">加入購物車</button>';
@@ -1746,6 +1754,7 @@ function allSpecsSoldOut(p){
 function cartQtyOf(id,spec){var sp=spec||'';return S.cart.reduce(function(s,i){return s+((i.id===id&&(i.spec||'')===sp)?i.qty:0);},0);}
 function addToCart(id,spec){
   var p=S.products.find(function(x){return x.id===id;});if(!p)return;
+  if(p.preview){showToast('此作品搶先預覽中，尚未開放購買'+(p.previewNote?'（'+p.previewNote+'）':''));return;}
   spec=spec||'';
   if(stockTracksFor(p,spec)){var _num=stockNumFor(p,spec);var _left=_num-cartQtyOf(id,spec);if(_left<=0){showToast(_num<=0?'此規格已售完':'已達庫存上限，僅剩 '+_num+' 件');return;}}
   var so=getSpecObj(p,spec);
@@ -2083,6 +2092,8 @@ function placeOrder(total){
   if((S.paymentMethod==='bank'||S.paymentMethod==='linepay')&&!S.shippingMethod){showToast('請選擇寄送方式');return;}
   if(S.appliedDiscount&&discUsedByUser(S.appliedDiscount)){showToast('此折扣碼每個帳號限用一次，您已使用過');S.appliedDiscount=null;renderCart();return;}
   if(repriceCart()){renderCart();showToast('購物車價格已依最新優惠更新，請確認後再送出');return;}
+  var _pv=S.cart.find(function(i){var p=S.products.find(function(x){return x.id===i.id;});return p&&p.preview;});
+  if(_pv){showToast('「'+_pv.name+'」目前為搶先預覽、尚未開放購買，請先從購物車移除');return;}
   if(revalidateDiscount()){renderCart();return;}
   var nm=(document.getElementById('rcvName')||{}).value||'';
   var ph=(document.getElementById('rcvPhone')||{}).value||'';
@@ -2419,10 +2430,21 @@ function renderMemberCoupons(){
   S._couponMemberId=null;
   var mem=S.members.filter(function(m){return !m.isAdmin;});
   var opts=mem.map(function(m){return '<option value="'+m.id+'">'+esc(m.name)+'（'+esc(m.email)+'）</option>';}).join('');
-  var rows=[];
-  mem.forEach(function(m){(m.coupons||[]).forEach(function(c){
-    rows.push('<tr><td>'+esc(m.name)+'</td><td>'+cpnLabel(c)+'</td><td style="font-size:11px">'+(c.from||'—')+'<br>~ '+(c.until||'無期限')+'</td><td>'+(c.used?'<span style="color:#2e7d32">已使用'+(c.usedOrderId?' #'+c.usedOrderId:'')+'</span>':'<span style="color:var(--dusty-rose)">未使用</span>')+'</td></tr>');
-  });});
+  var all=[];
+  mem.forEach(function(m){(m.coupons||[]).forEach(function(c){all.push({m:m,c:c});});});
+  all.sort(function(a,b){
+    if(!!a.c.used!==!!b.c.used)return a.c.used?1:-1;
+    return String(b.c.from||'')<String(a.c.from||'')?-1:1;
+  });
+  var cf=S._cpnFilter||'all';
+  var shown=all.filter(function(x){return cf==='all'?true:(cf==='used'?!!x.c.used:!x.c.used);});
+  var nUn=all.filter(function(x){return !x.c.used;}).length,nUs=all.length-nUn;
+  var chip=function(v,lbl){return '<button onclick="S._cpnFilter=\''+v+'\';renderMemberCoupons()" style="border:1.5px solid '+(cf===v?'var(--dusty-rose)':'var(--linen)')+';background:'+(cf===v?'var(--dusty-rose)':'#fff')+';color:'+(cf===v?'#fff':'var(--cocoa)')+';border-radius:16px;padding:5px 12px;font-size:12px;font-family:inherit;cursor:pointer">'+lbl+'</button>';};
+  var chips='<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">'+chip('all','全部 '+all.length)+chip('unused','未使用 '+nUn)+chip('used','已使用 '+nUs)+'</div>';
+  var rows=shown.map(function(x){
+    var m=x.m,c=x.c;
+    return '<tr'+(c.used?' style="opacity:.5"':'')+'><td>'+esc(m.name)+(c.desc?'<br><span style="font-size:11px;color:var(--text-light)">'+esc(c.desc)+'</span>':'')+'</td><td>'+cpnLabel(c)+'</td><td style="font-size:11px">'+(c.from||'—')+'<br>~ '+(c.until||'無期限')+'</td><td>'+(c.used?'<span style="color:#2e7d32">已使用'+(c.usedOrderId?'<br><span style="font-size:11px">#'+c.usedOrderId+(c.usedDate?'　'+c.usedDate:'')+'</span>':'')+'</span>':'<span style="color:var(--dusty-rose);font-weight:600">未使用</span>')+'</td></tr>';
+  });
   el.innerHTML='<h3 style="font-size:15px;color:var(--cocoa);margin:26px 0 10px"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"/><path d="M15 6v12" stroke-dasharray="2 2"/></svg>會員專屬折扣</h3>'
     +'<div class="disc-card" style="flex-direction:column;align-items:stretch;gap:10px">'
     +'<div class="fg"><label>搜尋會員（姓名或 IG）</label><input id="couponSearch" oninput="searchCouponMember(this.value)" placeholder="輸入姓名或 @IG" style="width:100%;box-sizing:border-box"><div id="couponSearchResults" style="margin-top:6px"></div><div id="couponSelected" style="font-size:13px;color:var(--cocoa);margin-top:6px"></div></div>'
@@ -2456,7 +2478,7 @@ function renderMemberCoupons(){
     +'<div class="fg" style="flex:1;min-width:0"><label>有效天數（0＝無期限）</label><input type="number" id="bcDays" style="width:100%;box-sizing:border-box" placeholder="14"></div></div>'
     +'<div class="fg"><label>說明</label><input id="bcDesc" style="width:100%;box-sizing:border-box" placeholder="週年慶優惠"></div>'
     +'<button class="abtn pr" style="align-self:flex-start" onclick="broadcastCoupon()">發送優惠券</button></div>'
-    +(rows.length?'<div class="table-scroll"><table class="dtable" style="margin-top:14px"><thead><tr><th>會員</th><th>金額</th><th>使用期間</th><th>狀態</th></tr></thead><tbody>'+rows.join('')+'</tbody></table></div>':'<p style="font-size:13px;color:var(--text-light);margin-top:10px">尚未發放任何會員折扣</p>');
+    +(all.length?chips+'<div class="table-scroll"><table class="dtable" style="margin-top:10px"><thead><tr><th>會員</th><th>折扣</th><th>使用期間</th><th>狀態</th></tr></thead><tbody>'+(rows.length?rows.join(''):'<tr><td colspan="4" style="color:var(--text-light);font-size:13px">此分類沒有折扣</td></tr>')+'</tbody></table></div>':'<p style="font-size:13px;color:var(--text-light);margin-top:10px">尚未發放任何會員折扣</p>');
 }
 function onCpnTypeChange(){var t=(document.querySelector('input[name="cpnType"]:checked')||{}).value||'amount';var a=document.getElementById('cpnAmountRow'),p=document.getElementById('cpnPercentRow');if(a)a.style.display=(t==='percent')?'none':'';if(p)p.style.display=(t==='percent')?'':'none';}
 function onBcTypeChange(){var t=(document.querySelector('input[name="bcType"]:checked')||{}).value||'amount';var a=document.getElementById('bcAmountRow'),p=document.getElementById('bcPercentRow');if(a)a.style.display=(t==='percent')?'none':'';if(p)p.style.display=(t==='percent')?'':'none';}
@@ -2572,10 +2594,11 @@ function askConfirm(msg,onOk){
   document.getElementById('confirmModal').classList.add('open');
 }
 function cancelStatus(id,which){
-  askConfirm(which==='paid'?'是否要取消「已收款」狀態？':'是否要取消「已出貨」狀態？',function(){
+  askConfirm(which==='paid'?'是否要取消「已收款」狀態？':which==='making'?'是否要取消「製作中」狀態？':'是否要取消「已出貨」狀態？',function(){
     var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
     if(which==='paid')o.status='pending';
-    else if(which==='shipped')o.status=o.hasCustom?'making':'paid';
+    else if(which==='making')o.status='paid';
+    else if(which==='shipped')o.status='making';
     persistOrder(o);renderAdmin();showToast('已取消');
   });
 }
@@ -2759,7 +2782,7 @@ function renderAdminProds(){
     }
     var rowBg=ck?'background:var(--warm-ivory)':(p.pinned?'background:#FFFAF2':'');
     return '<tr'+(rowBg?' style="'+rowBg+'"':'')+'><td><input type="checkbox" class="prodSel" onclick="toggleSelProd('+p.id+',this)" '+(ck?'checked':'')+'></td>'
-      +'<td style="font-size:24px">'+img+'</td><td>'+p.name+(p.draft?'<br><span style="font-size:11px;color:var(--dusty-rose)"> 草稿（未上架）</span>':'')+pinTag+'</td><td>'+p.cat+'</td><td>NT$ '+p.price+'</td>'
+      +'<td style="font-size:24px">'+img+'</td><td>'+p.name+(p.draft?'<br><span style="font-size:11px;color:var(--dusty-rose)"> 草稿（未上架）</span>':'')+(p.preview&&!p.draft?'<br><span style="font-size:11px;color:var(--cocoa)"> 搶先預覽（未開放購買）</span>':'')+pinTag+'</td><td>'+p.cat+'</td><td>NT$ '+p.price+'</td>'
       +'<td>'+(p.isCustom?'✓':'—')+'</td><td>'+(p.isCustom?'NT$ '+p.deposit:'—')+'</td>'
       +'<td><button class="abtn '+(p.draft?'pr':'sc')+'" onclick="togglePublish('+p.id+')">'+(p.draft?'上架':'下架')+'</button>'
       +'<button class="abtn '+(p.pinned?'ok':'sc')+'" onclick="togglePin('+p.id+')">'+(p.pinned?'取消置頂':'置頂')+'</button>'
@@ -2888,6 +2911,8 @@ function renderAdminOrds(){
       ?(btn(o.depositPaid,o.depositPaid?('cancelMoney('+o.id+",'deposit')"):('markMoney('+o.id+",'deposit')"),o.depositPaid?'✓ 訂金':'收訂金')
         +' '+btn(o.balancePaid,o.balancePaid?('cancelMoney('+o.id+",'balance')"):('markMoney('+o.id+",'balance')"),o.balancePaid?'✓ 尾款':'收尾款'))
       :btn(paid,paid?('cancelStatus('+o.id+",'paid')"):('updStatus('+o.id+",'paid')"),paid?'✓ 已收款':'確認收款');
+    var making=o.status==='making'||o.status==='shipped';
+    var makeCell=cancelled?'—':btn(making,making?('cancelStatus('+o.id+",'making')"):('updStatus('+o.id+",'making')"),making?'✓ 製作中':'開始製作');
     var ck=S._selOrders.indexOf(o.id)>=0;
     var rowStyle='cursor:pointer'+(cancelled?';opacity:.55':'')+(awaiting?';background:#FFF4E5':(ck?';background:var(--warm-ivory)':''));
     return '<tr style="'+rowStyle+'" onclick="openOrderDetail('+o.id+',true)">'
@@ -2895,13 +2920,14 @@ function renderAdminOrds(){
       +'<td>#'+o.id+(awaiting?'<br><span class="await-chip">已匯款待確認</span>':'')+'<br><span style="font-size:11px;color:var(--text-light)">'+o.date+'</span></td>'
       +'<td>'+esc(o.userName)+'</td><td style="font-size:12px">'+payLbl+'</td><td>NT$ '+o.total+'</td>'
       +'<td>'+payCell+'</td>'
+      +'<td>'+makeCell+'</td>'
       +'<td>'+(cancelled?'—':btn(shipped,shipped?('cancelStatus('+o.id+",'shipped')"):('updStatus('+o.id+",'shipped')"),shipped?'✓ 已出貨':'確認出貨'))+'</td>'
       +'<td><span class="sbadge s-'+o.status+'">'+sLabel(o.status)+'</span></td></tr>';
   }).join('');
   if(!rows)rows='<tr><td colspan="8" style="text-align:center;color:var(--text-light);padding:24px">此分類沒有訂單</td></tr>';
   el.innerHTML='<p style="font-size:12px;color:var(--text-light);margin-bottom:10px">點訂單列可查看明細與付款截圖；橘底＝顧客已回報匯款待你確認；客製訂金單分「訂金 / 尾款」兩段收款（左右可滑動）</p>'
     +chips+bar
-    +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="dtable" style="white-space:nowrap;min-width:760px"><thead><tr><th></th><th>訂單</th><th>會員</th><th>付款</th><th>金額</th><th>收款</th><th>出貨</th><th>狀態</th></tr></thead><tbody>'
+    +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="dtable" style="white-space:nowrap;min-width:840px"><thead><tr><th></th><th>訂單</th><th>會員</th><th>付款</th><th>金額</th><th>收款</th><th>製作</th><th>出貨</th><th>狀態</th></tr></thead><tbody>'
     +rows+'</tbody></table></div>';
 }
 function filterOrders(k){S._ordFilter=k;renderAdminOrds();}
@@ -3220,7 +3246,8 @@ function savePaymentSettings(){
 
 function updStatus(id,ns){
   var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
-  if(ns==='paid')o.status=o.hasCustom?'making':'paid';
+  if(ns==='paid')o.status='paid';
+  else if(ns==='making')o.status='making';
   else if(ns==='shipped')o.status='shipped';
   persistOrder(o);renderAdmin();showToast('訂單 #'+id+' 狀態已更新');
 }
@@ -3241,14 +3268,14 @@ function updatePayAlerts(){
 }
 function markMoney(id,which){
   var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
-  if(which==='deposit'){o.depositPaid=true;if(o.status==='pending')o.status='making';showToast('訂金已收');}
+  if(which==='deposit'){o.depositPaid=true;if(o.status==='pending')o.status='paid';showToast('訂金已收');}
   else{o.balancePaid=true;showToast('尾款已收');}
   persistOrder(o);renderAdmin();
 }
 function cancelMoney(id,which){
   askConfirm(which==='deposit'?'是否取消「訂金已收」？':'是否取消「尾款已收」？',function(){
     var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
-    if(which==='deposit'){o.depositPaid=false;if(o.status==='making')o.status='pending';}
+    if(which==='deposit'){o.depositPaid=false;if(o.status==='paid'||o.status==='making')o.status='pending';}
     else{o.balancePaid=false;}
     persistOrder(o);renderAdmin();showToast('已取消');
   });
@@ -3399,13 +3426,17 @@ function openProductModal(id){
     document.getElementById('editCustom').checked=p.isCustom;
     document.getElementById('editDeposit').value=p.deposit||'';
     document.getElementById('editDraft').checked=!!p.draft;
+    document.getElementById('editPreview').checked=!!p.preview;
+    document.getElementById('editPreviewNote').value=p.previewNote||'';
+    document.getElementById('previewNoteField').style.display=p.preview?'block':'none';
     if(p.isCustom)document.getElementById('depositField').style.display='block';
     S.editImages=(p.images&&p.images.length)?p.images.slice():(p.imgData?[p.imgData]:[]);
     S.editThumbs=(p.thumbs&&p.thumbs.length===S.editImages.length)?p.thumbs.slice():S.editImages.slice();
     S.editSpecs=p.specs?p.specs.map(function(s){return {name:s.name,price:s.price||'',deposit:(s.deposit===0?0:(s.deposit||'')),img:s.img||'',stock:(s.stock===0?0:(s.stock||''))};}):[];
   }else{
     ['editName','editPrice','editOriginal','editDesc','editMaterial','editDeposit','editStock'].forEach(function(x){document.getElementById(x).value='';});
-    ['editHot','editNew','editCustom','editCanCustom','editDraft','editNoDiscount'].forEach(function(x){document.getElementById(x).checked=false;});
+    ['editHot','editNew','editCustom','editCanCustom','editDraft','editNoDiscount','editPreview'].forEach(function(x){document.getElementById(x).checked=false;});
+    document.getElementById('editPreviewNote').value='';document.getElementById('previewNoteField').style.display='none';
     document.getElementById('editSaleMode').value='preorder';
     S.editImages=[];S.editThumbs=[];S.editSpecs=[];
   }
@@ -3517,6 +3548,8 @@ function saveProduct(){
     stock:(document.getElementById('editSaleMode').value==='preorder'?null:(document.getElementById('editStock').value===''?null:(parseInt(document.getElementById('editStock').value)||0))),
     isCustom:isC,deposit:isC?(parseInt(document.getElementById('editDeposit').value)||0):0,
     draft:document.getElementById('editDraft').checked,
+    preview:document.getElementById('editPreview').checked,
+    previewNote:document.getElementById('editPreview').checked?document.getElementById('editPreviewNote').value.trim():'',
     images:imgs,imgData:imgs[0]||'',thumbs:thumbs,imgThumb:thumbs[0]||imgs[0]||'',
     specs:(S.editSpecs||[]).filter(function(s){return (s.name||'').trim();}),emoji:''};
   var _bytes;try{_bytes=new Blob([JSON.stringify(data)]).size;}catch(e){_bytes=JSON.stringify(data).length;}
