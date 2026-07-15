@@ -736,7 +736,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0709d</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0715b</div>
 </footer>
 
 <!-- MODALS -->
@@ -890,6 +890,7 @@ function startFirebaseShop(){
       S.promo=Object.assign({},S.promo,cfg.promo);
       renderHomeProducts();renderShopProducts();
       if(document.getElementById('promoAdmin'))renderPromoAdmin();
+      var _pcart=document.getElementById('page-cart');if(_pcart&&_pcart.classList.contains('active'))renderCart();
     }
     var _ppg=document.getElementById('page-product');
     if(_ppg&&_ppg.classList.contains('active')&&S._pendingProduct==null&&S._openProductId!=null)renderProductPage(S._openProductId);
@@ -1784,7 +1785,24 @@ function calcShip(){
   return cod?38:60;
 }
 
+function repriceCart(){
+  var changed=false;
+  S.cart.forEach(function(item){
+    var p=S.products.find(function(x){return x.id===item.id;});if(!p)return;
+    var so=getSpecObj(p,item.spec||'');
+    var base=(so&&so.price!=null&&so.price!=='')?so.price:p.price;
+    var price=promoPrice(base,p);
+    var dep=(so&&so.deposit!==''&&so.deposit!=null)?so.deposit:p.deposit;
+    var label=(price<base?((S.promo&&S.promo.label)||'限時優惠'):'');
+    if(item.price!==price||item.origPrice!==base||item.promoLabel!==label||item.deposit!==dep){
+      item.price=price;item.origPrice=base;item.promoLabel=label;item.deposit=dep;changed=true;
+    }
+  });
+  if(changed)saveCart();
+  return changed;
+}
 function renderCart(){
+  repriceCart();
   revalidateDiscount();
   var el=document.getElementById('cartContent');
   if(!S.cart.length){el.innerHTML='<div class="empty-st"><span class="emo"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12l-1 12H7z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg></span>購物車是空的<br><br><button class="hero-cta" onclick="showPage(\'shop\')">去逛逛</button></div>';return;}
@@ -2064,6 +2082,7 @@ function placeOrder(total){
   if(!S.currentUser&&S.paymentMethod==='cod'){showToast('訪客結帳僅提供銀行匯款與 LINE Pay，貨到付款請先登入會員');return;}
   if((S.paymentMethod==='bank'||S.paymentMethod==='linepay')&&!S.shippingMethod){showToast('請選擇寄送方式');return;}
   if(S.appliedDiscount&&discUsedByUser(S.appliedDiscount)){showToast('此折扣碼每個帳號限用一次，您已使用過');S.appliedDiscount=null;renderCart();return;}
+  if(repriceCart()){renderCart();showToast('購物車價格已依最新優惠更新，請確認後再送出');return;}
   if(revalidateDiscount()){renderCart();return;}
   var nm=(document.getElementById('rcvName')||{}).value||'';
   var ph=(document.getElementById('rcvPhone')||{}).value||'';
@@ -2326,7 +2345,7 @@ function sendCustomerCopy(){
     var items=o.items.map(function(i){return i.name+(i.spec?'（'+i.spec+'）':'')+' x'+i.qty+'（NT$'+(i.price*i.qty)+'）';}).join('、');
     var pay=o.payment==='bank'?'銀行匯款':o.payment==='linepay'?'LINE Pay':'7-11貨到付款';
     var ship=o.shippingMethod==='711'?'7-11取貨':o.shippingMethod==='home'?'宅配':'7-11貨到';
-    var params={to_email:em,order_id:o.id,order_date:o.date,customer_name:o.receiver,customer_phone:o.phone,member_email:em,items:items,total:o.total,deposit:o.totalDeposit||0,payment:pay,shipping:ship,address:o.address,note:o.note||''};
+    var params={to_email:em,order_id:o.id,order_date:o.date,customer_name:o.receiver,customer_phone:o.phone,member_email:em,items:items,total:o.total,deposit:o.totalDeposit||0,pay_now:mailPayInfo(o).pay_now,balance:mailPayInfo(o).balance,payment:pay,shipping:ship,address:o.address,note:o.note||''};
     emailjs.send(cfg.serviceId,cfg.templateCustomer,params);
     showToast('訂單明細已寄出，請查收 ✓');
     var box=document.getElementById('successEmailBox');
@@ -2630,6 +2649,12 @@ function updateCodBank(){
   el.style.display=(S.cart.some(function(i){return i.isCustom;})&&S.customDepositChoice==='deposit')?'block':'none';
 }
 
+function mailPayInfo(o){
+  var remainder=(o.items||[]).filter(function(i){return i.isCustom;}).reduce(function(s,i){return s+Math.max(0,(i.price-i.deposit))*i.qty;},0)+(o.shipping||0);
+  var depOnly=o.hasCustom&&o.customDepositChoice==='deposit';
+  return {pay_now:depOnly?(o.total-remainder):o.total,
+    balance:depOnly?('NT$ '+remainder+'（含運費，客製完成後通知）'):'無'};
+}
 function sendOrderEmail(o){
   try{
     var cfg=S.emailjs||{};
@@ -2641,7 +2666,7 @@ function sendOrderEmail(o){
     var params={to_email:cfg.notifyEmail||'',order_id:o.id,order_date:o.date,
       customer_name:o.receiver,customer_phone:o.phone,member_email:memberEmail,
       customer_ig:(o.ig||(S.currentUser&&(S.currentUser.defaultIG||S.currentUser.ig))||'')||'未提供',
-      items:items,total:o.total,deposit:o.totalDeposit||0,payment:pay,shipping:ship,address:o.address,note:o.note||''};
+      items:items,total:o.total,deposit:o.totalDeposit||0,pay_now:mailPayInfo(o).pay_now,balance:mailPayInfo(o).balance,payment:pay,shipping:ship,address:o.address,note:o.note||''};
     /* reCAPTCHA token 驗證一次即作廢：只附在「賣家信」上（賣家模板開啟驗證），
        顧客信不帶 token（顧客模板需在 EmailJS 後台關閉 reCAPTCHA 驗證），否則會 timeout-or-duplicate */
     var tok=cfg.recaptchaSiteKey?captchaToken('pay'):'';
