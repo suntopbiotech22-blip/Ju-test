@@ -736,7 +736,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0715f</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0715g</div>
 </footer>
 
 <!-- MODALS -->
@@ -2741,8 +2741,13 @@ function adminFilteredProds(){
   var flt=S._prodCatFilter||'全部';
   var list=S.products.slice().sort(cmpProducts);
   if(flt!=='全部')list=list.filter(function(p){return p.cat===flt;});
+  var st=S._prodStateFilter||'all';
+  if(st==='live')list=list.filter(function(p){return !p.draft&&!p.preview;});
+  else if(st==='preview')list=list.filter(function(p){return !!p.preview&&!p.draft;});
+  else if(st==='draft')list=list.filter(function(p){return !!p.draft;});
   return list;
 }
+function filterProdState(v){S._prodStateFilter=v;renderAdminProds();}
 function filterProdCat(c){S._prodCatFilter=c;renderAdminProds();}
 function renderAdminProds(){
   updateMigrateBox();
@@ -2754,6 +2759,15 @@ function renderAdminProds(){
   var chips='<div class="ord-filter">'+cats.map(function(c){
     var n=c==='全部'?S.products.length:S.products.filter(function(p){return p.cat===c;}).length;
     return '<button class="cat-tab'+(flt===c?' active':'')+'" onclick="filterProdCat(\''+c+'\')">'+c+(n?' ('+n+')':'')+'</button>';
+  }).join('')+'</div>';
+  var st=S._prodStateFilter||'all';
+  var base=(flt==='全部')?S.products:S.products.filter(function(p){return p.cat===flt;});
+  var nLive=base.filter(function(p){return !p.draft&&!p.preview;}).length;
+  var nPrev=base.filter(function(p){return !!p.preview&&!p.draft;}).length;
+  var nDraft=base.filter(function(p){return !!p.draft;}).length;
+  var stDefs=[['all','全部 '+base.length],['live','已上架 '+nLive],['preview','預覽中 '+nPrev],['draft','未上架 '+nDraft]];
+  chips+='<div style="display:flex;gap:8px;margin:2px 0 10px;flex-wrap:wrap">'+stDefs.map(function(d){
+    return '<button onclick="filterProdState(\''+d[0]+'\')" style="border:1.5px solid '+(st===d[0]?'var(--dusty-rose)':'var(--linen)')+';background:'+(st===d[0]?'var(--dusty-rose)':'#fff')+';color:'+(st===d[0]?'#fff':'var(--cocoa)')+';border-radius:16px;padding:5px 12px;font-size:12px;font-family:inherit;cursor:pointer">'+d[1]+'</button>';
   }).join('')+'</div>';
   var list=adminFilteredProds();
   S._prodVisibleIds=list.map(function(p){return p.id;});
@@ -2789,7 +2803,7 @@ function renderAdminProds(){
     return '<tr'+(rowBg?' style="'+rowBg+'"':'')+'><td><input type="checkbox" class="prodSel" onclick="toggleSelProd('+p.id+',this)" '+(ck?'checked':'')+'></td>'
       +'<td style="font-size:24px">'+img+'</td><td>'+p.name+(p.draft?'<br><span style="font-size:11px;color:var(--dusty-rose)"> 草稿（未上架）</span>':'')+(p.preview&&!p.draft?'<br><span style="font-size:11px;color:var(--cocoa)"> 搶先預覽（未開放購買）</span>':'')+pinTag+'</td><td>'+p.cat+'</td><td>NT$ '+p.price+'</td>'
       +'<td>'+(p.isCustom?'✓':'—')+'</td><td>'+(p.isCustom?'NT$ '+p.deposit:'—')+'</td>'
-      +'<td><button class="abtn '+(p.draft?'pr':'sc')+'" onclick="togglePublish('+p.id+')">'+(p.draft?'上架':'下架')+'</button>'
+      +'<td>'+(p.preview&&!p.draft?'<button class="abtn pr" onclick="openForSale('+p.id+')">開放購買</button>':'')+'<button class="abtn '+(p.draft?'pr':'sc')+'" onclick="togglePublish('+p.id+')">'+(p.draft?'上架':'下架')+'</button>'
       +'<button class="abtn '+(p.pinned?'ok':'sc')+'" onclick="togglePin('+p.id+')">'+(p.pinned?'取消置頂':'置頂')+'</button>'
       +'<button class="abtn sc" onclick="duplicateProduct('+p.id+')">複製</button>'
       +'<button class="abtn sc" onclick="openProductModal('+p.id+')">編輯</button>'
@@ -3571,6 +3585,12 @@ function saveProduct(){
   closeModal('productEditModal');
 }
 
+function openForSale(id){
+  var p=S.products.find(function(x){return x.id===id;});if(!p||!p._docId||!window.FB)return;
+  askConfirm('確定開放「'+p.name+'」購買？顧客將立即可以下單。',function(){
+    window.FB.updateProduct(p._docId,{preview:false,previewNote:''}).then(function(){showToast('已開放購買 ✓');}).catch(function(e){showToast('操作失敗：'+(e.code||e.message));});
+  });
+}
 function togglePublish(id){
   var p=S.products.find(function(x){return x.id===id;});if(!p||!p._docId||!window.FB)return;
   var nd=!p.draft;
