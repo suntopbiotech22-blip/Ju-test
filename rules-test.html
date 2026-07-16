@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>啾手作・防線自動測試</title>
+<style>
+:root{--paper:#F5F0E8;--card:#FDFBF7;--cocoa:#5C4A3A;--ink:#3E332A;--taupe:#A89684;--rose:#C9A0A0;--rose-deep:#B98A8A;--sage:#7E9077;--linen:#E4DACB;--soft:#8A7A68;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--paper);font-family:-apple-system,"Noto Sans TC",sans-serif;color:var(--ink);padding:24px 18px 60px;max-width:560px;margin:0 auto}
+h1{font-family:Georgia,"Noto Serif TC",serif;font-size:26px;color:var(--cocoa);margin:8px 0 4px}
+.sub{font-size:14px;color:var(--soft);line-height:1.6}
+.ver{font-size:12px;color:var(--taupe);margin-top:4px}
+button.run{display:block;width:100%;margin:22px 0 8px;padding:16px;border:none;border-radius:14px;background:var(--rose-deep);color:#fff;font-size:17px;font-weight:700;font-family:inherit;cursor:pointer}
+button.run:disabled{opacity:.5}
+.tests{margin-top:14px;display:flex;flex-direction:column;gap:10px}
+.t{background:var(--card);border:1.5px solid var(--linen);border-radius:14px;padding:13px 16px;display:flex;gap:12px;align-items:flex-start}
+.t .st{flex:none;width:66px;text-align:center;border-radius:999px;padding:5px 0;font-size:13px;font-weight:700;margin-top:2px}
+.st.wait{background:var(--linen);color:var(--soft)}
+.st.run{background:#EFE6D8;color:#9A7B3F}
+.st.pass{background:#E7EDE4;color:#5E7256}
+.st.fail{background:#F3E3E0;color:#9C5B52}
+.t .nm{font-size:15px;font-weight:600;color:var(--cocoa)}
+.t .ex{font-size:12px;color:var(--taupe);margin-top:2px}
+.t .dt{font-size:12px;color:var(--soft);margin-top:4px;word-break:break-all;display:none}
+.t.showdt .dt{display:block}
+.verdict{margin-top:20px;border-radius:16px;padding:18px;font-size:15px;line-height:1.7;display:none}
+.verdict.ok{display:block;background:#E7EDE4;border:1.5px solid #C6D2C0;color:#41523B}
+.verdict.bad{display:block;background:#F3E3E0;border:1.5px solid #E0C4BE;color:#7E463E}
+.note{margin-top:22px;font-size:12.5px;color:var(--soft);line-height:1.7;border-top:1.5px dashed var(--linen);padding-top:14px}
+</style>
+</head>
+<body>
+<h1>防線自動測試</h1>
+<div class="sub">本工具會以<strong>匿名訪客身分</strong>（跟壞人一樣的權限）自動戳每一道 Firestore 防線：該擋的要擋、該通的要通。不會動到任何真實資料。</div>
+<div class="ver">工具版本 rt-0716a・對應規則 0715</div>
+<button class="run" id="btnRun" onclick="runAll()">▶ 開始測試</button>
+<div class="tests" id="tests"></div>
+<div class="verdict" id="verdict"></div>
+<div class="note">
+說明：每個測試點一下可展開技術細節。「擋」＝規則回傳 permission-denied。測試 7 會把某件作品的 specStock 原封不動寫回一次（數值完全相同），不影響庫存。全部通過後這個檔案可以留著（它做的事任何訪客本來就能做），之後改完規則都能再跑一次。
+</div>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js';
+import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, query, limit } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAETCZAk1fOUsFMPt5eb2q3DlrQlkr5GUc",
+  authDomain: "ju-accessories-shop.firebaseapp.com",
+  projectId: "ju-accessories-shop",
+  storageBucket: "ju-accessories-shop.firebasestorage.app",
+  messagingSenderId: "857716351561",
+  appId: "1:857716351561:web:181c555334b35bdcb4d598"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* expect: 'deny' 應被擋 / 'allow' 應放行 */
+const TESTS = [
+ {id:'t1', nm:'1. 匿名登入（取得訪客身分）', ex:'應成功——訪客結帳靠它', expect:'allow',
+  fn:async()=>{ await signInAnonymously(auth); }},
+ {id:'t2', nm:'2. 讀取商品列表', ex:'應放行——前台要能看作品', expect:'allow',
+  fn:async(ctx)=>{ const s=await getDocs(query(collection(db,'products'),limit(1)));
+    if(!s.empty){ctx.prodId=s.docs[0].id;ctx.prodData=s.docs[0].data();} }},
+ {id:'t3', nm:'3. 偷看會員資料', ex:'應擋——個資防線', expect:'deny',
+  fn:async()=>{ await getDoc(doc(db,'members','__rules_test__')); }},
+ {id:'t4', nm:'4. 偷看別人的訂單', ex:'應擋——訂單隱私防線', expect:'deny',
+  fn:async()=>{ await getDoc(doc(db,'orders','__rules_test__')); }},
+ {id:'t5', nm:'5. 竄改作品名稱與價格', ex:'應擋——定價防線', expect:'deny',
+  fn:async(ctx)=>{ if(!ctx.prodId)throw{code:'skip',message:'找不到商品可測'};
+    await updateDoc(doc(db,'products',ctx.prodId),{name:'__hack__',price:1}); }},
+ {id:'t6', nm:'6. 竄改規格內容（specs 欄位）', ex:'應擋——規格裡有價格', expect:'deny',
+  fn:async(ctx)=>{ if(!ctx.prodId)throw{code:'skip',message:'找不到商品可測'};
+    await updateDoc(doc(db,'products',ctx.prodId),{specs:[{name:'__hack__',price:1}]}); }},
+ {id:'t7', nm:'7. 更新規格庫存（specStock，寫回原值）', ex:'應放行——下單扣庫存靠它', expect:'allow',
+  fn:async(ctx)=>{ if(!ctx.prodId)throw{code:'skip',message:'找不到商品可測'};
+    const cur=(ctx.prodData&&ctx.prodData.specStock)||{};
+    await updateDoc(doc(db,'products',ctx.prodId),{specStock:cur}); }},
+ {id:'t8', nm:'8. 冒名建立訂單（userId 不是自己）', ex:'應擋——防偽造訂單', expect:'deny',
+  fn:async()=>{ await addDoc(collection(db,'orders'),{userId:'__someone_else__',test:true,id:0,items:[],total:0}); }},
+ {id:'t9', nm:'9. 竄改訂單狀態', ex:'應擋——出貨狀態只有店主能改', expect:'deny',
+  fn:async()=>{ await updateDoc(doc(db,'orders','__rules_test__'),{status:'shipped'}); }},
+ {id:'t10', nm:'10. 竄改網站設定（促銷／收款資訊）', ex:'應擋——設定只有店主能改', expect:'deny',
+  fn:async()=>{ await updateDoc(doc(db,'config','site'),{hack:true}); }},
+];
+
+const box=document.getElementById('tests');
+TESTS.forEach(t=>{
+  const d=document.createElement('div');d.className='t';d.id=t.id;
+  d.innerHTML='<div class="st wait">待測</div><div style="flex:1"><div class="nm">'+t.nm+'</div><div class="ex">'+t.ex+'</div><div class="dt"></div></div>';
+  d.onclick=()=>d.classList.toggle('showdt');
+  box.appendChild(d);
+});
+function setSt(id,cls,txt,detail){
+  const el=document.getElementById(id);
+  const st=el.querySelector('.st');st.className='st '+cls;st.textContent=txt;
+  if(detail)el.querySelector('.dt').textContent=detail;
+}
+function isDenied(e){
+  const c=(e&&(e.code||''))+'';const m=(e&&(e.message||''))+'';
+  return c.indexOf('permission-denied')>=0||m.indexOf('insufficient permissions')>=0||m.indexOf('PERMISSION_DENIED')>=0;
+}
+window.runAll=async function(){
+  const btn=document.getElementById('btnRun');btn.disabled=true;btn.textContent='測試中…';
+  const v=document.getElementById('verdict');v.className='verdict';
+  let pass=0,fail=0;const ctx={};
+  for(const t of TESTS){
+    setSt(t.id,'run','測試中');
+    let outcome,detail='';
+    try{ await t.fn(ctx); outcome='allow'; detail='操作成功完成'; }
+    catch(e){
+      if(e&&e.code==='skip'){setSt(t.id,'fail','略過',e.message);fail++;continue;}
+      if(isDenied(e)){outcome='deny';detail='被規則拒絕（permission-denied）';}
+      else{outcome='error';detail='非權限錯誤：'+(e.code||'')+' '+(e.message||'');}
+    }
+    if(outcome===t.expect){pass++;setSt(t.id,'pass',t.expect==='deny'?'已擋 ✓':'放行 ✓',detail);}
+    else{fail++;setSt(t.id,'fail',outcome==='error'?'錯誤':(outcome==='deny'?'被擋 ✗':'竟然通過 ✗'),detail);}
+  }
+  btn.disabled=false;btn.textContent='▶ 再測一次';
+  if(fail===0){v.className='verdict ok';v.innerHTML='<strong>全部通過 '+pass+' / '+TESTS.length+'</strong><br>防線完好：該擋的都擋住、庫存與訪客功能都通。這輪測試完成 ✓';}
+  else{v.className='verdict bad';v.innerHTML='<strong>'+fail+' 項未通過</strong>（通過 '+pass+'）<br>點開紅色項目看細節，截圖傳給 Claude 一起修。若「竟然通過」出現在應擋項目，代表防線有洞，請暫停發布新規則。';}
+};
+</script>
+</body>
+</html>
