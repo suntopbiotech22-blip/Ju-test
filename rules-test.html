@@ -34,7 +34,7 @@ button.run:disabled{opacity:.5}
 <body>
 <h1>防線自動測試</h1>
 <div class="sub">本工具會以<strong>匿名訪客身分</strong>（跟壞人一樣的權限）自動戳每一道 Firestore 防線：該擋的要擋、該通的要通。不會動到任何真實資料。</div>
-<div class="ver">工具版本 rt-0716a・對應規則 0715</div>
+<div class="ver">工具版本 rt-0716b・對應規則 0715</div>
 <button class="run" id="btnRun" onclick="runAll()">▶ 開始測試</button>
 <div class="tests" id="tests"></div>
 <div class="verdict" id="verdict"></div>
@@ -66,9 +66,9 @@ const TESTS = [
   fn:async(ctx)=>{ const s=await getDocs(query(collection(db,'products'),limit(1)));
     if(!s.empty){ctx.prodId=s.docs[0].id;ctx.prodData=s.docs[0].data();} }},
  {id:'t3', nm:'3. 偷看會員資料', ex:'應擋——個資防線', expect:'deny',
-  fn:async()=>{ await getDoc(doc(db,'members','__rules_test__')); }},
+  fn:async()=>{ await getDoc(doc(db,'members','zz-rules-test-zz')); }},
  {id:'t4', nm:'4. 偷看別人的訂單', ex:'應擋——訂單隱私防線', expect:'deny',
-  fn:async()=>{ await getDoc(doc(db,'orders','__rules_test__')); }},
+  fn:async()=>{ await getDoc(doc(db,'orders','zz-rules-test-zz')); }},
  {id:'t5', nm:'5. 竄改作品名稱與價格', ex:'應擋——定價防線', expect:'deny',
   fn:async(ctx)=>{ if(!ctx.prodId)throw{code:'skip',message:'找不到商品可測'};
     await updateDoc(doc(db,'products',ctx.prodId),{name:'__hack__',price:1}); }},
@@ -80,9 +80,9 @@ const TESTS = [
     const cur=(ctx.prodData&&ctx.prodData.specStock)||{};
     await updateDoc(doc(db,'products',ctx.prodId),{specStock:cur}); }},
  {id:'t8', nm:'8. 冒名建立訂單（userId 不是自己）', ex:'應擋——防偽造訂單', expect:'deny',
-  fn:async()=>{ await addDoc(collection(db,'orders'),{userId:'__someone_else__',test:true,id:0,items:[],total:0}); }},
+  fn:async()=>{ await addDoc(collection(db,'orders'),{userId:'zz-someone-else-zz',test:true,id:0,items:[],total:0}); }},
  {id:'t9', nm:'9. 竄改訂單狀態', ex:'應擋——出貨狀態只有店主能改', expect:'deny',
-  fn:async()=>{ await updateDoc(doc(db,'orders','__rules_test__'),{status:'shipped'}); }},
+  fn:async()=>{ await updateDoc(doc(db,'orders','zz-rules-test-zz'),{status:'shipped'}); }},
  {id:'t10', nm:'10. 竄改網站設定（促銷／收款資訊）', ex:'應擋——設定只有店主能改', expect:'deny',
   fn:async()=>{ await updateDoc(doc(db,'config','site'),{hack:true}); }},
 ];
