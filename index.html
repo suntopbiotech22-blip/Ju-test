@@ -736,7 +736,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0715g</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0717a</div>
 </footer>
 
 <!-- MODALS -->
@@ -1573,7 +1573,9 @@ function openOrderDetail(id,isAdmin){
     }
     html+='<div class="pay-info" style="margin-top:14px"> 7-11 賣貨便貨到付款　'+(depOnly?'餘款（含運費）NT$ '+remainder+' 取貨時付款':'取貨時付款 NT$ '+o.total)+'</div>';
   }
-  html+='<div style="font-size:13px;color:var(--text-light);margin-top:12px;line-height:1.9">寄送方式：'+(o.shippingMethod==='711'?'7-11 超商取貨':o.shippingMethod==='home'?'宅配到府':'7-11 賣貨便貨到付款')
+  html+='<div style="font-size:13px;color:var(--text-light);margin-top:12px;line-height:1.9">'
+    +(o.hasCustom?'客製付款：<span style="color:var(--dusty-rose);font-weight:600">'+(o.customDepositChoice==='deposit'?('僅匯訂金'+(o.customRemainChoice==='cod'?'（尾款 7-11 貨到付款）':o.customRemainChoice==='notify'?'（完成後通知付尾款）':'')):o.customDepositChoice==='full'?'全額匯款':'未選擇')+'</span><br>':'')
+    +'寄送方式：'+(o.shippingMethod==='711'?'7-11 超商取貨':o.shippingMethod==='home'?'宅配到府':'7-11 賣貨便貨到付款')
     +'<br>取貨/地址：'+esc(o.address||'—')+'<br>收件人：'+esc(o.receiver)+'　'+esc(o.phone)+(o.ig?'　IG '+esc(o.ig):'')+(o.guest&&o.email?'<br>Email：'+esc(o.email):'')+(o.note?'<br>備註：'+esc(o.note):'')+'</div>';
   if(o.payment!=='cod'||depOnly){
     var reported=o.paymentProof||o.paymentNote;
@@ -1959,7 +1961,7 @@ function checkoutForm(total,hasC){
     +'<input type="radio" name="pay" value="bank" onchange="selPay(\'bank\')"> 銀行匯款</label>'
     +'<label class="radio-opt" id="pay-linepay" onclick="selPay(\'linepay\')">'
     +'<input type="radio" name="pay" value="linepay" onchange="selPay(\'linepay\')"> LINE Pay</label>'
-    +(guest?'':'<label class="radio-opt" id="pay-cod" onclick="selPay(\'cod\')">'
+    +(guest?'':'<label class="radio-opt" id="pay-cod"'+((hasC&&S.customDepositChoice==='full')?' style="display:none"':'')+' onclick="selPay(\'cod\')">'
       +'<input type="radio" name="pay" value="cod" onchange="selPay(\'cod\')"> 7-11 賣貨便（貨到付款 NT$ 38）</label>')
     +'</div>'
     +'<div id="prepaidSection" style="display:none;margin-top:14px">'
@@ -2001,8 +2003,8 @@ function customBox(){
     +'</ul><p style="margin-top:8px;font-size:12px;color:var(--text-light)">客製作品需先匯款訂金，確認後才開始製作</p>'
     +'<p style="font-weight:500;margin-top:6px">請選擇匯款金額：</p>'
     +'<div class="opt-row">'
-    +'<label><input type="radio" name="custDep" value="deposit" onchange="S.customDepositChoice=\'deposit\';updateRemain();refreshTotals()"> 僅匯訂金 NT$ '+td+'</label>'
-    +'<label><input type="radio" name="custDep" value="full" onchange="S.customDepositChoice=\'full\';updateRemain();refreshTotals()"> 匯全額</label>'
+    +'<label><input type="radio" name="custDep" value="deposit" onchange="S.customDepositChoice=\'deposit\';updateRemain();updateCodOption();refreshTotals()"> 僅匯訂金 NT$ '+td+'</label>'
+    +'<label><input type="radio" name="custDep" value="full" onchange="S.customDepositChoice=\'full\';updateRemain();updateCodOption();refreshTotals()"> 匯全額</label>'
     +'</div>'
     +'<div id="remainOpts" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--linen)">'
     +'<p style="font-size:12px;margin-bottom:6px">尾款處理方式：</p>'
@@ -2012,6 +2014,19 @@ function customBox(){
     +'</div></div></div>';
 }
 
+function updateCodOption(){
+  var hideCod=S.cart.some(function(i){return i.isCustom;})&&S.customDepositChoice==='full';
+  var el=document.getElementById('pay-cod');
+  if(el)el.style.display=hideCod?'none':'';
+  if(hideCod&&S.paymentMethod==='cod'){
+    S.paymentMethod=null;
+    if(el)el.classList.remove('sel');
+    var r=document.querySelector('input[name="pay"][value="cod"]');if(r)r.checked=false;
+    var cs=document.getElementById('codSection');if(cs)cs.style.display='none';
+    var ss=document.getElementById('shipSection');if(ss)ss.style.display='block';
+    showToast('選擇匯全額後不提供貨到付款，請重新選擇付款方式');
+  }
+}
 function depositTotal(){return S.cart.filter(function(i){return i.isCustom;}).reduce(function(s,i){return s+i.deposit*i.qty;},0);}
 function orderTotal(){var sub=S.cart.reduce(function(s,i){return s+i.price*i.qty;},0);var d=appliedDiscAmt();return sub+calcShip()-d;}
 function customRemainder(){return S.cart.filter(function(i){return i.isCustom;}).reduce(function(s,i){return s+Math.max(0,i.price-i.deposit)*i.qty;},0);}
@@ -2051,6 +2066,7 @@ function updateRemain(){
 
 /* 付款/運送選擇 - 分開 onclick 和 onchange 確保 radio 可點 */
 function selPay(t){
+  if(t==='cod'&&S.cart.some(function(i){return i.isCustom;})&&S.customDepositChoice==='full'){showToast('已選擇匯全額，無法使用貨到付款，請改用銀行匯款或 LINE Pay');return;}
   S.paymentMethod=t;S.shippingMethod=null;
   /* 更新樣式 */
   ['pay-bank','pay-linepay','pay-cod'].forEach(function(id){
@@ -2118,6 +2134,7 @@ function placeOrder(total){
   var noteV=(document.getElementById('orderNote')||{}).value||'';
   var igV=(document.getElementById('rcvIG')||{}).value||'';
   if(hasC&&!S.customDepositChoice){showToast('請選擇客製訂金匯款方式');return;}
+  if(hasC&&S.customDepositChoice==='full'&&S.paymentMethod==='cod'){showToast('客製作品選擇匯全額時無法使用貨到付款，請改用銀行匯款或 LINE Pay');return;}
   if(hasC&&S.customDepositChoice==='deposit'&&!S.customRemainChoice){
     /* 讀取已勾選的 radio */
     var rr=document.querySelector('input[name="custRemain"]:checked');
@@ -2772,7 +2789,7 @@ function renderAdminProds(){
   var list=adminFilteredProds();
   S._prodVisibleIds=list.map(function(p){return p.id;});
   var pinnedList=list.filter(function(p){return p.pinned;});
-  var unpinnedList=S.products.filter(function(p){return !p.pinned;}).sort(cmpProducts);
+  var unpinnedList=list.filter(function(p){return !p.pinned;});
   var selN=S._selProds.length;
   var allOn=selN>0&&list.length>0&&list.every(function(p){return S._selProds.indexOf(p.id)>=0;});
   var bar='<div class="batch-bar">'
@@ -2830,10 +2847,16 @@ function movePin(id,dir){
   Promise.all([window.FB.updateProduct(a._docId,{pinOrder:bo}),window.FB.updateProduct(b._docId,{pinOrder:ao})]).then(function(){showToast('已調整順序');}).catch(function(e){showToast('操作失敗：'+(e.code||e.message));});
 }
 function moveOrder(id,dir){
+  var vis=Array.isArray(S._prodVisibleIds)?S._prodVisibleIds:S.products.map(function(p){return p.id;});
+  var visArr=S.products.filter(function(p){return !p.pinned&&vis.indexOf(p.id)>=0;}).sort(cmpProducts);
+  var vIdx=visArr.findIndex(function(p){return p.id===id;});if(vIdx<0)return;
+  var vj=vIdx+dir;if(vj<0||vj>=visArr.length)return;
+  var otherId=visArr[vj].id;
   var arr=S.products.filter(function(p){return !p.pinned;}).sort(cmpProducts);
   var idx=arr.findIndex(function(p){return p.id===id;});if(idx<0)return;
-  var j=idx+dir;if(j<0||j>=arr.length)return;
-  var tmp=arr[idx];arr[idx]=arr[j];arr[j]=tmp;
+  var me=arr.splice(idx,1)[0];
+  var j2=arr.findIndex(function(p){return p.id===otherId;});if(j2<0){arr.splice(idx,0,me);return;}
+  arr.splice(dir<0?j2:j2+1,0,me);
   var n=arr.length,updates=[];
   arr.forEach(function(p,i){
     var newOrder=(n-i)*1000;
@@ -2925,7 +2948,8 @@ function renderAdminOrds(){
     var paid=o.status==='paid'||o.status==='making'||o.status==='shipped';
     var shipped=o.status==='shipped';
     var awaiting=orderAwaitingPay(o);
-    var payLbl=o.payment==='bank'?'銀行匯款':o.payment==='linepay'?'LINE Pay':'貨到付款';
+    var payLbl=(o.payment==='bank'?'銀行匯款':o.payment==='linepay'?'LINE Pay':'貨到付款')
+      +(o.hasCustom?'<br><span style="font-size:11px;color:var(--dusty-rose)">客製：'+(o.customDepositChoice==='deposit'?'僅訂金':o.customDepositChoice==='full'?'全額匯款':'未選')+'</span>':'');
     var payCell=cancelled?'—':depOnly
       ?(btn(o.depositPaid,o.depositPaid?('cancelMoney('+o.id+",'deposit')"):('markMoney('+o.id+",'deposit')"),o.depositPaid?'✓ 訂金':'收訂金')
         +' '+btn(o.balancePaid,o.balancePaid?('cancelMoney('+o.id+",'balance')"):('markMoney('+o.id+",'balance')"),o.balancePaid?'✓ 尾款':'收尾款'))
