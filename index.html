@@ -656,7 +656,12 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
             <div class="cat-add"><input id="newCatName" placeholder="新增分類名稱" maxlength="8"><button class="abtn" onclick="addCategory()">＋ 新增分類</button></div>
             <p class="cat-hint">分類會同步套用到前台作品篩選與商品編輯選單。改名時會自動更新該分類底下的作品。</p>
           </div>
-          <button class="abtn pr" onclick="openProductModal()">＋ 新增作品</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button class="abtn pr" onclick="openProductModal()">＋ 新增作品</button>
+            <button class="abtn pr" onclick="exportProducts()"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 4 5-4M5 20h14"/></svg> 匯出作品（市集手帳）</button>
+            <button class="abtn sc" onclick="exportProductsCSV()"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 4 5-4M5 20h14"/></svg> 匯出價目表（Excel）</button>
+          </div>
+          <p class="cat-hint" style="margin-top:8px">「匯出作品」會下載一個 JSON 檔，可在市集手帳 App 的「作品 → 匯入清單」直接匯入，含分類、售價與款式。</p>
           <div style="margin-top:16px" id="adminProductList"></div>
         </div>
         <div class="adm-panel" id="panel-orders"><h2>訂單管理</h2><button class="abtn pr" style="margin-bottom:14px" onclick="exportOrders()"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 4 5-4M5 20h14"/></svg> 匯出 Excel</button><div id="adminOrderList"></div></div>
@@ -736,7 +741,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0717a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0722a</div>
 </footer>
 
 <!-- MODALS -->
@@ -3218,6 +3223,58 @@ function exportMembers(){
     rows.push([m.name,m.email,m.phone||'',m.ig||'',S.orders.filter(function(o){return o.userId===m.id;}).length]);});
   downloadCSV('會員資料_'+new Date().toISOString().slice(0,10)+'.csv',rows);
   showToast('已匯出會員');
+}
+function downloadJSON(filename,text){
+  try{
+    var blob=new Blob([text],{type:'application/json;charset=utf-8;'});
+    if(navigator.msSaveBlob){navigator.msSaveBlob(blob,filename);return;}
+    var url=URL.createObjectURL(blob),a=document.createElement('a');
+    if('download' in a){a.href=url;a.download=filename;document.body.appendChild(a);a.click();
+      setTimeout(function(){URL.revokeObjectURL(url);a.remove();},150);}
+    else{window.open(url,'_blank');}
+  }catch(e){try{window.open('data:application/json;charset=utf-8,'+encodeURIComponent(text),'_blank');}catch(e2){}}
+}
+function exportProducts(){
+  var cats=(S.categories||[]).filter(function(c){return c&&c!=='全部';});
+  var list=(S.products||[]).map(function(p){
+    var variants=(p.specs||[]).filter(function(s){return (s.name||'').trim();}).map(function(s){
+      return {color:(s.name||'').trim(),code:'',photo:s.img||'',price:s.price||0};
+    });
+    return {
+      name:p.name||'',
+      category:p.cat||'',
+      code:'',
+      price:p.price||0,
+      photo:p.imgThumb||(p.thumbs&&p.thumbs[0])||p.imgData||(p.images&&p.images[0])||'',
+      isCustom:!!p.isCustom,
+      deposit:p.deposit||0,
+      draft:!!p.draft,
+      variants:variants
+    };
+  });
+  var data={source:'juaccessories.com',exportedAt:new Date().toISOString(),categories:cats,products:list};
+  var txt=JSON.stringify(data,null,2);
+  var kb;try{kb=Math.round(new Blob([txt]).size/1024);}catch(e){kb=Math.round(txt.length/1024);}
+  downloadJSON('Ju作品_'+new Date().toISOString().slice(0,10)+'.json',txt);
+  showToast('已匯出 '+list.length+' 件作品（約 '+kb+' KB）');
+}
+function exportProductsCSV(){
+  var rows=[['作品名稱','分類','售價','原價','款式/顏色','款式加價','款式庫存','總庫存','客製','訂金','狀態']];
+  (S.products||[]).forEach(function(p){
+    var st=p.draft?'未上架':(p.preOrder?'預購':'現貨');
+    var specs=(p.specs||[]).filter(function(s){return (s.name||'').trim();});
+    if(!specs.length){
+      rows.push([p.name,p.cat,p.price,p.original||'','','','',(p.stock==null?'':p.stock),p.isCustom?'是':'',p.deposit||'',st]);
+    }else{
+      specs.forEach(function(s,i){
+        rows.push([i===0?p.name:'',i===0?p.cat:'',i===0?p.price:'',i===0?(p.original||''):'',
+          s.name,s.price||'',(s.stock==null?'':s.stock),i===0?(p.stock==null?'':p.stock):'',
+          i===0?(p.isCustom?'是':''):'',i===0?(p.deposit||''):'',i===0?st:'']);
+      });
+    }
+  });
+  downloadCSV('作品價目表_'+new Date().toISOString().slice(0,10)+'.csv',rows);
+  showToast('已匯出價目表');
 }
 
 function renderBanners(){
