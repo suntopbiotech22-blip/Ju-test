@@ -741,7 +741,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0722a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0722b</div>
 </footer>
 
 <!-- MODALS -->
@@ -2750,14 +2750,16 @@ function renderDash(){
     +'<div class="stat-card" style="cursor:pointer" onclick="goAdmin(\'members\')"><div class="stat-num">'+S.members.filter(function(m){return !m.isAdmin;}).length+'</div><div class="stat-lbl">會員人數</div></div>'
     +'<div class="stat-card" style="cursor:pointer" onclick="goAdmin(\'products\')"><div class="stat-num">'+S.products.length+'</div><div class="stat-lbl">作品數</div></div>'
     +'<div class="stat-card" style="cursor:pointer" onclick="goAdmin(\'sales\')"><div class="stat-num">'+rev.toLocaleString()+'</div><div class="stat-lbl">累計營業額</div></div>';
-  document.getElementById('recentOrders').innerHTML='<thead><tr><th>訂單</th><th>會員</th><th>金額</th><th>狀態</th><th>操作</th></tr></thead><tbody>'
-    +S.orders.slice(0,5).map(function(o){
-      return '<tr><td>#'+o.id+'<br><span style="font-size:11px;color:var(--text-light)">'+o.date+'</span></td>'
+  var recRows=S.orders.slice(0,5).map(function(o){
+      var cancelled=o.status==='cancelled';
+      var rowStyle='cursor:pointer'+(cancelled?';opacity:.55':'');
+      return '<tr style="'+rowStyle+'" onclick="openOrderDetail('+o.id+',true)"><td>#'+o.id+'<br><span style="font-size:11px;color:var(--text-light)">'+o.date+'</span></td>'
         +'<td>'+esc(o.userName)+'</td><td>NT$ '+o.total+'</td>'
-        +'<td><span class="sbadge s-'+o.status+'">'+sLabel(o.status)+'</span></td>'
-        +'<td><button class="abtn sc" onclick="updStatus('+o.id+',\'paid\')">確認收款</button>'
-        +'<button class="abtn pr" onclick="updStatus('+o.id+',\'shipped\')">出貨</button></td></tr>';
-    }).join('')+'</tbody>';
+        +'<td><span class="sbadge s-'+o.status+'">'+sLabel(o.status)+'</span></td></tr>';
+    }).join('');
+  if(!recRows)recRows='<tr><td colspan="4" style="text-align:center;color:var(--text-light);padding:24px">尚無訂單</td></tr>';
+  document.getElementById('recentOrders').innerHTML='<thead><tr><th>訂單</th><th>會員</th><th>金額</th><th>狀態</th></tr></thead><tbody>'
+    +recRows+'</tbody>';
 }
 function adminFilteredProds(){
   var flt=S._prodCatFilter||'全部';
