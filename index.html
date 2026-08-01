@@ -755,7 +755,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0801a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0801d</div>
 </footer>
 
 <!-- MODALS -->
@@ -1728,6 +1728,7 @@ function renderProductPage(id){
     +(p.preOrder?'<p style="font-size:12px;color:var(--cocoa);margin-bottom:12px;line-height:1.7;padding:8px 12px;background:#FFF8F0;border-radius:8px"><span style="font-weight:600">預購商品</span>　此款為接單後手工製作，完成後再安排出貨</p>':'')+'<p style="font-size:13px;color:var(--text-light);margin-bottom:16px;line-height:1.8;white-space:pre-wrap">'+p.desc+'</p>'
     +(p.material?'<p style="font-size:12px;color:var(--text-light);margin-bottom:16px"><span style="color:var(--cocoa);font-weight:500">材質：</span>'+p.material+'</p>':'')
     +specsHtml
+    +productGiftBlock(id)
     +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">'
     +'<span id="detailPrice" style="font-size:22px;font-weight:600;color:var(--cocoa)">NT$ '+(hasPromo?promoDP:shownPrice)+'</span>'
     +(hasPromo?'<span style="font-size:13px;color:var(--text-light);text-decoration:line-through">NT$ '+basePrice+'</span>':(hs?'<span style="font-size:13px;color:var(--text-light);text-decoration:line-through">NT$ '+p.original+'</span>':''))
@@ -3359,7 +3360,7 @@ function renderBanners(){
       return '<div class="disc-card" style="flex-direction:column;align-items:stretch;gap:8px"><input id="tkEditText" value="'+(t.text||'').replace(/"/g,'&quot;')+'" style="width:100%;box-sizing:border-box">'
         +'<div style="display:flex;gap:6px;justify-content:flex-end"><button class="abtn pr" onclick="saveTickerEdit('+i+')">儲存</button><button class="abtn sc" onclick="cancelTickerEdit()">取消</button></div></div>';
     }
-    return '<div class="disc-card"><span style="font-size:13px;flex:1;min-width:0;'+(t.enabled?'':'color:var(--text-light);text-decoration:line-through')+'">'+t.text+'</span>'
+    return '<div class="disc-card" style="flex-direction:column;align-items:stretch;gap:10px"><span style="font-size:13px;display:block;line-height:1.6;'+(t.enabled?'':'color:var(--text-light);text-decoration:line-through')+'">'+t.text+'</span>'
       +'<div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">'
       +'<button class="abtn sc" onclick="editTickerMsg('+i+')">編輯</button>'
       +'<button class="abtn sc" onclick="dupTickerMsg('+i+')">複製</button>'
@@ -3395,14 +3396,37 @@ function giftsBlock(){
   var items=list.map(function(g){
     var img=g.img
       ?'<img loading="lazy" src="'+esc(g.img)+'" style="width:54px;height:54px;object-fit:cover;border-radius:10px;flex-shrink:0">'
-      :'<div style="width:54px;height:54px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">\U0001F381</div>';
+      :'<div style="width:54px;height:54px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px">🎁</div>';
     return '<div style="display:flex;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--linen)">'+img
       +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--cocoa)">'+esc(g.name)+'</div>'
       +(g.desc?'<div style="font-size:12px;color:var(--text-light);margin-top:3px;line-height:1.6">'+esc(g.desc)+'</div>':'')
       +'</div></div>';
   }).join('');
   return '<div style="background:var(--warm-ivory);border-radius:14px;padding:14px 16px;margin:2px 2px 14px">'
-    +'<div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--cocoa)"><span style="font-size:17px">\U0001F381</span>結帳即贈</div>'
+    +'<div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--cocoa)">夏日遊樂園-戒指（親子組）贈品</div>'
+    +items+'</div>';
+}
+function giftsForProduct(id){
+  return (S.gifts||[]).filter(function(g){
+    if(!g||g.enabled===false)return false;
+    if(g.scope==='products')return (g.productIds||[]).indexOf(id)>=0;
+    return true;
+  });
+}
+function productGiftBlock(id){
+  var list=giftsForProduct(id);
+  if(!list.length)return '';
+  var items=list.map(function(g){
+    var img=g.img
+      ?'<img loading="lazy" src="'+esc(g.img)+'" style="width:60px;height:60px;object-fit:cover;border-radius:10px;flex-shrink:0">'
+      :'<div style="width:60px;height:60px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px">🎁</div>';
+    return '<div style="display:flex;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--linen)">'+img
+      +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--cocoa)">'+esc(g.name)+'</div>'
+      +(g.desc?'<div style="font-size:12px;color:var(--text-light);margin-top:3px;line-height:1.6">'+esc(g.desc)+'</div>':'')
+      +'</div></div>';
+  }).join('');
+  return '<div style="background:var(--warm-ivory);border-radius:14px;padding:14px 16px;margin-bottom:16px">'
+    +'<div style="font-size:13px;font-weight:700;color:var(--cocoa)">🎁 隨單附贈</div>'
     +items+'</div>';
 }
 function giftScopeLabel(g){
@@ -3425,7 +3449,7 @@ function renderGiftAdmin(){
       if(S._giftEdit===i)return '';
       var img=g.img
         ?'<img loading="lazy" src="'+esc(g.img)+'" style="width:56px;height:56px;object-fit:cover;border-radius:10px;flex-shrink:0">'
-        :'<div style="width:56px;height:56px;border-radius:10px;background:var(--warm-ivory);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px">\U0001F381</div>';
+        :'<div style="width:56px;height:56px;border-radius:10px;background:var(--warm-ivory);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:24px">🎁</div>';
       return '<div class="disc-card" style="align-items:flex-start;gap:12px">'+img
         +'<div style="flex:1;min-width:0">'
         +'<div style="font-size:14px;font-weight:600;'+(g.enabled===false?'text-decoration:line-through;color:var(--text-light)':'color:var(--cocoa)')+'">'+esc(g.name)+'</div>'
