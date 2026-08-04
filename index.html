@@ -642,6 +642,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
         <div class="adm-nav" onclick="switchAdmin('payment',this)"><span class="nav-ic"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/><path d="M2.5 9.5h19"/></svg></span>收款設定</div>
         <div class="adm-nav" onclick="switchAdmin('sales',this)"><span class="nav-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V11M11 20V4M18 20v-6"/></svg></span>銷售報表</div>
         <div class="adm-nav" onclick="switchAdmin('banners',this)"><span class="nav-ic"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4a1 1 0 0 0 1 1h2l8 4V5L7 9H5a1 1 0 0 0-1 1z"/><path d="M18 9a3 3 0 0 1 0 6"/></svg></span>跑馬燈訊息</div>
+        <div class="adm-nav" onclick="switchAdmin('popup',this)"><span class="nav-ic"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>進站彈窗</div>
         <div class="adm-nav" onclick="switchAdmin('gifts',this)"><span class="nav-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v8h14v-8"/><path d="M12 8v12"/><path d="M12 8C10.5 8 8.5 7 8.5 5.3 8.5 4.3 9.2 3.6 10.2 3.6c2 0 1.8 4.4 1.8 4.4z"/><path d="M12 8c1.5 0 3.5-1 3.5-2.7C15.5 4.3 14.8 3.6 13.8 3.6c-2 0-1.8 4.4-1.8 4.4z"/></svg></span>贈品設定</div>
       </div>
       <div class="admin-content">
@@ -703,6 +704,11 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
           <button class="abtn pr" onclick="document.getElementById('lookbookInput').click()">＋ 新增藝廊照片</button>
           <input type="file" id="lookbookInput" accept="image/*" style="display:none" onchange="addLookbookPhoto(this)">
         </div>
+        <div class="adm-panel" id="panel-popup">
+          <h2>進站彈窗公告</h2>
+          <p style="font-size:13px;color:var(--text-light);margin-bottom:16px;line-height:1.8">設定顧客進入官網時自動彈出的公告視窗（例如公休、出貨延遲、活動通知）。<b>內容留空並儲存，彈窗就不會出現。</b>同一位顧客每次造訪只會看到一次；修改內容後回訪顧客會再看到更新版。</p>
+          <div id="popupAdmin"></div>
+        </div>
         <div class="adm-panel" id="panel-gifts">
           <h2>贈品設定</h2>
           <p style="font-size:13px;color:var(--text-light);margin-bottom:16px">設定隨單附贈的小禮物。可指定「全館」或「特定作品」，符合條件的顧客會在購物車看到贈品圖片與說明。</p>
@@ -755,7 +761,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0801e</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0804b</div>
 </footer>
 
 <!-- MODALS -->
@@ -786,6 +792,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     </div>
   </div>
 </div>
+<div class="moverlay" id="welcomePopup"><div class="modal" style="max-width:420px"><button class="mclose" onclick="closeModal('welcomePopup')">✕</button><div id="welcomePopupBody" style="clear:both"></div></div></div>
 <div class="moverlay" id="productModal"><div class="modal"><button class="mclose" onclick="closeModal('productModal')">✕</button><div id="modalContent"></div></div></div>
 <div class="moverlay" id="orderDetailModal"><div class="modal"><button class="mclose" onclick="closeModal('orderDetailModal')">✕</button><div id="orderDetailContent"></div></div></div>
 <div class="moverlay" id="memberOrdersModal"><div class="modal"><button class="mclose" onclick="closeModal('memberOrdersModal')">✕</button><h3 style="margin-bottom:10px">會員訂單</h3><div id="memberOrdersBody"></div></div></div>
@@ -855,6 +862,8 @@ var S={
   nextOrderId:1001,nextProductId:7,orders:[],
   discounts:[],
   welcomeCoupon:{enabled:false,amount:50,days:30,desc:'新會員首購禮'},
+  /* 進站彈窗公告：內容留空則不顯示（後台「進站彈窗」可編輯）；ver 於每次儲存更新，用來讓回訪顧客在新造訪看到更新後的公告 */
+  welcomePopup:{enabled:true,title:'',text:'',ver:0},
   /* 分類促銷（後台直接套用，所選分類商品自動顯示折扣價，可選新品除外，不需折扣碼） */
   promo:{enabled:false,cat:'全部',type:'percent',percent:9,amount:0,excludeNew:false,label:'限時優惠',start:'',end:''},
   members:[],
@@ -908,6 +917,11 @@ function startFirebaseShop(){
     if(cfg&&cfg.welcomeCoupon&&typeof cfg.welcomeCoupon==='object'){
       S.welcomeCoupon=Object.assign({},S.welcomeCoupon,cfg.welcomeCoupon);
       if(document.getElementById('memberCouponAdmin'))renderMemberCoupons();
+    }
+    if(cfg&&cfg.welcomePopup&&typeof cfg.welcomePopup==='object'){
+      S.welcomePopup=Object.assign({},S.welcomePopup,cfg.welcomePopup);
+      if(document.getElementById('popupAdmin'))renderPopupAdmin();
+      maybeShowWelcomePopup();
     }
     if(cfg&&Array.isArray(cfg.gifts)){
       S.gifts=cfg.gifts;
@@ -1406,6 +1420,47 @@ function addLookbookPhoto(input){
 function removeLookbookPhoto(i){S.lookbook.splice(i,1);renderLookbookAdmin();renderLookbook();saveLookbook();showToast('已刪除');}
 function updateLookbookCap(i,v){if(S.lookbook[i]){S.lookbook[i].cap=v;saveLookbook();}}
 function saveLookbook(){if(window.FB&&window.FB.saveConfig){window.FB.saveConfig({lookbook:S.lookbook}).catch(function(e){showToast('儲存失敗：'+(e.code||e.message));});}}
+function welcomePopupActive(){var w=S.welcomePopup;return !!(w&&w.enabled&&(w.text||'').trim());}
+function showWelcomePopup(){
+  var w=S.welcomePopup||{};var title=(w.title||'').trim();var text=(w.text||'').trim();
+  var html='';
+  if(title)html+='<h3 style="margin:2px 0 12px;font-size:19px;text-align:center">'+esc(title)+'</h3>';
+  if(text)html+='<div style="font-size:14px;color:var(--cocoa);line-height:1.9;white-space:pre-wrap">'+esc(text)+'</div>';
+  html+='<button class="sub-btn" onclick="closeModal(\'welcomePopup\')">我知道了</button>';
+  var b=document.getElementById('welcomePopupBody');if(b)b.innerHTML=html;
+  var ov=document.getElementById('welcomePopup');if(ov)ov.classList.add('open');
+}
+function maybeShowWelcomePopup(){
+  if(!welcomePopupActive())return;
+  var pa=document.getElementById('page-admin');if(pa&&pa.classList.contains('active'))return;
+  var key='ju_wpop_'+((S.welcomePopup&&S.welcomePopup.ver)||0);
+  try{if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1');}catch(e){}
+  showWelcomePopup();
+}
+function renderPopupAdmin(){
+  var box=document.getElementById('popupAdmin');if(!box)return;var w=S.welcomePopup||{};
+  box.innerHTML='<div class="fg"><label style="display:flex;align-items:center;gap:8px;font-size:13px"><input type="checkbox" id="wpEnabled" '+(w.enabled?'checked':'')+' style="width:auto">啟用彈窗（關閉可暫時隱藏但保留內容）</label></div>'
+    +'<div class="fg"><label>標題（可留空）</label><input id="wpTitle" value="'+esc(w.title||'')+'" placeholder="例：本週出貨公告" style="width:100%;box-sizing:border-box"></div>'
+    +'<div class="fg"><label>內容訊息（留空則不會顯示彈窗）</label><textarea id="wpText" rows="5" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid var(--linen);border-radius:10px;font-family:inherit;font-size:13px;background:var(--cream);outline:none;line-height:1.7" placeholder="輸入要對顧客顯示的公告，可換行…">'+esc(w.text||'')+'</textarea></div>'
+    +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="sub-btn" style="flex:1;min-width:150px;margin-top:0" onclick="saveWelcomePopup()">儲存彈窗設定</button><button class="abtn" style="border-radius:30px;padding:10px 20px;background:#fff;border:1.5px solid var(--gold);color:var(--cocoa)" onclick="previewWelcomePopup()">預覽</button></div>';
+}
+function saveWelcomePopup(){
+  var en=document.getElementById('wpEnabled').checked;
+  var title=(document.getElementById('wpTitle').value||'').trim();
+  var text=(document.getElementById('wpText').value||'').trim();
+  S.welcomePopup=Object.assign({},S.welcomePopup,{enabled:en,title:title,text:text,ver:Date.now()});
+  if(window.FB&&window.FB.saveConfig){window.FB.saveConfig({welcomePopup:S.welcomePopup}).then(function(){showToast(text?'彈窗設定已儲存':'內容已清空，彈窗將不再顯示');}).catch(function(e){showToast('儲存失敗：'+(e.code||e.message));});}
+  else{showToast('彈窗設定已儲存');}
+}
+function previewWelcomePopup(){
+  var title=(document.getElementById('wpTitle').value||'').trim();
+  var text=(document.getElementById('wpText').value||'').trim();
+  if(!title&&!text){showToast('請先輸入標題或內容');return;}
+  var saved=S.welcomePopup;
+  S.welcomePopup=Object.assign({},S.welcomePopup,{title:title,text:text});
+  showWelcomePopup();
+  S.welcomePopup=saved;
+}
 function goShopAll(){S.selectedCat='全部';S.searchQuery='';S.shopPage=1;var sb=document.getElementById('shopSearch');if(sb)sb.value='';showPage('shop');renderShopProducts();window.scrollTo({top:0});}
 function renderShopProducts(){
   var tabs=document.getElementById('catTabs');
@@ -1796,7 +1851,26 @@ function addCartBtnHtml(p,spec){
   }
   var soldOut=stockTracksFor(p,spec)&&stockNumFor(p,spec)<=0;
   if(soldOut)return '<button class="sub-btn" disabled style="opacity:.5;cursor:not-allowed">已售完</button>';
-  return '<button class="sub-btn" onclick="addToCart('+p.id+',S._selSpec)">加入購物車</button>';
+  S._selQty=1;
+  var stepper='<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">'
+    +'<span style="font-size:13px;color:var(--cocoa);font-weight:500">數量</span>'
+    +'<div class="qty-ctrl">'
+    +'<button class="qty-btn" onclick="changeDetailQty('+p.id+',-1)">−</button>'
+    +'<span class="qty-n" id="detailQtyN">1</span>'
+    +'<button class="qty-btn" onclick="changeDetailQty('+p.id+',1)">+</button>'
+    +'</div></div>';
+  return stepper+'<button class="sub-btn" onclick="addToCart('+p.id+',S._selSpec,S._selQty)">加入購物車</button>';
+}
+function changeDetailQty(id,d){
+  var p=S.products.find(function(x){return x.id===id;});if(!p)return;
+  var cur=S._selQty||1;var q=cur+d;if(q<1)q=1;
+  if(d>0&&stockTracksFor(p,S._selSpec)){
+    var cap=stockNumFor(p,S._selSpec)-cartQtyOf(id,S._selSpec);
+    if(cap<1){showToast('已達可購買數量上限');q=cur;}
+    else if(q>cap){showToast('此規格最多可再加購 '+cap+' 件');q=cap;}
+  }
+  S._selQty=q;
+  var el=document.getElementById('detailQtyN');if(el)el.textContent=q;
 }
 function allSpecsSoldOut(p){
   if(!p.specs||!p.specs.length)return false;
@@ -1805,24 +1879,25 @@ function allSpecsSoldOut(p){
   return tracked.every(function(s){return specStockNum(s)<=0;});
 }
 function cartQtyOf(id,spec){var sp=spec||'';return S.cart.reduce(function(s,i){return s+((i.id===id&&(i.spec||'')===sp)?i.qty:0);},0);}
-function addToCart(id,spec){
+function addToCart(id,spec,qty){
   var p=S.products.find(function(x){return x.id===id;});if(!p)return;
   if(p.preview){showToast('此作品搶先預覽中，尚未開放購買'+(p.previewNote?'（'+p.previewNote+'）':''));return;}
   spec=spec||'';
-  if(stockTracksFor(p,spec)){var _num=stockNumFor(p,spec);var _left=_num-cartQtyOf(id,spec);if(_left<=0){showToast(_num<=0?'此規格已售完':'已達庫存上限，僅剩 '+_num+' 件');return;}}
+  qty=parseInt(qty,10)||1;if(qty<1)qty=1;var capped=false;
+  if(stockTracksFor(p,spec)){var _num=stockNumFor(p,spec);var _left=_num-cartQtyOf(id,spec);if(_left<=0){showToast(_num<=0?'此規格已售完':'已達庫存上限，僅剩 '+_num+' 件');return;}if(qty>_left){qty=_left;capped=true;}}
   var so=getSpecObj(p,spec);
   var base=(so&&so.price!=null&&so.price!=='')?so.price:p.price;
   var price=promoPrice(base,p);
   var dep=(so&&so.deposit!==''&&so.deposit!=null)?so.deposit:p.deposit;
   var img=(so&&so.img)?so.img:(p.imgData||'');
   var ex=S.cart.find(function(x){return x.id===id&&(x.spec||'')===spec;});
-  if(ex){ex.qty++;}else{
-    var item=Object.assign({},p,{qty:1,spec:spec,price:price,origPrice:base,promoLabel:(price<base?((S.promo&&S.promo.label)||'限時優惠'):''),deposit:dep,imgData:img,cid:'c'+Date.now()+Math.floor(Math.random()*1000)});
+  if(ex){ex.qty+=qty;}else{
+    var item=Object.assign({},p,{qty:qty,spec:spec,price:price,origPrice:base,promoLabel:(price<base?((S.promo&&S.promo.label)||'限時優惠'):''),deposit:dep,imgData:img,cid:'c'+Date.now()+Math.floor(Math.random()*1000)});
     delete item.images;delete item.specs;
     S.cart.push(item);
   }
   updateCartBadge();
-  if(revalidateDiscount()){renderCart();}else{showToast('已加入：'+p.name+(spec?'（'+spec+'）':'')+'');}
+  if(revalidateDiscount()){renderCart();}else{showToast('已加入：'+p.name+(spec?'（'+spec+'）':'')+(qty>1?' × '+qty+' 件':'')+(capped?'（已達庫存上限）':''));}
 }
 
 function updateCartBadge(){
@@ -2309,7 +2384,7 @@ function renderAdmin(){
     if(!S._authResolved){var _sg=document.getElementById('statsGrid');if(_sg)_sg.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--text-light);padding:40px">驗證管理員身分中…</div>';return;}
     showPage('home');return;
   }
-  renderDash();renderAdminProds();renderInventory();renderAdminOrds();renderAdminMembs();renderDiscs();renderPromoAdmin();renderPayment();renderSales();renderBanners();renderLookbookAdmin();renderGiftAdmin();renderMemberCoupons();updatePayAlerts();
+  renderDash();renderAdminProds();renderInventory();renderAdminOrds();renderAdminMembs();renderDiscs();renderPromoAdmin();renderPayment();renderSales();renderBanners();renderPopupAdmin();renderLookbookAdmin();renderGiftAdmin();renderMemberCoupons();updatePayAlerts();
   activateAdminPanel(S._adminPanel||'dashboard');
 }
 function renderCatSelect(){
