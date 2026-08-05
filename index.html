@@ -774,7 +774,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0805e</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0805g</div>
 </footer>
 
 <!-- MODALS -->
@@ -2206,16 +2206,22 @@ function updateDepositSummary(){
   var lpa=document.getElementById('linePayAmt');if(lpa)lpa.textContent='NT$ '+payableNow();
 }
 function linePayBlock(){
-  var lp=S.linePay||{};
-  var qr=lp.qrImage
-    ?'<img loading="lazy" src="'+lp.qrImage+'" alt="LINE Pay 收款碼" style="width:180px;height:180px;object-fit:contain;border-radius:12px;background:#fff;padding:6px;border:1px solid var(--linen)">'
-    :'<div style="width:180px;height:180px;border-radius:12px;border:1.5px dashed var(--linen);display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;color:var(--text-light);padding:12px;margin:0 auto">尚未設定 LINE Pay 收款碼<br>請到後台「收款設定」上傳</div>';
-  return '<div class="pay-info" style="border-left-color:#06C755;text-align:center">'
+  return '<div class="pay-info" style="border-left-color:#06C755">'
     +'<strong style="color:#06C755"> LINE Pay 付款</strong>'
-    +'<div style="margin:12px auto;display:flex;justify-content:center">'+qr+'</div>'
-    +'<div style="font-size:14px;color:var(--cocoa);font-weight:600;margin-bottom:8px">應付金額 <span id="linePayAmt">NT$ 0</span></div>'
-    +(lp.link?'<a href="'+lp.link+'" target="_blank" style="display:inline-block;background:#06C755;color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;text-decoration:none;margin-bottom:8px">開啟 LINE Pay 連結</a><br>':'')
-    +'<span style="font-size:12px;color:var(--text-light)">'+(lp.note||'')+'</span></div>';
+    +'<div style="font-size:14px;color:var(--cocoa);font-weight:600;margin:10px 0 8px">應付金額 <span id="linePayAmt">NT$ 0</span></div>'
+    +'<div style="font-size:12.5px;color:var(--text-light);line-height:1.9">收款碼與付款連結會在<b style="color:var(--cocoa)">訂單送出後</b>顯示，之後也可以隨時到「我的訂單」查看。<br>請先完成下單再付款，以免款項對不到訂單。</div>'
+    +'</div>';
+}
+/* 訂單完成後才顯示的 LINE Pay 收款碼與連結 */
+function linePayQRHtml(payNow){
+  var lp=S.linePay||{};
+  return '<div style="text-align:center">'
+    +'<strong style="color:#06C755"> LINE Pay</strong>　本次應付 <strong>NT$ '+payNow+'</strong>'
+    +(lp.qrImage
+      ?'<div style="margin:12px auto;display:flex;justify-content:center"><img loading="lazy" src="'+lp.qrImage+'" alt="LINE Pay 收款碼" style="width:180px;height:180px;object-fit:contain;border-radius:12px;background:#fff;padding:6px;border:1px solid var(--linen)"></div>'
+      :'<div style="font-size:12px;color:var(--text-light);margin:12px 0">收款碼設定中，請洽賣家</div>')
+    +(lp.link?'<a href="'+lp.link+'" target="_blank" rel="noopener" style="display:inline-block;background:#06C755;color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;text-decoration:none;margin-bottom:8px">開啟 LINE Pay 連結</a><br>':'')
+    +'<span style="font-size:12px;color:var(--text-light)">'+esc(lp.note||'付款完成後請至訂單頁面上傳付款截圖通知付款')+'</span></div>';
 }
 
 function updateRemain(){
@@ -2370,7 +2376,7 @@ function placeOrder(total){
     pi='<strong> 台新銀行（812）</strong>帳號：20730100008145<br>本次應付 <strong>NT$ '+payNow+'</strong>，匯款後請至訂單頁面上傳付款截圖通知付款';
   }else if(o.payment==='linepay'){
     msg=(hasC&&o.customDepositChoice==='deposit')?('本次需付款 NT$ '+payNow+'（一般商品＋客製訂金）'+tail):'請用 LINE Pay 完成付款，確認後將盡快出貨';
-    pi='<strong style="color:#06C755"> LINE Pay</strong> 本次應付 <strong>NT$ '+payNow+'</strong><br>'+(S.linePay&&S.linePay.qrImage?'掃描收款碼付款':'收款碼設定中，請洽賣家')+'，完成後請至訂單頁面上傳付款截圖通知付款';
+    pi=linePayQRHtml(payNow);
   }else{
     if(hasC&&o.customDepositChoice==='deposit'){
       msg='客製訂金 NT$ '+payNow+' 請先匯款，餘款 NT$ '+remainder+'（含運費）待商品完成後 7-11 賣貨便貨到付款';
@@ -3481,11 +3487,23 @@ function adminDeleteMember(id){
   if(window.FB&&window.FB.deleteMember){window.FB.deleteMember(uid).then(done).catch(function(e){showToast('刪除失敗：'+(e.code||e.message));});}
   else{done();}
 }
+function toggleInvAll(){S._invAll=!S._invAll;renderInventory();}
 function renderInventory(){
   var el=document.getElementById('inventoryList');if(!el)return;
-  var ps=S.products.slice().sort(function(a,b){return (a.cat>b.cat?1:(a.cat<b.cat?-1:((a.name>b.name)?1:-1)));});
-  if(!ps.length){el.innerHTML='<p style="color:var(--text-light);text-align:center;padding:30px">尚無作品</p>';return;}
-  el.innerHTML='<p style="font-size:12px;color:var(--text-light);margin-bottom:10px">可直接修改庫存數量（自動儲存），或切換「現貨」標籤。有設定數量的作品，客人下單後會自動扣減，扣到 0 會顯示「售完」並停止下單；欄位留空（不設數量）的作品則不限量（適合客製、可預購）。取消訂單時庫存會自動回補。</p>'
+  var all=S.products.slice().sort(function(a,b){return (a.cat>b.cat?1:(a.cat<b.cat?-1:((a.name>b.name)?1:-1)));});
+  if(!all.length){el.innerHTML='<p style="color:var(--text-light);text-align:center;padding:30px">尚無作品</p>';return;}
+  var inS=all.filter(function(p){return !!p.inStock;});
+  var nOff=all.length-inS.length;
+  var ps=S._invAll?all:inS;
+  var bar='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">'
+    +'<span style="font-size:12px;color:var(--cocoa)"><b>'+(S._invAll?'全部作品':'現貨作品')+'</b>　'+ps.length+' 件</span>'
+    +'<button class="abtn '+(S._invAll?'pr':'sc')+'" onclick="toggleInvAll()">'+(S._invAll?'只看現貨':('顯示全部（另有 '+nOff+' 件非現貨）'))+'</button></div>';
+  if(!ps.length){
+    el.innerHTML=bar+'<p style="color:var(--text-light);text-align:center;padding:24px;font-size:13px;line-height:1.9">目前沒有標示為現貨的作品。<br>按上方「顯示全部」即可把作品設為現貨，或到「作品管理」編輯販售模式。</p>';
+    return;
+  }
+  el.innerHTML=bar
+    +'<p style="font-size:12px;color:var(--text-light);margin-bottom:10px">可直接修改庫存數量（自動儲存），或切換「現貨」標籤。有設定數量的作品，客人下單後會自動扣減，扣到 0 會顯示「售完」並停止下單；欄位留空（不設數量）的作品則不限量（適合客製、可預購）。取消訂單時庫存會自動回補。</p>'
     +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="dtable" style="white-space:nowrap;min-width:560px"><thead><tr><th>圖</th><th>名稱</th><th>分類</th><th>現貨</th><th>庫存數量</th></tr></thead><tbody>'
     +ps.map(function(p){
       var img=p.imgData?('<img loading="lazy" src="'+p.imgData+'" style="width:40px;height:40px;object-fit:cover;border-radius:8px">'):IMG_PH;
