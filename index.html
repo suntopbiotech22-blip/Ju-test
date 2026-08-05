@@ -774,7 +774,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0805a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0805e</div>
 </footer>
 
 <!-- MODALS -->
@@ -810,6 +810,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
 <div class="moverlay" id="orderDetailModal"><div class="modal"><button class="mclose" onclick="closeModal('orderDetailModal')">✕</button><div id="orderDetailContent"></div></div></div>
 <div class="moverlay" id="memberOrdersModal"><div class="modal"><button class="mclose" onclick="closeModal('memberOrdersModal')">✕</button><h3 style="margin-bottom:10px">會員訂單</h3><div id="memberOrdersBody"></div></div></div>
 <div class="moverlay" id="confirmModal"><div class="modal" style="max-width:340px;text-align:center"><p id="confirmMsg" style="margin:6px 0 20px;color:var(--cocoa);font-size:15px"></p><div style="display:flex;gap:10px"><button class="abtn" style="flex:1;border-radius:30px;background:#fff;border:1.5px solid var(--gold);color:var(--cocoa)" onclick="closeModal('confirmModal')">取消</button><button class="abtn pr" style="flex:1;border-radius:30px" id="confirmOkBtn">確定</button></div></div></div>
+<div class="moverlay" id="shipCheckModal"><div class="modal" style="max-width:390px"><h3 style="margin-bottom:4px">請再確認寄送資訊</h3><div id="shipCheckBody" style="font-size:13.5px;color:var(--cocoa);line-height:1.85;margin:12px 0 18px"></div><div style="display:flex;gap:10px"><button class="abtn" style="flex:1;border-radius:30px;background:#fff;border:1.5px solid var(--gold);color:var(--cocoa);padding:10px 14px;font-size:13px" onclick="closeModal('shipCheckModal')">返回修改</button><button class="abtn pr" style="flex:1;border-radius:30px;padding:10px 14px;font-size:13px" id="shipCheckOkBtn">確認無誤，送出</button></div></div></div>
 <div class="moverlay" id="productEditModal">
   <div class="modal">
     <button class="mclose" onclick="closeModal('productEditModal')">✕</button>
@@ -1197,6 +1198,12 @@ function doRegister(){
   if(pwd.length<6){showToast('密碼至少 6 位');return;}
   if(isAdminEmail(email)){showToast('此 Email 為管理帳號，請改用登入');return;}
   if(S.emailjs&&S.emailjs.recaptchaSiteKey&&!captchaVerified('reg')){showToast('請先完成「我不是機器人」驗證');return;}
+  var _rw=phoneIssue(phone);
+  if(_rw&&!S._regConfirmed){
+    showShipCheck([_rw],function(){S._regConfirmed=true;doRegister();},'請再確認手機號碼','手機號碼是出貨聯絡的主要方式，建議填寫正確的 10 碼手機號碼。');
+    return;
+  }
+  S._regConfirmed=false;
   if(!window.FB||!window.FB.registerUser){
     if(S.members.some(function(m){return m.email===email;})){showToast('此 Email 已註冊過囉');return;}
     var u0={id:Date.now(),name:name,email:email,pwd:pwd,phone:phone,ig:ig,isAdmin:false,coupons:[],favs:getFavs()};
@@ -2133,14 +2140,16 @@ function checkoutForm(total,hasC){
     +'<label class="radio-opt" id="ship-home" onclick="selShip(\'home\')">'
     +'<input type="radio" name="ship" value="home" onchange="selShip(\'home\')"> 宅配到府</label>'
     +'</div>'
-    +'<div id="field-711" style="display:none;margin-top:10px" class="fg"><label>7-11 店名或店號</label><input id="storeInput" value="'+(S.currentUser&&S.currentUser.defaultStore?S.currentUser.defaultStore:'')+'" placeholder="例：台北市大安區信義門市"></div>'
-    +'<div id="field-home" style="display:none;margin-top:10px" class="fg"><label>收件地址</label><input id="addrInput" value="'+(S.currentUser&&S.currentUser.defaultAddr?S.currentUser.defaultAddr:'')+'" placeholder="縣市、鄉鎮市區、詳細地址"></div>'
+    +'<div id="field-711" style="display:none;margin-top:10px" class="fg"><label>7-11 店名或店號</label><input id="storeInput" value="'+esc(actF('store'))+'" placeholder="例：信義門市，或 6 碼店號"><label style="margin-top:10px">門市地址（必填）</label><input id="storeAddrInput" value="'+esc(actF('storeAddr'))+'" placeholder="門市完整地址，方便我們核對門市"><div style="margin-top:6px;font-size:11.5px;color:var(--text-light)">不確定門市全名？<a href="https://emap.pcsc.com.tw/" target="_blank" rel="noopener" style="color:var(--dusty-rose)">開啟 7-11 官方門市查詢 &rsaquo;</a></div></div>'
+    +'<div id="field-home" style="display:none;margin-top:10px" class="fg"><label>收件地址</label><div style="display:flex;gap:8px"><input id="zipInput" inputmode="numeric" maxlength="6" value="'+esc(defAddrParts().zip)+'" placeholder="郵遞區號" style="width:104px;flex:none;box-sizing:border-box"><input id="addrInput" value="'+esc(defAddrParts().rest)+'" placeholder="縣市、鄉鎮市區、詳細地址" style="flex:1;min-width:0;box-sizing:border-box"></div></div>'
     +'</div>'
     +'<div class="fsec"><h3><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.3v9.4L12 21l-8-4.3V7.3z"/><path d="M4 7.3 12 11l8-3.7M12 11v10"/></svg>收件人資訊</h3>'
-    +'<div class="fg"><label>姓名</label><input id="rcvName" placeholder="收件人姓名" value="'+(S.currentUser?(S.currentUser.defaultName||S.currentUser.name):'')+'"></div>'
-    +'<div class="fg"><label>電話</label><input id="rcvPhone" placeholder="0912-345-678" value="'+(S.currentUser?(S.currentUser.defaultPhone||S.currentUser.phone||''):'')+'"></div>'
+    +(S.currentUser&&addrBook().length>1?'<div class="fg"><label>選擇已儲存的寄送資料</label><select id="addrPick" onchange="applyAddrPick(this.value)">'+addrBook().map(function(a,i){return '<option value="'+esc(a.id)+'"'+((activeAddr()&&activeAddr().id===a.id)?' selected':'')+'>'+esc(addrTitle(a,i))+'｜'+esc(addrBrief(a))+'</option>';}).join('')+'</select></div>':'')
+    +'<div class="fg"><label>姓名</label><input id="rcvName" placeholder="收件人姓名" value="'+esc(S.currentUser?(actF('name')||S.currentUser.name||''):'')+'"></div>'
+    +'<div class="fg"><label>電話</label><input id="rcvPhone" placeholder="0912-345-678" value="'+esc(S.currentUser?(actF('phone')||S.currentUser.phone||''):'')+'"></div>'
     +(guest?'<div class="fg"><label>電子郵件（必填，寄送訂單通知）</label><input id="rcvEmail" type="email" placeholder="your@email.com"></div>':'')
-    +'<div class="fg"><label>Instagram 帳號</label><input id="rcvIG" placeholder="@yourname" value="'+(S.currentUser?(S.currentUser.defaultIG||S.currentUser.ig||''):'')+'"></div>'
+    +'<div class="fg"><label>Instagram 帳號</label><input id="rcvIG" placeholder="@yourname" value="'+esc(S.currentUser?(actF('ig')||S.currentUser.ig||''):'')+'"></div>'
+    +(S.currentUser?'<label style="display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--text-light);line-height:1.6;cursor:pointer"><input type="checkbox" id="saveDefaultsChk" style="width:auto;flex:none;margin:2px 0 0"'+(hasShipDefaults()?'':' checked')+'> 儲存這次填寫的寄送資料（會另存成一筆，可在會員頁切換預設）</label>':'')
     +'</div>'
     +'<div class="fg" style="margin-top:14px"><label>備註</label>'
     +'<textarea id="orderNote" rows="2" style="width:100%;padding:10px 14px;border:1.5px solid var(--linen);border-radius:10px;font-family:inherit;font-size:13px;background:var(--cream);outline:none" placeholder="款式顏色需求、其他備註..."></textarea></div>'
@@ -2275,11 +2284,20 @@ function placeOrder(total){
   var nm=(document.getElementById('rcvName')||{}).value||'';
   var ph=(document.getElementById('rcvPhone')||{}).value||'';
   if(!nm.trim()||!ph.trim()){showToast('請填寫收件人資訊');return;}
-  var addr='';
-  if((S.paymentMethod==='bank'||S.paymentMethod==='linepay')&&S.shippingMethod==='711'){var a=document.getElementById('storeInput');addr=a?a.value.trim():'';}
-  if((S.paymentMethod==='bank'||S.paymentMethod==='linepay')&&S.shippingMethod==='home'){var a=document.getElementById('addrInput');addr=a?a.value.trim():'';}
+  var addr='',_zipV='',_addrRaw='',_storeV='',_storeAddrV='';
+  if((S.paymentMethod==='bank'||S.paymentMethod==='linepay')&&S.shippingMethod==='711'){
+    var a=document.getElementById('storeInput');_storeV=a?a.value.trim():'';
+    var sa=document.getElementById('storeAddrInput');_storeAddrV=sa?sa.value.trim():'';
+    addr=_storeV?(_storeV+(_storeAddrV?'（'+_storeAddrV+'）':'')):'';
+  }
+  if((S.paymentMethod==='bank'||S.paymentMethod==='linepay')&&S.shippingMethod==='home'){
+    var a=document.getElementById('addrInput');_addrRaw=a?a.value.trim():'';
+    var z=document.getElementById('zipInput');_zipV=z?z.value.trim():'';
+    addr=((_zipV?_zipV+' ':'')+_addrRaw).trim();
+  }
   if(S.paymentMethod==='cod'){addr='7-11 賣貨便（下單後提供取貨資訊）';}
   if(S.paymentMethod!=='cod'&&!addr){showToast('請填寫取貨地址或店名');return;}
+  if(S.paymentMethod!=='cod'&&S.shippingMethod==='711'&&!_storeAddrV){showToast('請填寫 7-11 門市地址');return;}
   var hasC=S.cart.some(function(i){return i.isCustom;});
   if(!S.currentUser&&hasC){showToast('客製作品需登入會員才能下單');return;}
   var gEmail='';
@@ -2296,6 +2314,30 @@ function placeOrder(total){
     var rr=document.querySelector('input[name="custRemain"]:checked');
     if(rr)S.customRemainChoice=rr.value;
     else{showToast('請選擇尾款處理方式');return;}
+  }
+  var _shipWarn=checkShipInfo({phone:ph,zip:_zipV,addr:_addrRaw,
+    checkAddr:(S.paymentMethod!=='cod'&&S.shippingMethod==='home')});
+  if(_shipWarn.length&&!S._shipConfirmed){
+    showShipCheck(_shipWarn,function(){S._shipConfirmed=true;placeOrder(total);},'請再確認寄送資訊','資訊不完整可能導致包裹無法送達。請返回修改，或確認無誤後再送出訂單。');
+    return;
+  }
+  S._shipConfirmed=false;
+  var _sdChk=document.getElementById('saveDefaultsChk');
+  if(S.currentUser&&_sdChk&&_sdChk.checked){
+    var _isHome=(S.paymentMethod!=='cod'&&S.shippingMethod==='home');
+    var _is711=(S.paymentMethod!=='cod'&&S.shippingMethod==='711');
+    var _ent={id:newAddrId(),label:'',name:nm.trim(),phone:ph.trim(),ig:igV.trim(),
+      zip:_isHome?_zipV:'',addr:_isHome?_addrRaw:'',
+      store:_is711?_storeV:'',storeAddr:_is711?_storeAddrV:''};
+    var _bk=addrBook(),_dup=null;
+    for(var _bi=0;_bi<_bk.length;_bi++){if(sameAddr(_bk[_bi],_ent)){_dup=_bk[_bi];break;}}
+    if(_dup){S.currentUser.defaultAddrId=_dup.id;}
+    else{
+      _bk.push(_ent);
+      while(_bk.length>10){var _rm=_bk.shift();if(S.currentUser.defaultAddrId===_rm.id)S.currentUser.defaultAddrId='';}
+      S.currentUser.defaultAddrId=_ent.id;
+    }
+    try{persistMember(S.currentUser);}catch(e){}
   }
   var ci=S.cart.filter(function(i){return i.isCustom;});
   var td=ci.reduce(function(s,i){return s+i.deposit*i.qty;},0);
@@ -2742,31 +2784,235 @@ function selectCouponMember(id){
   var inp=document.getElementById('couponSearch');if(inp&&m)inp.value=m.name;
 }
 
+/* ===== 寄送資料簿（可存多筆、可切換預設、可編輯） ===== */
+function addrBook(){
+  var u=S.currentUser;if(!u)return [];
+  if(!Array.isArray(u.addrBook)){
+    u.addrBook=[];
+    var legacy=(u.defaultName||u.defaultPhone||u.defaultIG||u.defaultAddr||u.defaultZip||u.defaultStore||u.defaultStoreAddr);
+    if(legacy){
+      var sp=u.defaultZip?{zip:u.defaultZip,rest:u.defaultAddr||''}:splitZip(u.defaultAddr||'');
+      u.addrBook.push({id:'a1',label:'',name:u.defaultName||'',phone:u.defaultPhone||'',ig:u.defaultIG||'',
+        zip:sp.zip,addr:sp.rest,store:u.defaultStore||'',storeAddr:u.defaultStoreAddr||''});
+      u.defaultAddrId='a1';
+    }
+  }
+  return u.addrBook;
+}
+function addrById(id){var b=addrBook();for(var i=0;i<b.length;i++)if(b[i].id===id)return b[i];return null;}
+function activeAddr(){
+  var b=addrBook();if(!b.length)return null;
+  var f=addrById(S.currentUser&&S.currentUser.defaultAddrId);
+  return f||b[0];
+}
+function actF(k){var a=activeAddr();return (a&&a[k])||'';}
+function newAddrId(){return 'a'+Date.now()+Math.floor(Math.random()*1000);}
+function addrTitle(a,i){return a.label||a.name||('寄送資料 '+(i+1));}
+function addrHomeStr(a){return ((a.zip?a.zip+' ':'')+(a.addr||'')).trim();}
+function addrBrief(a){
+  var p=[];
+  if(addrHomeStr(a))p.push('宅配 '+addrHomeStr(a));
+  if(a.store)p.push('7-11 '+a.store);
+  return p.join('／')||'尚未填寫地址';
+}
+function sameAddr(a,b){
+  var ks=['name','phone','zip','addr','store','storeAddr'];
+  for(var i=0;i<ks.length;i++)if((a[ks[i]]||'')!==(b[ks[i]]||''))return false;
+  return true;
+}
+function hasShipDefaults(){return addrBook().length>0;}
+function defAddrParts(){var a=activeAddr();return a?{zip:a.zip||'',rest:a.addr||''}:{zip:'',rest:''};}
+/* 結帳頁切換已存的寄送資料 */
+function applyAddrPick(id){
+  var a=addrById(id);if(!a)return;
+  var set=function(eid,v){var e=document.getElementById(eid);if(e)e.value=v||'';};
+  set('rcvName',a.name);set('rcvPhone',a.phone);set('rcvIG',a.ig);
+  set('zipInput',a.zip);set('addrInput',a.addr);
+  set('storeInput',a.store);set('storeAddrInput',a.storeAddr);
+}
 function renderMemberDefaults(){
   var el=document.getElementById('memberDefaults');if(!el)return;
   var u=S.currentUser;if(!u)return;
-  var has=u.defaultName||u.defaultPhone||u.defaultIG||u.defaultAddr||u.defaultStore;
-  if(S._defEdit||!has){
-    el.innerHTML='<h3 style="font-size:15px;color:var(--cocoa);margin-bottom:10px"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c4-4.5 6-7.6 6-10.5A6 6 0 0 0 6 10.5C6 13.4 8 16.5 12 21z"/><circle cx="12" cy="10.4" r="2.2"/></svg>預設寄送資訊</h3>'
-      +'<div class="fg"><label>預設收件人姓名</label><input id="defName" value="'+(u.defaultName||'')+'" placeholder="收件人姓名"></div>'
-      +'<div class="fg"><label>預設電話</label><input id="defPhone" value="'+(u.defaultPhone||'')+'" placeholder="0912-345-678"></div>'
-      +'<div class="fg"><label>預設 Instagram 帳號</label><input id="defIG" value="'+(u.defaultIG||'')+'" placeholder="@yourname"></div>'
-      +'<div class="fg"><label>預設宅配地址</label><input id="defAddr" value="'+(u.defaultAddr||'')+'" placeholder="縣市、鄉鎮市區、詳細地址"></div>'
-      +'<div class="fg"><label>預設 7-11 店名/店號</label><input id="defStore" value="'+(u.defaultStore||'')+'" placeholder="例：台北市大安區信義門市"></div>'
-      +'<button class="sub-btn" onclick="saveMemberDefaults()">儲存預設資訊</button>';
-  }else{
-    el.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="font-size:15px;color:var(--cocoa)"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c4-4.5 6-7.6 6-10.5A6 6 0 0 0 6 10.5C6 13.4 8 16.5 12 21z"/><circle cx="12" cy="10.4" r="2.2"/></svg>預設寄送資訊</h3><button class="abtn pr" onclick="editMemberDefaults()">編輯</button></div>'
-      +'<div style="font-size:13px;color:var(--text-light);line-height:2.1">收件人：'+(u.defaultName||'—')+'<br>電話：'+(u.defaultPhone||'—')+'<br>IG：'+(u.defaultIG||'—')+'<br>宅配地址：'+(u.defaultAddr||'—')+'<br>7-11 店名：'+(u.defaultStore||'—')+'</div>';
+  var bk=addrBook(),act=activeAddr();
+  var head='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+    +'<h3 style="font-size:15px;color:var(--cocoa)"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c4-4.5 6-7.6 6-10.5A6 6 0 0 0 6 10.5C6 13.4 8 16.5 12 21z"/><circle cx="12" cy="10.4" r="2.2"/></svg>寄送資料</h3>'
+    +(S._addrEdit?'':'<button class="abtn pr" onclick="addAddrEntry()">新增一筆</button>')+'</div>';
+  if(S._addrEdit){el.innerHTML=head+addrEditForm();return;}
+  if(!bk.length){
+    el.innerHTML=head+'<div style="font-size:13px;color:var(--text-light);line-height:1.9">還沒有儲存的寄送資料。結帳時勾選「儲存這次填寫的寄送資料」就會自動存起來，也可以按上方「新增一筆」。</div>';
+    return;
   }
+  el.innerHTML=head+bk.map(function(a,i){
+    var on=!!(act&&act.id===a.id);
+    return '<div style="border:1.5px solid '+(on?'var(--gold)':'var(--linen)')+';border-radius:12px;padding:12px 14px;margin-bottom:10px;background:'+(on?'var(--cream)':'transparent')+'">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
+      +'<b style="font-size:14px;color:var(--cocoa)">'+esc(addrTitle(a,i))+'</b>'
+      +(on?'<span style="background:var(--gold);color:#fff;font-size:10px;border-radius:8px;padding:1px 7px">預設</span>':'')+'</div>'
+      +'<div style="font-size:12.5px;color:var(--text-light);line-height:1.95">'
+      +'收件人：'+esc(a.name||'—')+'<br>電話：'+esc(a.phone||'—')
+      +(a.ig?'<br>IG：'+esc(a.ig):'')
+      +'<br>宅配：'+esc(addrHomeStr(a)||'—')
+      +'<br>7-11：'+esc(a.store||'—')
+      +(a.storeAddr?'<br>門市地址：'+esc(a.storeAddr):'')
+      +'</div><div style="margin-top:10px">'
+      +(on?'':'<button class="abtn sc" onclick="setDefaultAddr(\''+a.id+'\')">設為預設</button>')
+      +'<button class="abtn pr" onclick="editAddrEntry(\''+a.id+'\')">編輯</button>'
+      +'<button class="abtn dg" onclick="delAddrEntry(\''+a.id+'\')">刪除</button>'
+      +'</div></div>';
+  }).join('');
 }
-function editMemberDefaults(){S._defEdit=true;renderMemberDefaults();}
-function saveMemberDefaults(){
+function addrEditForm(){
+  var a=(S._addrEdit==='new')?{}:(addrById(S._addrEdit)||{});
+  return '<div class="fg"><label>名稱（方便辨識，可留空）</label><input id="abLabel" value="'+esc(a.label||'')+'" placeholder="例：家裡、公司、媽媽家"></div>'
+    +'<div class="fg"><label>收件人姓名</label><input id="abName" value="'+esc(a.name||'')+'" placeholder="收件人姓名"></div>'
+    +'<div class="fg"><label>電話</label><input id="abPhone" value="'+esc(a.phone||'')+'" placeholder="0912-345-678"></div>'
+    +'<div class="fg"><label>Instagram 帳號</label><input id="abIG" value="'+esc(a.ig||'')+'" placeholder="@yourname"></div>'
+    +'<div class="fg"><label>宅配地址</label><div style="display:flex;gap:8px">'
+    +'<input id="abZip" inputmode="numeric" maxlength="6" value="'+esc(a.zip||'')+'" placeholder="郵遞區號" style="width:104px;flex:none;box-sizing:border-box">'
+    +'<input id="abAddr" value="'+esc(a.addr||'')+'" placeholder="縣市、鄉鎮市區、詳細地址" style="flex:1;min-width:0;box-sizing:border-box"></div></div>'
+    +'<div class="fg"><label>7-11 店名或店號</label><input id="abStore" value="'+esc(a.store||'')+'" placeholder="例：信義門市，或 6 碼店號">'
+    +'<label style="margin-top:10px">7-11 門市地址</label><input id="abStoreAddr" value="'+esc(a.storeAddr||'')+'" placeholder="門市完整地址">'
+    +'<div style="margin-top:6px;font-size:11.5px;color:var(--text-light)">不確定門市全名？<a href="https://emap.pcsc.com.tw/" target="_blank" rel="noopener" style="color:var(--dusty-rose)">開啟 7-11 官方門市查詢 &rsaquo;</a></div></div>'
+    +'<button class="sub-btn" onclick="saveAddrEntry()">儲存這筆</button>'
+    +'<button class="abtn sc" style="width:100%;margin-top:8px;padding:10px;border-radius:30px" onclick="cancelAddrEdit()">取消</button>';
+}
+function addAddrEntry(){S._addrEdit='new';S._abConfirmed=false;renderMemberDefaults();}
+function editAddrEntry(id){S._addrEdit=id;S._abConfirmed=false;renderMemberDefaults();}
+function cancelAddrEdit(){S._addrEdit=null;S._abConfirmed=false;renderMemberDefaults();}
+function setDefaultAddr(id){
+  if(!S.currentUser||!addrById(id))return;
+  S.currentUser.defaultAddrId=id;persistMember(S.currentUser);
+  renderMemberDefaults();showToast('已設為預設寄送資料');
+}
+function delAddrEntry(id){
+  askConfirm('確定要刪除這筆寄送資料嗎？',function(){
+    if(!S.currentUser)return;
+    var bk=addrBook();
+    for(var i=0;i<bk.length;i++){if(bk[i].id===id){bk.splice(i,1);break;}}
+    if(S.currentUser.defaultAddrId===id)S.currentUser.defaultAddrId=bk.length?bk[0].id:'';
+    persistMember(S.currentUser);renderMemberDefaults();showToast('已刪除');
+  });
+}
+function saveAddrEntry(){
   if(!S.currentUser)return;
-  var g=function(id){return (document.getElementById(id)||{}).value||'';};
-  S.currentUser.defaultName=g('defName');S.currentUser.defaultPhone=g('defPhone');
-  S.currentUser.defaultIG=g('defIG');S.currentUser.defaultAddr=g('defAddr');S.currentUser.defaultStore=g('defStore');
+  var g=function(id){return ((document.getElementById(id)||{}).value||'').trim();};
+  var e={label:g('abLabel'),name:g('abName'),phone:g('abPhone'),ig:g('abIG'),
+    zip:g('abZip'),addr:g('abAddr'),store:g('abStore'),storeAddr:g('abStoreAddr')};
+  if(!e.name){showToast('請填寫收件人姓名');return;}
+  if(!e.phone){showToast('請填寫電話');return;}
+  if(!e.addr&&!e.store){showToast('請至少填寫宅配地址或 7-11 門市');return;}
+  var w=[],t;
+  t=phoneIssue(e.phone);if(t)w.push(t);
+  if(e.zip||e.addr){t=zipIssue(e.zip,e.addr);if(t)w.push(t);t=addrIssue(e.addr);if(t)w.push(t);}
+  if(e.store&&!e.storeAddr)w.push('已填 7-11 店名但沒有門市地址，超商取貨結帳時需要門市地址');
+  if(w.length&&!S._abConfirmed){
+    showShipCheck(w,function(){S._abConfirmed=true;saveAddrEntry();},'請再確認寄送資料','這筆資料會在結帳時自動帶入，建議先修正再儲存。');
+    return;
+  }
+  S._abConfirmed=false;
+  var bk=addrBook();
+  if(S._addrEdit==='new'){
+    e.id=newAddrId();bk.push(e);S.currentUser.defaultAddrId=e.id;
+  }else{
+    var o=addrById(S._addrEdit);
+    if(o){for(var k in e)o[k]=e[k];}
+    else{e.id=newAddrId();bk.push(e);S.currentUser.defaultAddrId=e.id;}
+  }
   persistMember(S.currentUser);
-  S._defEdit=false;renderMemberDefaults();showToast('已儲存預設寄送資訊');
+  S._addrEdit=null;renderMemberDefaults();showToast('已儲存寄送資料');
+}
+/* ===== 寄送資訊完整性檢查（手機／地址／店名） ===== */
+function _halfw(s){
+  return (s==null?'':String(s))
+    .replace(/[\uFF01-\uFF5E]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-65248);})
+    .replace(/\u3000/g,' ');
+}
+function phoneIssue(v){
+  var raw=_halfw(v).trim();
+  if(!raw)return '電話未填寫';
+  var d=raw.replace(/[\s\-().]/g,'');
+  if(d.indexOf('+886')===0)d='0'+d.slice(4);
+  else if(/^886\d{9,}$/.test(d))d='0'+d.slice(3);
+  if(/[^0-9]/.test(d))return '電話含有數字以外的字元，請確認是否填寫正確';
+  if(/^09\d{8}$/.test(d))return '';
+  if(/^0[2-8]\d{7,8}$/.test(d))return '';
+  if(/^9\d{8}$/.test(d))return '手機號碼似乎少了開頭的 0（手機應為 09 開頭共 10 碼）';
+  if(d.indexOf('09')===0)return '手機號碼位數不正確（09 開頭應共 10 碼，目前 '+d.length+' 碼）';
+  if(d.charAt(0)!=='0')return '電話號碼未以 0 開頭，可能不完整';
+  if(d.length<9)return '電話號碼位數不足（目前 '+d.length+' 碼）';
+  return '電話號碼格式不常見，請再確認一次';
+}
+function addrIssue(v){
+  var a=_halfw(v).trim();
+  if(!a)return '收件地址未填寫';
+  var miss=[];
+  if(!/[縣市]/.test(a))miss.push('缺少縣／市');
+  if(!/[鄉鎮市區]/.test(a))miss.push('缺少鄉鎮市區');
+  if(!/\d/.test(a))miss.push('缺少門牌號碼');
+  else if(a.indexOf('號')<0&&!/[巷弄樓]/.test(a))miss.push('缺少「號」，門牌可能不完整');
+  if(a.replace(/\s/g,'').length<10&&!miss.length)miss.push('地址偏短，可能不完整');
+  return miss.length?('收件地址可能不完整：'+miss.join('、')):'';
+}
+/* 全臺 3 碼郵遞區號區間（依縣市） */
+var ZIP_RANGES=[
+  ['臺北市',['臺北市','台北市'],100,116],
+  ['基隆市',['基隆市'],200,206],
+  ['新北市',['新北市'],207,208],
+  ['新北市',['新北市'],220,253],
+  ['連江縣',['連江縣'],209,212],
+  ['宜蘭縣',['宜蘭縣'],260,272],
+  ['新竹市',['新竹市'],300,300],
+  ['新竹縣',['新竹縣'],302,315],
+  ['桃園市',['桃園市'],320,338],
+  ['苗栗縣',['苗栗縣'],350,369],
+  ['臺中市',['臺中市','台中市'],400,439],
+  ['彰化縣',['彰化縣'],500,530],
+  ['南投縣',['南投縣'],540,558],
+  ['嘉義市',['嘉義市'],600,600],
+  ['嘉義縣',['嘉義縣'],602,625],
+  ['雲林縣',['雲林縣'],630,655],
+  ['臺南市',['臺南市','台南市'],700,745],
+  ['高雄市',['高雄市'],800,852],
+  ['澎湖縣',['澎湖縣'],880,885],
+  ['金門縣',['金門縣'],890,896],
+  ['屏東縣',['屏東縣'],900,947],
+  ['臺東縣',['臺東縣','台東縣'],950,966],
+  ['花蓮縣',['花蓮縣'],970,983]
+];
+function zipIssue(zip,addr){
+  var z=_halfw(zip||'').replace(/[\s\-]/g,'').trim();
+  var a=_halfw(addr||'').trim();
+  if(!z)return '郵遞區號未填寫（3 碼）';
+  if(!/^(\d{3}|\d{5}|\d{6})$/.test(z))return '郵遞區號格式不正確，請填 3 碼數字（或 5～6 碼）';
+  var n=parseInt(z.slice(0,3),10);
+  if(!ZIP_RANGES.some(function(r){return n>=r[2]&&n<=r[3];}))return '郵遞區號 '+z.slice(0,3)+' 不是有效的臺灣郵遞區號';
+  if(!a)return '';
+  var named=ZIP_RANGES.filter(function(r){return r[1].some(function(nm){return a.indexOf(nm)>=0;});});
+  if(!named.length)return '';
+  if(named.some(function(r){return n>=r[2]&&n<=r[3];}))return '';
+  return '郵遞區號 '+z.slice(0,3)+' 與地址縣市（'+named[0][0]+'）不符，請確認';
+}
+/* 相容舊資料：把寫在地址開頭的郵遞區號拆出來 */
+function splitZip(a){
+  a=_halfw(a||'').trim();
+  var m=a.match(/^(\d{3})(\d{0,3})[\s,，、]*(.+)$/);
+  return m?{zip:m[1]+m[2],rest:m[3].trim()}:{zip:'',rest:a};
+}
+function checkShipInfo(o){
+  var w=[],t;
+  if(o.phone!=null){t=phoneIssue(o.phone);if(t)w.push(t);}
+  if(o.checkAddr){t=zipIssue(o.zip,o.addr);if(t)w.push(t);t=addrIssue(o.addr);if(t)w.push(t);}
+  return w;
+}
+function showShipCheck(list,onOk,title,note){
+  var _m=document.getElementById('shipCheckModal');
+  var _h=_m.querySelector('h3');if(_h)_h.textContent=title||'請再確認寄送資訊';
+  var b=document.getElementById('shipCheckBody');
+  b.innerHTML='<div style="background:var(--cream);border:1px solid var(--gold);border-radius:10px;padding:12px 14px">'
+    +list.map(function(t){return '<div style="margin:3px 0">・'+esc(t)+'</div>';}).join('')
+    +'</div><div style="margin-top:12px;font-size:12.5px;color:var(--text-light);line-height:1.8">'+esc(note||'資訊不完整可能導致包裹無法送達。請返回修改，或確認無誤後再繼續。')+'</div>';
+  document.getElementById('shipCheckOkBtn').onclick=function(){closeModal('shipCheckModal');onOk();};
+  document.getElementById('shipCheckModal').classList.add('open');
 }
 function askConfirm(msg,onOk){
   document.getElementById('confirmMsg').textContent=msg;
