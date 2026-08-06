@@ -774,7 +774,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0805g</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0805h</div>
 </footer>
 
 <!-- MODALS -->
@@ -879,7 +879,7 @@ var S={
   discounts:[],
   welcomeCoupon:{enabled:false,amount:50,days:30,desc:'新會員首購禮'},
   /* 進站彈窗公告：內容留空則不顯示（後台「進站彈窗」可編輯）；ver 於每次儲存更新，用來讓回訪顧客在新造訪看到更新後的公告 */
-  welcomePopup:{enabled:true,title:'',text:'',ver:0},
+  welcomePopup:{enabled:true,title:'',text:'',align:'center',ver:0},
   /* 分類促銷（後台直接套用，所選分類商品自動顯示折扣價，可選新品除外，不需折扣碼） */
   promo:{enabled:false,cat:'全部',type:'percent',percent:9,amount:0,excludeNew:false,label:'限時優惠',start:'',end:''},
   members:[],
@@ -1446,9 +1446,10 @@ function saveLookbook(){if(window.FB&&window.FB.saveConfig){window.FB.saveConfig
 function welcomePopupActive(){var w=S.welcomePopup;return !!(w&&w.enabled&&(w.text||'').trim());}
 function showWelcomePopup(){
   var w=S.welcomePopup||{};var title=(w.title||'').trim();var text=(w.text||'').trim();
+  var al=(w.align==='left')?'left':'center';
   var html='';
-  if(title)html+='<h3 style="margin:2px 0 12px;font-size:19px;text-align:center">'+esc(title)+'</h3>';
-  if(text)html+='<div style="font-size:14px;color:var(--cocoa);line-height:1.9;white-space:pre-wrap">'+esc(text)+'</div>';
+  if(title)html+='<h3 style="margin:2px 0 12px;font-size:19px;text-align:'+al+'">'+esc(title)+'</h3>';
+  if(text)html+='<div style="font-size:14px;color:var(--cocoa);line-height:1.9;white-space:pre-wrap;text-align:'+al+'">'+esc(text)+'</div>';
   html+='<button class="sub-btn" onclick="closeModal(\'welcomePopup\')">我知道了</button>';
   var b=document.getElementById('welcomePopupBody');if(b)b.innerHTML=html;
   var ov=document.getElementById('welcomePopup');if(ov)ov.classList.add('open');
@@ -1464,14 +1465,16 @@ function renderPopupAdmin(){
   var box=document.getElementById('popupAdmin');if(!box)return;var w=S.welcomePopup||{};
   box.innerHTML='<div class="fg"><label style="display:flex;align-items:center;gap:8px;font-size:13px"><input type="checkbox" id="wpEnabled" '+(w.enabled?'checked':'')+' style="width:auto">啟用彈窗（關閉可暫時隱藏但保留內容）</label></div>'
     +'<div class="fg"><label>標題（可留空）</label><input id="wpTitle" value="'+esc(w.title||'')+'" placeholder="例：本週出貨公告" style="width:100%;box-sizing:border-box"></div>'
-    +'<div class="fg"><label>內容訊息（留空則不會顯示彈窗）</label><textarea id="wpText" rows="5" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid var(--linen);border-radius:10px;font-family:inherit;font-size:13px;background:var(--cream);outline:none;line-height:1.7" placeholder="輸入要對顧客顯示的公告，可換行…">'+esc(w.text||'')+'</textarea></div>'
+    +'<div class="fg"><label>內容訊息（留空則不會顯示彈窗）</label><textarea id="wpText" rows="5" style="width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid var(--linen);border-radius:10px;font-family:inherit;font-size:13px;background:var(--cream);outline:none;line-height:1.7" placeholder="輸入要對顧客顯示的公告，換行會照原樣顯示…">'+esc(w.text||'')+'</textarea></div>'
+    +'<div class="fg"><label>文字對齊</label><select id="wpAlign" style="width:100%;box-sizing:border-box"><option value="center"'+((w.align==='left')?'':' selected')+'>置中（預設）</option><option value="left"'+((w.align==='left')?' selected':'')+'>靠左</option></select></div>'
     +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="sub-btn" style="flex:1;min-width:150px;margin-top:0" onclick="saveWelcomePopup()">儲存彈窗設定</button><button class="abtn" style="border-radius:30px;padding:10px 20px;background:#fff;border:1.5px solid var(--gold);color:var(--cocoa)" onclick="previewWelcomePopup()">預覽</button></div>';
 }
 function saveWelcomePopup(){
   var en=document.getElementById('wpEnabled').checked;
   var title=(document.getElementById('wpTitle').value||'').trim();
   var text=(document.getElementById('wpText').value||'').trim();
-  S.welcomePopup=Object.assign({},S.welcomePopup,{enabled:en,title:title,text:text,ver:Date.now()});
+  var al=((document.getElementById('wpAlign')||{}).value==='left')?'left':'center';
+  S.welcomePopup=Object.assign({},S.welcomePopup,{enabled:en,title:title,text:text,align:al,ver:Date.now()});
   if(window.FB&&window.FB.saveConfig){window.FB.saveConfig({welcomePopup:S.welcomePopup}).then(function(){showToast(text?'彈窗設定已儲存':'內容已清空，彈窗將不再顯示');}).catch(function(e){showToast('儲存失敗：'+(e.code||e.message));});}
   else{showToast('彈窗設定已儲存');}
 }
@@ -1480,7 +1483,8 @@ function previewWelcomePopup(){
   var text=(document.getElementById('wpText').value||'').trim();
   if(!title&&!text){showToast('請先輸入標題或內容');return;}
   var saved=S.welcomePopup;
-  S.welcomePopup=Object.assign({},S.welcomePopup,{title:title,text:text});
+  var al=((document.getElementById('wpAlign')||{}).value==='left')?'left':'center';
+  S.welcomePopup=Object.assign({},S.welcomePopup,{title:title,text:text,align:al});
   showWelcomePopup();
   S.welcomePopup=saved;
 }
