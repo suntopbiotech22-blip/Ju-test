@@ -351,6 +351,16 @@ input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{fo
 .info-list{list-style:none;padding:0;margin:8px 0 0;}
 .info-list li{position:relative;padding:16px 18px 16px 46px;background:var(--white);border:1px solid var(--warm-ivory);border-radius:14px;margin-bottom:12px;color:var(--text);font-size:14.5px;line-height:1.85;box-shadow:0 2px 10px var(--shadow);}
 .info-list li::before{content:"◆";position:absolute;left:18px;top:16px;color:var(--gold);font-size:13px;}
+.doc-upd{text-align:center;font-size:12.5px;color:var(--text-light);margin:0 0 18px;}
+.doc-sec{background:var(--white);border:1px solid var(--warm-ivory);border-radius:14px;padding:16px 18px;margin-bottom:12px;box-shadow:0 2px 10px var(--shadow);}
+.doc-sec h4{font-size:15px;color:var(--cocoa);margin:0 0 8px;font-weight:600;letter-spacing:.02em;}
+.doc-sec h5{font-size:13.5px;color:var(--cocoa);margin:12px 0 4px;font-weight:600;}
+.doc-sec p{font-size:14px;line-height:1.9;color:var(--text);margin:0 0 8px;}
+.doc-sec p:last-child{margin-bottom:0;}
+.doc-sec ul{margin:6px 0 8px;padding-left:19px;}
+.doc-sec li{font-size:13.8px;line-height:1.9;color:var(--text);margin-bottom:5px;}
+.doc-sec b{color:var(--cocoa);}
+.doc-note{font-size:13px;color:var(--text-light);line-height:1.85;background:var(--warm-ivory);border-radius:10px;padding:10px 13px;margin-top:8px;}
 .footer-links{margin-top:14px;display:flex;justify-content:center;gap:18px;flex-wrap:wrap;}
 .footer-links a{color:rgba(255,255,255,.85);font-size:13px;text-decoration:none;cursor:pointer;}
 .footer-links a:hover{color:#fff;text-decoration:underline;}
@@ -592,6 +602,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
         <div class="fg"><label>手機號碼</label><input type="tel" id="regPhone" placeholder="0912-345-678"></div>
         <div class="fg"><label>Instagram 帳號（選填）</label><input type="text" id="regIG" placeholder="@ju.accessories.tw"></div>
         <div class="fg" id="regCaptchaBox" style="display:none"><div id="regCaptchaWidget"></div></div>
+        <p style="font-size:11.5px;color:var(--text-light);line-height:1.75;margin:0 0 10px">點選「建立帳號」即表示您已閱讀並同意本店的 <a href="#privacy" target="_blank" rel="noopener" style="color:var(--dusty-rose)">隱私權政策</a>。</p>
         <button class="sub-btn" onclick="doRegister()">建立帳號</button>
       </div>
       <button onclick="showPage('guestorders')" style="display:block;width:100%;background:none;border:none;color:var(--text-light);font-size:12px;margin-top:14px;font-family:inherit;cursor:pointer;text-decoration:underline">訪客訂單查詢 ›</button>
@@ -753,6 +764,208 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
   </div>
 </div>
 
+
+<!-- PRIVACY POLICY PAGE -->
+<div id="page-privacy" class="page">
+  <div class="section">
+    <p class="section-title">隱私權政策</p>
+    <p class="section-sub">個人資料蒐集、處理及利用告知聲明</p>
+    <div class="divider">◇</div>
+    <div class="info-page">
+      <p class="doc-upd">最後更新：2026 年 8 月 9 日（民國 115 年）</p>
+
+      <div class="doc-sec">
+        <h4>一、前言</h4>
+        <p>就手作（以下簡稱「本店」）非常重視您的個人資料保護。依《個人資料保護法》第 8 條規定，謹向您說明本店蒐集、處理及利用個人資料的相關事項，請您詳細閱讀。</p>
+        <p>本政策適用於您使用本網站（juaccessories.com）所進行的瀏覽、註冊會員、下單購買、付款回報及聯絡客服等行為。若您不同意本政策內容，請停止使用本網站服務。</p>
+      </div>
+
+      <div class="doc-sec">
+        <h4>二、我們是誰與聯絡方式</h4>
+        <ul>
+          <li>公司名稱：<b>日梢生技有限公司</b>（統一編號：90588451）</li>
+          <li>品牌名稱：<b>就手作</b></li>
+          <li>客服信箱：<b>suntop.biotech22@gmail.com</b></li>
+          <li>Instagram：<b>@ju.accessories.tw</b></li>
+          <li>客服時間：<b>週一至週五 9:00–17:00</b>（例假日順延）</li>
+        </ul>
+      </div>
+
+      <div class="doc-sec">
+        <h4>三、蒐集目的</h4>
+        <p>本店蒐集您的個人資料，係為下列特定目的（括號內為法務部公告之特定目的代號）：</p>
+        <ul>
+          <li>行銷（040）</li>
+          <li>契約、類似契約或其他法律關係事務（069）</li>
+          <li>消費者、客戶管理與服務（090）</li>
+          <li>消費者保護（091）</li>
+          <li>網路購物及其他電子商務服務（148）</li>
+          <li>調查、統計與研究分析（157）</li>
+          <li>其他經營合於營業登記項目或組織章程所定之業務（181）</li>
+        </ul>
+        <p>具體而言，包含：完成訂單成立與付款確認、商品製作與寄送、售後服務與客訴處理、會員帳號管理、折扣與優惠券發放、訂單通知信寄送、防止盜用與詐騙，以及依法製作與保存會計憑證及報稅。</p>
+      </div>
+
+      <div class="doc-sec">
+        <h4>四、蒐集的個人資料類別</h4>
+        <p>本店僅蒐集提供服務所必要之資料：</p>
+        <h5>1. 會員註冊</h5>
+        <ul>
+          <li>電子郵件地址、姓名、手機號碼、Instagram 帳號（選填）</li>
+          <li>密碼（由 Google Firebase Authentication 加密保管，<b>本店無法看見您的原始密碼</b>）</li>
+          <li>若您自行啟用雙重驗證（TOTP），將產生驗證裝置綁定資訊</li>
+        </ul>
+        <h5>2. 下單與寄送</h5>
+        <ul>
+          <li>收件人姓名、聯絡電話</li>
+          <li>宅配地址（郵遞區號、縣市、鄉鎮市區、詳細地址）</li>
+          <li>或 7-ELEVEN 取貨門市名稱／店號與門市地址</li>
+          <li>訂單備註（由您自行填寫之內容）</li>
+        </ul>
+        <h5>3. 付款相關</h5>
+        <ul>
+          <li>付款方式選擇（銀行匯款／LINE Pay／超商貨到付款）</li>
+          <li>您主動上傳的<b>付款截圖</b>或付款留言（可能包含匯款帳號末幾碼、交易時間、金額）</li>
+          <li><b>本店不會蒐集、也無法取得您的完整信用卡號、金融卡號、銀行密碼或 LINE Pay 帳戶密碼。</b></li>
+        </ul>
+        <h5>4. 交易與服務紀錄</h5>
+        <ul>
+          <li>訂單編號、購買品項與金額、訂單狀態、折扣碼與優惠券使用紀錄、累計消費金額、客服往來紀錄</li>
+        </ul>
+        <h5>5. 網站使用資訊</h5>
+        <ul>
+          <li>儲存於您裝置本機的購物車內容與收藏清單</li>
+          <li>為防止機器人濫用而由 Google reCAPTCHA 產生之風險評估資訊</li>
+        </ul>
+        <div class="doc-note">本店<b>不會</b>蒐集您的身分證統一編號、出生年月日、病歷、醫療、基因、性生活、健康檢查及犯罪前科等特種個人資料。</div>
+      </div>
+
+      <div class="doc-sec">
+        <h4>五、利用之期間、地區、對象及方式</h4>
+        <h5>（一）期間</h5>
+        <ul>
+          <li>依法令規定之保存期間：例如依《商業會計法》，會計憑證自記帳日起保存 <b>5 年</b></li>
+          <li>為履行契約及售後服務所必要之期間</li>
+          <li>會員資料：至您刪除帳號或請求本店停止利用之日止（法令另有規定者除外）</li>
+          <li>期間屆滿後，本店將刪除或以其他方式使資料無從識別特定當事人</li>
+        </ul>
+        <h5>（二）地區</h5>
+        <p>中華民國境內，以及本店所使用雲端服務供應商伺服器所在地（詳見第六點，可能包含美國、日本、新加坡等地）。</p>
+        <h5>（三）對象</h5>
+        <ul>
+          <li>本店（日梢生技有限公司）及其受僱人員</li>
+          <li>為完成服務所必要之委外協力廠商（詳見第六點）</li>
+          <li>依法有調查權之司法、稅務或其他主管機關</li>
+          <li>經您本人同意之對象</li>
+        </ul>
+        <h5>（四）方式</h5>
+        <p>以自動化機器或其他非自動化方式，於前述目的必要範圍內蒐集、處理、利用及國際傳輸您的個人資料。</p>
+        <div class="doc-note"><b>本店不會將您的個人資料出售、出租或交換予任何第三方作為商業行銷之用。</b></div>
+      </div>
+
+      <div class="doc-sec">
+        <h4>六、委外處理與第三方服務</h4>
+        <p>為提供網站與訂單服務，本店使用下列第三方服務，這些業者可能接觸到您的部分資料，並各自受其隱私權政策規範：</p>
+        <ul>
+          <li><b>Google Firebase</b>（Authentication／Firestore／Storage）：會員帳號、訂單、寄送資料及付款截圖 — 用於身分驗證、資料庫與檔案儲存</li>
+          <li><b>Google reCAPTCHA Enterprise</b>：操作行為風險評估 — 防止機器人與濫用</li>
+          <li><b>EmailJS</b>：姓名、Email、訂單內容 — 寄送訂單通知信</li>
+          <li><b>GitHub Pages</b>（GitHub, Inc.）：連線紀錄 — 網站主機代管</li>
+          <li><b>統一超商（7-ELEVEN 賣貨便）</b>：收件人姓名、電話、取貨門市 — 超商取貨與貨到付款</li>
+          <li><b>LINE Pay</b>（連加網路商業股份有限公司）：由您於 LINE Pay 端輸入之付款資訊 — 行動支付（本店不接觸您的付款帳戶資料）</li>
+          <li><b>黑貓宅急便（統一速達）、中華郵政</b>：收件人姓名、電話、地址 — 商品配送</li>
+        </ul>
+        <p>本店要求上述委外廠商就其受託事項負保密義務，並僅得於委託範圍內使用您的資料。</p>
+      </div>
+
+      <div class="doc-sec">
+        <h4>七、個人資料之國際傳輸</h4>
+        <p>由於本店使用前述國際雲端服務，您的個人資料可能被傳輸並儲存於中華民國境外之伺服器。上述業者均已依其所在地及國際資料保護規範採取相應保護措施。若您不同意此項國際傳輸，將無法使用本網站之會員與訂購服務。</p>
+      </div>
+
+      <div class="doc-sec">
+        <h4>八、行銷與顧客分享內容之使用</h4>
+        <p>本店可能以電子郵件或 Instagram 向您發送新品、優惠或活動訊息。您可隨時來信或私訊告知，本店將立即停止對您的行銷使用，並不影響您原有訂單之權益。</p>
+        <h5>關於顧客分享的照片與評價</h5>
+        <p>若您於公開社群平台標註（標記）本店帳號，或主動提供開箱照片、佩戴照、使用心得給本店，本店可能將該內容<b>轉分享或用於品牌宣傳、廣告及網站展示</b>。</p>
+        <ul>
+          <li>本店不會一併公開您的電話、地址、Email 等聯絡資料</li>
+          <li>若內容含有可辨識之人像（例如孩子的臉部），本店將<b>另行向您取得同意</b>後才使用</li>
+          <li>您可隨時要求本店下架或停止使用該內容，本店將儘速處理</li>
+        </ul>
+      </div>
+
+      <div class="doc-sec">
+        <h4>九、Cookie 與本機儲存</h4>
+        <p>本網站使用瀏覽器的 localStorage／sessionStorage 技術，用以記住您的購物車內容、收藏清單及是否已顯示過公告訊息，使您在關閉頁面後仍能延續購物流程。這些資料儲存於您自己的裝置中，您可隨時透過瀏覽器設定清除；清除後購物車與收藏內容將一併消失。</p>
+      </div>
+
+      <div class="doc-sec">
+        <h4>十、您的權利</h4>
+        <p>依個人資料保護法第 3 條，您就本店保有之您的個人資料得行使下列權利：</p>
+        <ul>
+          <li>查詢或請求閱覽</li>
+          <li>請求製給複製本</li>
+          <li>請求補充或更正</li>
+          <li>請求停止蒐集、處理或利用</li>
+          <li>請求刪除</li>
+        </ul>
+        <p><b>行使方式：</b>您可自行登入會員頁面隨時檢視、修改或刪除寄送資料；其餘權利請透過客服信箱 <b>suntop.biotech22@gmail.com</b> 或 Instagram <b>@ju.accessories.tw</b> 提出。本店將於收到請求並確認您的身分後，於 <b>15 日內</b>回覆處理（必要時得延長 15 日並通知您）。目前本店不收取查詢或製給複製本之費用。</p>
+        <div class="doc-note">若您請求刪除或停止利用之資料屬本店依法應保存者（例如已完成交易之會計憑證），或為履行契約、售後維修所必要者，本店將於法定期間屆滿後再行刪除，並向您說明。</div>
+      </div>
+
+      <div class="doc-sec">
+        <h4>十一、自由選擇提供與不提供的影響</h4>
+        <p>您可自由選擇是否提供個人資料。惟部分欄位為完成交易所必要，若您不提供，將造成以下影響：</p>
+        <ul>
+          <li><b>收件人姓名、電話</b>：無法成立訂單，物流無法聯繫您</li>
+          <li><b>宅配地址或超商門市</b>：無法寄送商品</li>
+          <li><b>電子郵件（訪客結帳）</b>：無法寄送訂單通知信，也無法查詢訂單</li>
+          <li><b>註冊會員資料</b>：無法使用折扣碼、專屬優惠券、訂單查詢與貨到付款</li>
+          <li><b>Instagram 帳號（選填）</b>：不影響交易，僅可能影響客製溝通之便利性</li>
+        </ul>
+      </div>
+
+      <div class="doc-sec">
+        <h4>十二、資料安全維護</h4>
+        <ul>
+          <li>全站以 HTTPS 加密傳輸</li>
+          <li>會員密碼由 Firebase Authentication 以雜湊方式保管，本店人員無法檢視</li>
+          <li>管理者帳號啟用雙重驗證（TOTP）</li>
+          <li>以資料庫安全規則限制存取權限，一般會員僅能讀寫自己的資料</li>
+          <li>使用 reCAPTCHA 防止自動化濫用</li>
+        </ul>
+        <p>惟網際網路傳輸無法保證絕對安全。若因不可抗力或第三人之非法行為致資料外洩，本店將於知悉後儘速查明，並依個人資料保護法第 12 條通知您及主管機關。</p>
+      </div>
+
+      <div class="doc-sec">
+        <h4>十三、未成年人之保護</h4>
+        <p>本店商品雖以兒童飾品為主，但購買者應為具完全行為能力之成年人。若您未滿 18 歲，請於您的法定代理人（父母或監護人）閱讀、瀉解並同意本政策後，方得使用本網站服務並提供個人資料；若未滿 7 歲，應由法定代理人代為使用。本店不會主動向兒童蒐集個人資料。</p>
+      </div>
+
+      <div class="doc-sec">
+        <h4>十四、政策之修訂</h4>
+        <p>本店保有隨時修訂本政策之權利。修訂後將於本頁面公告並更新「最後更新」日期；若涉及重大變更，本店將以顯著方式提醒。建議您定期查閱本頁面。</p>
+      </div>
+
+      <div class="doc-sec">
+        <h4>十五、聯絡我們</h4>
+        <p>如您對本政策或個人資料之處理有任何疑問、意見或欲行使前述權利，歡迎與我們聯繫：</p>
+        <ul>
+          <li>客服信箱：<b>suntop.biotech22@gmail.com</b></li>
+          <li>Instagram：<b>@ju.accessories.tw</b></li>
+          <li>客服時間：週一至週五 9:00–17:00（例假日順延）</li>
+        </ul>
+      </div>
+
+      <div style="text-align:center;margin-top:24px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="see-all-btn" onclick="showPage('terms')">購買須知</button>
+        <button class="see-all-btn" onclick="showPage('shop')">← 回作品列表</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- PRODUCT DETAIL PAGE -->
 <div id="page-product" class="page">
   <div class="section">
@@ -770,11 +983,15 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"></path><rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M8 11h8M8 15h5"></path></svg>
     <span>購買須知</span>
   </a>
+  <a class="terms-link" onclick="showPage('privacy')">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5.5c0 4.2-2.9 8.1-7 9.5-4.1-1.4-7-5.3-7-9.5V6z"></path><path d="M9.5 12l1.8 1.8 3.4-3.6"></path></svg>
+    <span>隱私權政策</span>
+  </a>
   <a class="ig-link" href="https://www.instagram.com/ju.accessories.tw?igsh=MW5jMmsyMzRma2ZlOQ%3D%3D&utm_source=qr" target="_blank" rel="noopener">
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0809a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0809c</div>
 </footer>
 
 <!-- MODALS -->
@@ -1835,7 +2052,7 @@ function route(){
   if(m){renderProductPage(parseInt(m[1],10));return;}
   var am=h.match(/^admin(?:\/([a-z]*))?$/);
   if(am){S._adminPanel=am[1]||'dashboard';showPage('admin');return;}
-  var valid={shop:1,showcase:1,cart:1,auth:1,member:1,success:1,terms:1,home:1,guestorders:1};
+  var valid={shop:1,showcase:1,cart:1,auth:1,member:1,success:1,terms:1,home:1,guestorders:1,privacy:1};
   showPage(valid[h]?h:'home');
 }
 window.addEventListener('hashchange',route);
@@ -2113,6 +2330,25 @@ function removeDiscount(){
   renderCart();
 }
 
+/* 結帳頁：先讓會員從已儲存的寄送資料一鍵帶入，避免誤以為要手動重填 */
+function savedShipBlock(){
+  if(!S.currentUser)return '';
+  var bk=addrBook();if(!bk.length)return '';
+  var head='<div class="fsec"><h3><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c4-4.5 6-7.6 6-10.5A6 6 0 0 0 6 10.5C6 13.4 8 16.5 12 21z"/><circle cx="12" cy="10.4" r="2.2"/></svg>已儲存的寄送資料</h3>';
+  if(bk.length>1){
+    return head
+      +'<div class="fg"><label>選一筆直接帶入</label><select id="addrPick" onchange="applyAddrPick(this.value)">'
+      +bk.map(function(a,i){return '<option value="'+esc(a.id)+'"'+((activeAddr()&&activeAddr().id===a.id)?' selected':'')+'>'+esc(addrTitle(a,i))+'｜'+esc(addrBrief(a))+'</option>';}).join('')
+      +'</select></div>'
+      +'<div style="font-size:12px;color:var(--text-light);line-height:1.85">選擇後會自動帶入下方的門市／地址與收件人資料，不需要重新填寫，也可以直接修改。</div>'
+      +'</div>';
+  }
+  var a=activeAddr()||bk[0];
+  return head
+    +'<div style="background:var(--warm-ivory);border-radius:10px;padding:10px 14px;font-size:12.5px;color:var(--text-light);line-height:1.95">'
+    +'已自動帶入：<b style="color:var(--cocoa)">'+esc(a.name||'')+'</b>　'+esc(a.phone||'')+'<br>'+esc(addrBrief(a))
+    +'<br>如需更改，直接修改下方欄位即可。</div></div>';
+}
 function guestGate(hasC){
   /* 未登入結帳入口：登入 或 訪客結帳（購物車含客製作品時僅能登入） */
   return '<div class="login-prompt"><p>登入會員即可結帳，享折扣碼、會員優惠券、訂單查詢與 7-11 貨到付款</p>'
@@ -2150,6 +2386,7 @@ function checkoutForm(total,hasC){
     +'<div class="pay-info" style="margin-bottom:10px"> 7-11 貨到付款採用賣貨便物流，下單完成後我們會私訊提供賣貨便下單連結，請記得追蹤粉專以免漏接訊息</div>'
     +'<div id="codBankInfo" style="display:none"><div class="pay-info"><strong> 客製作品付款說明</strong>訂金請先「銀行匯款」（台新銀行 812，帳號 20730100008145），尾款於商品完成後以「7-11 賣貨便貨到付款」</div></div>'
     +'</div></div>'
+    +savedShipBlock()
     +'<div class="fsec" id="shipSection" style="display:'+((S.paymentMethod==='cod')?'none':'block')+'"><h3><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6.5h10v9H3zM13 9.5h4l3.5 3.5v2.5H13z"/><circle cx="7" cy="17.5" r="1.7"/><circle cx="17.5" cy="17.5" r="1.7"/></svg>寄送方式</h3>'
     +'<div class="radio-grp">'
     +'<label class="radio-opt" id="ship-711" onclick="selShip(\'711\')">'
@@ -2161,7 +2398,6 @@ function checkoutForm(total,hasC){
     +'<div id="field-home" style="display:none;margin-top:10px" class="fg"><label>收件地址</label><div style="display:flex;gap:8px"><input id="zipInput" inputmode="numeric" maxlength="6" value="'+esc(defAddrParts().zip)+'" placeholder="郵遞區號" style="width:104px;flex:none;box-sizing:border-box"><input id="addrInput" value="'+esc(defAddrParts().rest)+'" placeholder="縣市、鄉鎮市區、詳細地址" style="flex:1;min-width:0;box-sizing:border-box"></div></div>'
     +'</div>'
     +'<div class="fsec"><h3><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.3v9.4L12 21l-8-4.3V7.3z"/><path d="M4 7.3 12 11l8-3.7M12 11v10"/></svg>收件人資訊</h3>'
-    +(S.currentUser&&addrBook().length>1?'<div class="fg"><label>選擇已儲存的寄送資料</label><select id="addrPick" onchange="applyAddrPick(this.value)">'+addrBook().map(function(a,i){return '<option value="'+esc(a.id)+'"'+((activeAddr()&&activeAddr().id===a.id)?' selected':'')+'>'+esc(addrTitle(a,i))+'｜'+esc(addrBrief(a))+'</option>';}).join('')+'</select></div>':'')
     +'<div class="fg"><label>姓名</label><input id="rcvName" placeholder="收件人姓名" value="'+esc(S.currentUser?(actF('name')||S.currentUser.name||''):'')+'"></div>'
     +'<div class="fg"><label>電話</label><input id="rcvPhone" placeholder="0912-345-678" value="'+esc(S.currentUser?(actF('phone')||S.currentUser.phone||''):'')+'"></div>'
     +(guest?'<div class="fg"><label>電子郵件（必填，寄送訂單通知）</label><input id="rcvEmail" type="email" placeholder="your@email.com"></div>':'')
@@ -2171,6 +2407,10 @@ function checkoutForm(total,hasC){
     +'<div class="fg" style="margin-top:14px"><label>備註</label>'
     +'<textarea id="orderNote" rows="2" style="width:100%;padding:10px 14px;border:1.5px solid var(--linen);border-radius:10px;font-family:inherit;font-size:13px;background:var(--cream);outline:none" placeholder="款式顏色需求、其他備註..."></textarea></div>'
     +'<div class="fg" id="payCaptchaBox" style="display:none"><div id="payCaptchaWidget"></div></div>'
+    +'<div style="display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--text-light);line-height:1.75;margin:14px 0 4px">'
+    +'<input type="checkbox" id="privacyChk" style="width:auto;flex:none;margin:3px 0 0">'
+    +'<span><label for="privacyChk" style="display:inline;margin:0;font-size:12.5px;color:var(--text-light);cursor:pointer">我已閱讀並同意本店為完成訂單、寄送與售後服務，蒐集、處理及利用上述個人資料</label>'
+    +'（<a href="#privacy" target="_blank" rel="noopener" style="color:var(--dusty-rose)">閱讀隱私權政策 ›</a>）</span></div>'
     +'<button class="sub-btn" onclick="placeOrder('+total+')">確認下單</button>';
 }
 
@@ -2339,6 +2579,8 @@ function placeOrder(total){
   if(S.paymentMethod==='cod'){addr='7-11 賣貨便（下單後提供取貨資訊）';}
   if(S.paymentMethod!=='cod'&&!addr){showToast('請填寫取貨地址或店名');return;}
   if(S.paymentMethod!=='cod'&&S.shippingMethod==='711'&&!_storeAddrV){showToast('請填寫 7-11 門市地址');return;}
+  var _pc=document.getElementById('privacyChk');
+  if(_pc&&!_pc.checked){showToast('請先勾選同意個人資料使用說明，才能完成下單');try{_pc.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}return;}
   var hasC=S.cart.some(function(i){return i.isCustom;});
   if(!S.currentUser&&hasC){showToast('客製作品需登入會員才能下單');return;}
   var gEmail='';
@@ -2869,6 +3111,11 @@ function applyAddrPick(id){
   set('rcvName',a.name);set('rcvPhone',a.phone);set('rcvIG',a.ig);
   set('zipInput',a.zip);set('addrInput',a.addr);
   set('storeInput',a.store);set('storeAddrInput',a.storeAddr);
+  /* 還沒選寄送方式時，依這筆資料自動幫忙選好 */
+  if(!S.shippingMethod&&S.paymentMethod!=='cod'){
+    if(a.store)selShip('711');
+    else if(addrHomeStr(a))selShip('home');
+  }
 }
 function renderMemberDefaults(){
   var el=document.getElementById('memberDefaults');if(!el)return;
