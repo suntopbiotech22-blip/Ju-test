@@ -774,7 +774,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0805h</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0809a</div>
 </footer>
 
 <!-- MODALS -->
@@ -1675,9 +1675,8 @@ function confirmCrop(){
 function closeCrop(){var m=document.getElementById('cropModal');if(m)m.classList.remove('open');CROP.cb=null;CROP.dragging=false;}
 function openOrderDetail(id,isAdmin){
   var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
-  var remainder=(o.items||[]).filter(function(i){return i.isCustom;}).reduce(function(s,i){return s+(i.price-i.deposit)*i.qty;},0)+(o.shipping||0);
   var depOnly=o.hasCustom&&o.customDepositChoice==='deposit';
-  var payNow=depOnly?(o.total-remainder):o.total;
+  var _sp=orderPaySplit(o),remainder=_sp.remainder,payNow=_sp.payNow;
   var lines=o.items.map(function(i){return '<div style="display:flex;justify-content:space-between;font-size:13px;margin:5px 0"><span>'+esc(i.name)+(i.spec?'（'+esc(i.spec)+'）':'')+(i.isCustom?'':'')+' ×'+i.qty+'</span><span>NT$ '+(i.price*i.qty)+'</span></div>';}).join('');
   var html='<h3 style="margin-bottom:4px">訂單 #'+o.id+'</h3>'
     +'<p class="msub" style="margin-bottom:12px">'+o.date+'　<span class="sbadge s-'+o.status+'">'+sLabel(o.status)+'</span>'+(o.guest?'　<span class="sbadge" style="background:var(--warm-ivory);color:var(--cocoa)">訪客</span>':'')+'</p>'
@@ -1686,7 +1685,7 @@ function openOrderDetail(id,isAdmin){
     +(o.discount?'<div class="sum-row" style="color:var(--dusty-rose)"><span>折扣</span><span>-NT$ '+o.discount+'</span></div>':'')
     +'<div class="sum-row total"><span>合計</span><span>NT$ '+o.total+'</span></div>'
     +(depOnly?'<div class="sum-row" style="color:var(--dusty-rose);font-weight:600;border-top:1px dashed var(--taupe);padding-top:8px;margin-top:2px"><span>本次應付（一般＋訂金）</span><span>NT$ '+payNow+'</span></div>'
-      +'<div class="sum-row" style="color:var(--text-light);font-size:13px"><span>尾款（含運費，客製完成後通知）</span><span>NT$ '+remainder+'</span></div>':'')
+      +'<div class="sum-row" style="color:var(--text-light);font-size:13px"><span>尾款（含運費'+(_sp.discToRemain?'，已折抵優惠 NT$ '+_sp.discToRemain:'')+'，客製完成後通知）</span><span>NT$ '+remainder+'</span></div>':'')
     +'</div>'+moneyStatusBlock(o);
   if(o.payment==='bank'){
     html+='<div class="pay-info" style="margin-top:14px"><strong> 台新銀行（812）</strong>帳號：20730100008145<br>本次應付 <strong>NT$ '+payNow+'</strong></div>';
@@ -1974,8 +1973,9 @@ function repriceCart(){
     var price=promoPrice(base,p);
     var dep=(so&&so.deposit!==''&&so.deposit!=null)?so.deposit:p.deposit;
     var label=(price<base?((S.promo&&S.promo.label)||'限時優惠'):'');
-    if(item.price!==price||item.origPrice!==base||item.promoLabel!==label||item.deposit!==dep){
-      item.price=price;item.origPrice=base;item.promoLabel=label;item.deposit=dep;changed=true;
+    var nd=!!p.noDiscount;
+    if(item.price!==price||item.origPrice!==base||item.promoLabel!==label||item.deposit!==dep||!!item.noDiscount!==nd){
+      item.price=price;item.origPrice=base;item.promoLabel=label;item.deposit=dep;item.noDiscount=nd;changed=true;
     }
   });
   if(changed)saveCart();
@@ -1997,6 +1997,7 @@ function renderCart(){
     return '<div class="cart-item"><div class="cart-item-img" style="cursor:pointer" onclick="openDetail('+item.id+')">'+img+'</div>'
       +'<div class="ci-info"><div class="ci-name" style="cursor:pointer" onclick="openDetail('+item.id+')">'+esc(item.name)+((item.origPrice&&item.price<item.origPrice)?' <span style="color:var(--dusty-rose);font-weight:700">＊</span>':'')+(item.isCustom?'':'')+'</div>'
       +(item.spec?'<div style="font-size:12px;color:var(--text-light)">規格：'+item.spec+'</div>':'')
+      +(item.noDiscount?'<div style="font-size:11.5px;color:var(--text-light)">此作品不參與折扣</div>':'')
       +'<div class="ci-price">NT$ '+item.price+((item.origPrice&&item.price<item.origPrice)?' <span style="font-size:12px;color:var(--text-light);text-decoration:line-through;font-weight:400">NT$ '+item.origPrice+'</span>':'')+'</div>'
       +'<div class="qty-ctrl" style="margin-top:6px">'
       +'<button class="qty-btn" onclick="changeQty(\''+item.cid+'\',-1)">−</button>'
@@ -2006,6 +2007,7 @@ function renderCart(){
   }).join('');
 
   var slbl=S.paymentMethod==='cod'?'7-11貨到付款運費':ship===0?'運費（滿千免運）':'運費';
+  var _ndNames=cartNoDiscNames();
   var _plabels=[];
   S.cart.forEach(function(i){if(i.origPrice&&i.price<i.origPrice){var _l=i.promoLabel||'限時優惠';if(_plabels.indexOf(_l)<0)_plabels.push(_l);}});
   var promoNote=_plabels.length?'<div style="font-size:12px;color:var(--dusty-rose);margin:2px 2px 14px;line-height:1.7">＊ 已套用'+_plabels.map(function(l){return '「'+l+'」';}).join('、')+'優惠（標示 ＊ 的作品已折扣）</div>':'';
@@ -2016,10 +2018,11 @@ function renderCart(){
     +'<div class="order-sum">'
     +'<div class="sum-row"><span>商品小計</span><span>NT$ '+sub+'</span></div>'
     +'<div class="sum-row"><span>'+slbl+'</span><span>'+(ship===0?'免費':'NT$ '+ship)+'</span></div>'
-    +(d?'<div class="sum-row" style="color:var(--dusty-rose)"><span>折扣（'+S.appliedDiscount.code+'）</span><span>-NT$ '+d+'</span></div>':'')
+    +(d?'<div class="sum-row" style="color:var(--dusty-rose)"><span>折扣（'+esc(S.appliedDiscount.code)+'）</span><span>-NT$ '+d+'</span></div>':'')
+    +((d&&_ndNames.length)?'<div style="font-size:11.5px;color:var(--text-light);margin:-4px 2px 6px;line-height:1.7">「'+esc(_ndNames.join('、'))+'」不參與折扣，未列入折抵計算</div>':'')
     +'<div class="sum-row total"><span>合計</span><span>NT$ '+total+'</span></div>'
     +'<div class="sum-row" id="payNowRow" style="display:none;border-top:1px dashed var(--taupe);margin-top:2px;padding-top:10px;color:var(--dusty-rose);font-weight:600"><span>本次付款金額（一般作品＋客製訂金）</span><span class="pn-amt"></span></div>'
-    +'<div class="sum-row" id="remainRow" style="display:none;color:var(--text-light);font-size:13px"><span>尾款（含運費，客製完成後通知）</span><span class="rm-amt"></span></div>'
+    +'<div class="sum-row" id="remainRow" style="display:none;color:var(--text-light);font-size:13px"><span class="rm-lbl">尾款（含運費，客製完成後通知）</span><span class="rm-amt"></span></div>'
     +'<div class="free-bar"><span style="white-space:nowrap">'+((sub-d)>=1000?' 已達免運！':'距免運還差 NT$ '+(1000-(sub-d)))+'</span>'
     +'<div class="free-prog"><div class="free-fill" style="width:'+pct+'%"></div></div></div>'
     +'</div>'
@@ -2038,38 +2041,46 @@ function renderCart(){
   renderCaptchaWidgets();
 }
 
+/* 折扣適用品項：標記「禁止使用所有折扣」的作品不參與，但不影響其他作品折扣 */
+function discEligibleItems(disc){
+  var inc=(disc&&disc.incCats)||[],ex=(disc&&disc.exCats)||[];
+  return S.cart.filter(function(i){
+    if(i.noDiscount)return false;
+    if(inc.length&&inc.indexOf(i.cat)<0)return false;
+    if(ex.indexOf(i.cat)>=0)return false;
+    return true;
+  });
+}
 function discEligibleSub(disc){
   if(!disc)return 0;
-  var inc=disc.incCats||[],ex=disc.exCats||[];
-  return S.cart.reduce(function(s,i){
-    if(inc.length&&inc.indexOf(i.cat)<0)return s;
-    if(ex.indexOf(i.cat)>=0)return s;
-    return s+i.price*i.qty;
-  },0);
+  return discEligibleItems(disc).reduce(function(s,i){return s+i.price*i.qty;},0);
 }
 function discIneligibleItems(disc){
   if(!disc)return [];
   var inc=disc.incCats||[],ex=disc.exCats||[];
   if(!inc.length&&!ex.length)return [];
-  return S.cart.filter(function(i){return (inc.length&&inc.indexOf(i.cat)<0)||ex.indexOf(i.cat)>=0;});
+  /* noDiscount 作品單獨處理（直接排除），不列入分類不符而整張退回的判斷 */
+  return S.cart.filter(function(i){return !i.noDiscount&&((inc.length&&inc.indexOf(i.cat)<0)||ex.indexOf(i.cat)>=0);});
 }
 function cartNoDiscNames(){var nd=S.cart.filter(function(i){return i.noDiscount;});return nd.map(function(i){return i.name;}).filter(function(n,ix,a){return a.indexOf(n)===ix;});}
+/* 購物車內每一件都是不參與折扣的作品 → 才完全無法使用優惠 */
+function cartAllNoDisc(){return S.cart.length>0&&S.cart.every(function(i){return i.noDiscount;});}
 function revalidateDiscount(){
   if(!S.appliedDiscount)return false;
-  var ndn=cartNoDiscNames();
-  if(ndn.length){S.appliedDiscount=null;showToast('「'+ndn.join('、')+'」不適用任何折扣，已為您取消優惠');return true;}
+  if(cartAllNoDisc()){S.appliedDiscount=null;showToast('「'+cartNoDiscNames().join('、')+'」不適用任何折扣，已為您取消優惠');return true;}
   var bad=discIneligibleItems(S.appliedDiscount);
   if(bad.length){var nm=bad.map(function(i){return i.name;}).filter(function(n,ix,a){return a.indexOf(n)===ix;});S.appliedDiscount=null;showToast('「'+nm.join('、')+'」非此折扣適用品項，已為您取消優惠');return true;}
+  if(discEligibleSub(S.appliedDiscount)<=0){S.appliedDiscount=null;showToast('目前購物車內沒有可套用此折扣的作品，已為您取消優惠');return true;}
   return false;
 }
 function discRate(p){p=parseFloat(p)||0;if(p<=0)return 0;return p<10?p/10:p/100;}
 function appliedDiscAmt(){
   var disc=S.appliedDiscount;if(!disc)return 0;
-  var scoped=(disc.incCats&&disc.incCats.length)||(disc.exCats&&disc.exCats.length);
-  var base=scoped?discEligibleSub(disc):S.cart.reduce(function(s,i){return s+i.price*i.qty;},0);
+  var base=discEligibleSub(disc);
+  if(base<=0)return 0;
   if(disc.type==='percent'){var r=discRate(disc.percent);if(r<=0||r>=1)return 0;return Math.round(base*(1-r));}
   var amt=disc.amount||0;
-  if(scoped){if(base<=0)return 0;if(amt>base)amt=base;}
+  if(amt>base)amt=base;
   return amt;
 }
 function discActive(d){
@@ -2086,12 +2097,14 @@ function applyDiscount(){
   var ds=discActive(f);
   if(ds==='before'){showToast('此折扣 '+f.start+' 起才能使用');return;}
   if(ds==='after'){showToast('此折扣碼已過期');return;}
-  var _ndn=cartNoDiscNames();
-  if(_ndn.length){showToast('「'+_ndn.join('、')+'」不適用任何折扣，請移除後再使用優惠');return;}
+  if(cartAllNoDisc()){showToast('「'+cartNoDiscNames().join('、')+'」不適用任何折扣，目前無法使用優惠');return;}
   var _bad=discIneligibleItems(f);
   if(_bad.length){var _nm=_bad.map(function(i){return i.name;}).filter(function(n,ix,a){return a.indexOf(n)===ix;});showToast('「'+_nm.join('、')+'」非此折扣適用品項，請移除後再使用此折扣');return;}
+  if(!discEligibleItems(f).length){showToast('購物車內沒有可套用此折扣的作品');return;}
   if(discUsedByUser(f)){showToast('此折扣碼每個帳號限用一次，您已使用過');return;}
-  S.appliedDiscount=f;var amt=appliedDiscAmt();showToast('折扣套用成功！折扣 NT$ '+amt+'');renderCart();
+  S.appliedDiscount=f;var amt=appliedDiscAmt();
+  var _skip=cartNoDiscNames();
+  showToast('折扣套用成功！折扣 NT$ '+amt+(_skip.length?'（「'+_skip.join('、')+'」不參與折扣）':''));renderCart();
 }
 function removeDiscount(){
   if(!S.appliedDiscount){renderCart();return;}
@@ -2197,17 +2210,34 @@ function updateCodOption(){
 function depositTotal(){return S.cart.filter(function(i){return i.isCustom;}).reduce(function(s,i){return s+i.deposit*i.qty;},0);}
 function orderTotal(){var sub=S.cart.reduce(function(s,i){return s+i.price*i.qty;},0);var d=appliedDiscAmt();return sub+calcShip()-d;}
 function customRemainder(){return S.cart.filter(function(i){return i.isCustom;}).reduce(function(s,i){return s+Math.max(0,i.price-i.deposit)*i.qty;},0);}
-function payableNow(){return (S.cart.some(function(i){return i.isCustom;})&&S.customDepositChoice==='deposit')?(orderTotal()-customRemainder()-calcShip()):orderTotal();}
+/* 共用：只匯訂金時，折扣一律先折在尾款；尾款不足折抵時，剩餘金額才折在本次付款
+   remBase = 客製尾款（未折扣）+ 運費；total 為已扣折扣的訂單合計 */
+function splitPayAmounts(remBase,total,disc,depOnly){
+  if(!depOnly)return {payNow:total,remainder:0,discToRemain:0};
+  var toRem=Math.min(Math.max(0,disc||0),remBase);
+  var remainder=remBase-toRem;
+  return {payNow:total-remainder,remainder:remainder,discToRemain:toRem};
+}
+function orderPaySplit(o){
+  var remBase=(o.items||[]).filter(function(i){return i.isCustom;}).reduce(function(s,i){return s+Math.max(0,i.price-i.deposit)*i.qty;},0)+(o.shipping||0);
+  return splitPayAmounts(remBase,o.total,o.discount||0,!!(o.hasCustom&&o.customDepositChoice==='deposit'));
+}
+function cartPaySplit(){
+  var depOnly=S.cart.some(function(i){return i.isCustom;})&&S.customDepositChoice==='deposit';
+  return splitPayAmounts(customRemainder()+calcShip(),orderTotal(),appliedDiscAmt(),depOnly);
+}
+function payableNow(){return cartPaySplit().payNow;}
 function updateDepositSummary(){
-  var total=orderTotal(),remainder=customRemainder()+calcShip(),payNow=total-remainder;
+  var sp=cartPaySplit();
   var depOnly=S.cart.some(function(i){return i.isCustom;})&&S.customDepositChoice==='deposit';
   var row=document.getElementById('payNowRow'),rem=document.getElementById('remainRow');
   if(row){
-    if(depOnly){row.style.display='flex';var a=row.querySelector('.pn-amt');if(a)a.textContent='NT$ '+payNow;
-      if(rem){rem.style.display='flex';var b=rem.querySelector('.rm-amt');if(b)b.textContent='NT$ '+remainder;}}
+    if(depOnly){row.style.display='flex';var a=row.querySelector('.pn-amt');if(a)a.textContent='NT$ '+sp.payNow;
+      if(rem){rem.style.display='flex';var b=rem.querySelector('.rm-amt');if(b)b.textContent='NT$ '+sp.remainder;
+        var lb=rem.querySelector('.rm-lbl');if(lb)lb.textContent='尾款（含運費'+(sp.discToRemain?'，已折抵優惠 NT$ '+sp.discToRemain:'')+'，客製完成後通知）';}}
     else{row.style.display='none';if(rem)rem.style.display='none';}
   }
-  var lpa=document.getElementById('linePayAmt');if(lpa)lpa.textContent='NT$ '+payableNow();
+  var lpa=document.getElementById('linePayAmt');if(lpa)lpa.textContent='NT$ '+sp.payNow;
 }
 function linePayBlock(){
   return '<div class="pay-info" style="border-left-color:#06C755">'
@@ -2291,6 +2321,7 @@ function placeOrder(total){
   var _sc=S.cart.find(function(i){var p=S.products.find(function(x){return x.id===i.id;});return p&&p.showcase;});
   if(_sc){showToast('「'+_sc.name+'」為展示作品、不開放購買，請先從購物車移除');return;}
   if(revalidateDiscount()){renderCart();return;}
+  total=orderTotal(); /* 以當下狀態重算，避免按鈕上的金額過期 */
   var nm=(document.getElementById('rcvName')||{}).value||'';
   var ph=(document.getElementById('rcvPhone')||{}).value||'';
   if(!nm.trim()||!ph.trim()){showToast('請填寫收件人資訊');return;}
@@ -2372,9 +2403,8 @@ function placeOrder(total){
   S.customDepositChoice=null;S.customRemainChoice=null;
   updateCartBadge();
   var msg='',pi='';
-  var remainder=ci.reduce(function(s,i){return s+(i.price-i.deposit)*i.qty;},0)+o.shipping;
-  var payNow=(hasC&&o.customDepositChoice==='deposit')?(total-remainder):total;
-  var tail=(hasC&&o.customDepositChoice==='deposit')?'，尾款 NT$ '+remainder+'（含運費，客製完成後通知）':'';
+  var _sp=orderPaySplit(o),remainder=_sp.remainder,payNow=_sp.payNow;
+  var tail=(hasC&&o.customDepositChoice==='deposit')?'，尾款 NT$ '+remainder+'（含運費'+(_sp.discToRemain?'，已折抵優惠 NT$ '+_sp.discToRemain:'')+'，客製完成後通知）':'';
   if(o.payment==='bank'){
     msg=(hasC&&o.customDepositChoice==='deposit')?('本次需付款 NT$ '+payNow+'（一般商品＋客製訂金）'+tail):'請依以下資訊完成匯款，確認後將盡快出貨';
     pi='<strong> 台新銀行（812）</strong>帳號：20730100008145<br>本次應付 <strong>NT$ '+payNow+'</strong>，匯款後請至訂單頁面上傳付款截圖通知付款';
@@ -2653,10 +2683,10 @@ function memberCouponsBlock(){
 }
 function applyMemberCoupon(id){
   var c=(S.currentUser.coupons||[]).find(function(x){return x.id===id;});if(!c)return;
-  var _ndn=cartNoDiscNames();
-  if(_ndn.length){showToast('「'+_ndn.join('、')+'」不適用任何折扣，請移除後再使用優惠');return;}
+  if(cartAllNoDisc()){showToast('「'+cartNoDiscNames().join('、')+'」不適用任何折扣，目前無法使用優惠');return;}
   S.appliedDiscount={code:c.desc,amount:c.amount||0,type:c.type,percent:c.percent,_couponId:c.id};
-  showToast('已套用專屬折扣 '+cpnLabel(c)+'');renderCart();
+  var _skip=cartNoDiscNames();
+  showToast('已套用專屬折扣 '+cpnLabel(c)+(_skip.length?'（「'+_skip.join('、')+'」不參與折扣）':''));renderCart();
 }
 function renderMemberCoupons(){
   var el=document.getElementById('memberCouponAdmin');if(!el)return;
@@ -3133,10 +3163,10 @@ function updateCodBank(){
 }
 
 function mailPayInfo(o){
-  var remainder=(o.items||[]).filter(function(i){return i.isCustom;}).reduce(function(s,i){return s+Math.max(0,(i.price-i.deposit))*i.qty;},0)+(o.shipping||0);
   var depOnly=o.hasCustom&&o.customDepositChoice==='deposit';
-  return {pay_now:depOnly?(o.total-remainder):o.total,
-    balance:depOnly?('NT$ '+remainder+'（含運費，客製完成後通知）'):'無'};
+  var sp=orderPaySplit(o);
+  return {pay_now:sp.payNow,
+    balance:depOnly?('NT$ '+sp.remainder+'（含運費'+(sp.discToRemain?'，已折抵優惠 NT$ '+sp.discToRemain:'')+'，客製完成後通知）'):'無'};
 }
 function sendOrderEmail(o){
   try{
@@ -3986,12 +4016,11 @@ function cancelMoney(id,which){
 }
 function moneyStatusBlock(o){
   if(!(o.hasCustom&&o.customDepositChoice==='deposit'))return '';
-  var remainder=(o.items||[]).filter(function(i){return i.isCustom;}).reduce(function(s,i){return s+(i.price-i.deposit)*i.qty;},0)+(o.shipping||0);
-  var payNow=o.total-remainder;
+  var _sp=orderPaySplit(o),remainder=_sp.remainder,payNow=_sp.payNow;
   var tag=function(ok){return ok?'<b style="color:#2e7d32">已收 ✓</b>':'<b style="color:var(--dusty-rose)">待收</b>';};
   return '<div style="margin-top:12px;background:var(--warm-ivory);border-radius:10px;padding:10px 14px;font-size:13px;line-height:2">'
     +'<div>訂金 NT$ '+payNow+'（先銀行匯款）：'+tag(o.depositPaid)+'</div>'
-    +'<div>尾款 NT$ '+remainder+'（賣貨便貨到付款）：'+tag(o.balancePaid)+'</div></div>';
+    +'<div>尾款 NT$ '+remainder+'（賣貨便貨到付款'+(_sp.discToRemain?'，已折抵優惠 NT$ '+_sp.discToRemain:'')+'）：'+tag(o.balancePaid)+'</div></div>';
 }
 
 
