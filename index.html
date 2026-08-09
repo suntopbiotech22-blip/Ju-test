@@ -776,7 +776,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
 
       <div class="doc-sec">
         <h4>一、前言</h4>
-        <p>就手作（以下簡稱「本店」）非常重視您的個人資料保護。依《個人資料保護法》第 8 條規定，謹向您說明本店蒐集、處理及利用個人資料的相關事項，請您詳細閱讀。</p>
+        <p>啾手作（以下簡稱「本店」）非常重視您的個人資料保護。依《個人資料保護法》第 8 條規定，謹向您說明本店蒐集、處理及利用個人資料的相關事項，請您詳細閱讀。</p>
         <p>本政策適用於您使用本網站（juaccessories.com）所進行的瀏覽、註冊會員、下單購買、付款回報及聯絡客服等行為。若您不同意本政策內容，請停止使用本網站服務。</p>
       </div>
 
@@ -784,7 +784,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
         <h4>二、我們是誰與聯絡方式</h4>
         <ul>
           <li>公司名稱：<b>日梢生技有限公司</b>（統一編號：90588451）</li>
-          <li>品牌名稱：<b>就手作</b></li>
+          <li>品牌名稱：<b>啾手作</b></li>
           <li>客服信箱：<b>suntop.biotech22@gmail.com</b></li>
           <li>Instagram：<b>@ju.accessories.tw</b></li>
           <li>客服時間：<b>週一至週五 9:00–17:00</b>（例假日順延）</li>
@@ -837,7 +837,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
           <li>儲存於您裝置本機的購物車內容與收藏清單</li>
           <li>為防止機器人濫用而由 Google reCAPTCHA 產生之風險評估資訊</li>
         </ul>
-        <div class="doc-note">本店<b>不會</b>蒐集您的身分證統一編號、出生年月日、病歷、醫療、基因、性生活、健康檢查及犯罪前科等特種個人資料。</div>
+        <div class="doc-note">本店<b>不會</b>蒐集您的身分證統一編號、出生年月日，亦不會蒐集個人資料保護法第 6 條所定之特種個人資料。</div>
       </div>
 
       <div class="doc-sec">
@@ -991,7 +991,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0809c</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0809d</div>
 </footer>
 
 <!-- MODALS -->
@@ -2598,10 +2598,26 @@ function placeOrder(total){
     if(rr)S.customRemainChoice=rr.value;
     else{showToast('請選擇尾款處理方式');return;}
   }
-  var _shipWarn=checkShipInfo({phone:ph,zip:_zipV,addr:_addrRaw,
-    checkAddr:(S.paymentMethod!=='cod'&&S.shippingMethod==='home')});
-  if(_shipWarn.length&&!S._shipConfirmed){
-    showShipCheck(_shipWarn,function(){S._shipConfirmed=true;placeOrder(total);},'請再確認寄送資訊','資訊不完整可能導致包裹無法送達。請返回修改，或確認無誤後再送出訂單。');
+  if(!S._shipConfirmed){
+    var _rvInfo={pay:S.paymentMethod,ship:S.shippingMethod,guest:!S.currentUser,
+      name:nm.trim(),phone:ph.trim(),ig:igV.trim(),email:gEmail,note:noteV.trim(),
+      store:_storeV,storeAddr:_storeAddrV,zip:_zipV,addr:_addrRaw};
+    var _rows=orderReviewRows(_rvInfo);
+    if(hasC&&S.customDepositChoice==='deposit'){
+      var _rsp=cartPaySplit();
+      _rows.push(['本次應付','NT$ '+_rsp.payNow+'（一般作品＋客製訂金）']);
+      _rows.push(['尾款','NT$ '+_rsp.remainder+'（含運費'+(_rsp.discToRemain?'，已折抵優惠 NT$ '+_rsp.discToRemain:'')+'，客製完成後通知）']);
+    }else{
+      _rows.push(['本次應付','NT$ '+total]);
+    }
+    var _warn=checkShipInfo({phone:ph,zip:_zipV,addr:_addrRaw,
+      checkAddr:(S.paymentMethod!=='cod'&&S.shippingMethod==='home')});
+    if(S.paymentMethod!=='cod'&&S.shippingMethod==='711'){
+      if(!_storeV.trim())_warn.push('尚未填寫 7-11 店名或店號');
+      if(!_storeAddrV.trim())_warn.push('尚未填寫 7-11 門市地址');
+    }
+    if(!S.currentUser&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(gEmail))_warn.push('電子郵件格式似乎不正確，訂單通知信可能寄不到');
+    showOrderReview(_rows,_warn,function(){S._shipConfirmed=true;placeOrder(total);});
     return;
   }
   S._shipConfirmed=false;
@@ -3290,6 +3306,48 @@ function checkShipInfo(o){
   if(o.phone!=null){t=phoneIssue(o.phone);if(t)w.push(t);}
   if(o.checkAddr){t=zipIssue(o.zip,o.addr);if(t)w.push(t);t=addrIssue(o.addr);if(t)w.push(t);}
   return w;
+}
+/* 送出前的最後確認：只列出「這筆訂單實際會用到」的資訊，避免混淆 */
+function orderReviewRows(o){
+  var r=[];
+  r.push(['付款方式',o.pay==='bank'?'銀行匯款':o.pay==='linepay'?'LINE Pay':'7-11 賣貨便貨到付款']);
+  if(o.pay==='cod'){
+    r.push(['寄送方式','7-11 賣貨便（下單後提供取貨連結）']);
+  }else if(o.ship==='711'){
+    r.push(['寄送方式','7-11 超商取貨']);
+    r.push(['取貨門市',o.store||'']);
+    r.push(['門市地址',o.storeAddr||'']);
+  }else{
+    r.push(['寄送方式','宅配到府']);
+    r.push(['收件地址',((o.zip?o.zip+' ':'')+(o.addr||'')).trim()]);
+  }
+  r.push(['收件人',o.name||'']);
+  r.push(['聯絡電話',o.phone||'']);
+  if(o.guest)r.push(['電子郵件',o.email||'']);
+  if(o.ig)r.push(['Instagram',o.ig]);
+  if(o.note)r.push(['備註',o.note]);
+  return r;
+}
+function showOrderReview(rows,warns,onOk){
+  var _m=document.getElementById('shipCheckModal');
+  var _h=_m.querySelector('h3');if(_h)_h.textContent='送出前請再確認一次';
+  var b=document.getElementById('shipCheckBody');
+  var warnHtml=warns.length
+    ?'<div style="background:var(--cream);border:1px solid var(--gold);border-radius:10px;padding:11px 13px;margin-bottom:12px">'
+      +'<div style="font-weight:600;color:var(--dusty-rose);margin-bottom:4px">以下項目請再檢查</div>'
+      +warns.map(function(t){return '<div style="margin:3px 0">・'+esc(t)+'</div>';}).join('')+'</div>'
+    :'';
+  var rowsHtml=rows.map(function(kv){
+    var miss=!String(kv[1]||'').trim();
+    return '<div style="display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--warm-ivory)">'
+      +'<span style="flex:none;width:76px;color:var(--text-light);font-size:12.5px">'+esc(kv[0])+'</span>'
+      +'<span style="flex:1;min-width:0;word-break:break-all;'+(miss?'color:var(--dusty-rose);font-weight:600':'color:var(--cocoa)')+'">'
+      +(miss?'尚未填寫':esc(String(kv[1])))+'</span></div>';
+  }).join('');
+  b.innerHTML=warnHtml+'<div>'+rowsHtml+'</div>'
+    +'<div style="margin-top:12px;font-size:12.5px;color:var(--text-light);line-height:1.8">請確認以上資訊正確。資訊有誤可能導致包裹無法送達；送出後如需修改，請儘快與我們聯繫。</div>';
+  document.getElementById('shipCheckOkBtn').onclick=function(){closeModal('shipCheckModal');onOk();};
+  _m.classList.add('open');
 }
 function showShipCheck(list,onOk,title,note){
   var _m=document.getElementById('shipCheckModal');
