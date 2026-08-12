@@ -991,7 +991,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0813b</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0813c</div>
 </footer>
 
 <!-- MODALS -->
@@ -1114,6 +1114,35 @@ var S={
   emailjs:{publicKey:'0fDgbRNsr5gYK1db6',serviceId:'service_v1zwgeo',templateSeller:'template_7fudb3h',templateCustomer:'template_lg542mk',notifyEmail:'',recaptchaSiteKey:'6LeePEItAAAAAMcEpujIHZ3v7eheEtftxrJLi5yB'}
 };
 
+/* 版本廣播：SITE_BUILD 只能遞增（YYYYMMDD + 當日第幾個版）。
+   舊分頁會從 config 即時收到新 build，就知道自己過期了。 */
+var SITE_VER='0813c',SITE_BUILD=202608133;
+function publishSiteBuild(cfg){
+  if(!(cfg&&typeof cfg==='object'))cfg={};
+  var cur=parseInt(cfg.siteBuild,10)||0;
+  if(SITE_BUILD<=cur)return;
+  if(!(S.currentUser&&S.currentUser.isAdmin))return;
+  if(S._buildPublished)return;S._buildPublished=true;
+  if(window.FB&&window.FB.saveConfig)window.FB.saveConfig({siteBuild:SITE_BUILD,siteVersion:SITE_VER}).catch(function(){S._buildPublished=false;});
+}
+function checkSiteBuild(cfg){
+  var latest=parseInt(cfg&&cfg.siteBuild,10)||0;
+  if(latest>SITE_BUILD){S._staleBuild=true;showUpdateBar(cfg&&cfg.siteVersion);}
+  else publishSiteBuild(cfg);
+}
+function showUpdateBar(ver){
+  if(document.getElementById('updateBar'))return;
+  var b=document.createElement('div');
+  b.id='updateBar';
+  b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:var(--cocoa);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;font-size:13px;line-height:1.6;box-shadow:0 -2px 14px rgba(0,0,0,.18)';
+  b.innerHTML='<span>網站已更新'+(ver?'（'+esc(ver)+'）':'')+'，請重新整理以取得最新價格與庫存</span>'
+    +'<button onclick="reloadForUpdate()" style="background:#fff;color:var(--cocoa);border:none;border-radius:20px;padding:7px 18px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0">立即更新</button>';
+  document.body.appendChild(b);
+}
+function reloadForUpdate(){
+  try{location.replace(location.pathname+'?v='+Date.now()+(location.hash||''));}
+  catch(e){location.reload();}
+}
 var ADMIN_EMAILS=['turisms09@gmail.com','suntop.biotech22@gmail.com'];
 function isAdminEmail(e){return ADMIN_EMAILS.indexOf((e||'').trim().toLowerCase())>=0;}
 var DEFAULT_PRODUCTS=S.products.slice();
@@ -1127,6 +1156,7 @@ function startFirebaseShop(){
     if(pa&&pa.classList.contains('active'))renderAdmin();
   });
   if(window.FB.subscribeConfig){window.FB.subscribeConfig(function(cfg){
+    S._lastCfg=cfg;checkSiteBuild(cfg);
     if(cfg&&Array.isArray(cfg.categories)){
       S.categories=['全部'].concat(cfg.categories.filter(function(c){return c&&c!=='全部';}));
       if(S.selectedCat!=='全部'&&S.categories.indexOf(S.selectedCat)<0)S.selectedCat='全部';
@@ -1167,12 +1197,14 @@ function startFirebaseShop(){
       if(document.getElementById('promoAdmin'))renderPromoAdmin();
       var _pcart=document.getElementById('page-cart');if(_pcart&&_pcart.classList.contains('active'))renderCart();
     }
+    S._promoSig=promoSig();
     var _ppg=document.getElementById('page-product');
     if(_ppg&&_ppg.classList.contains('active')&&S._pendingProduct==null&&S._openProductId!=null)renderProductPage(S._openProductId);
   });}
   if(window.FB.onAuth){window.FB.onAuth(handleAuthUser);}
 }
 function refreshAuthUI(){
+  try{if(S.currentUser&&S.currentUser.isAdmin&&!S._staleBuild)publishSiteBuild(S._lastCfg);}catch(e){}
   var pc=document.getElementById('page-cart');if(pc&&pc.classList.contains('active'))renderCart();
   var pm=document.getElementById('page-member');if(pm&&pm.classList.contains('active')&&typeof renderMemberProfile==='function')renderMemberProfile();
 }
@@ -1251,8 +1283,13 @@ function handleAuthUser(user){
   }
 }
 window.addEventListener('fb-ready',startFirebaseShop);
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState!=='visible')return;
+  var sig=promoSig();
+  if(sig!==S._promoSig){S._promoSig=sig;repaintPromo();}
+});
 
-document.addEventListener('DOMContentLoaded',function(){loadCart();loadShopState();renderHomeProducts();renderLookbook();renderShopProducts();renderShowcaseProducts();updateCartBadge();renderTicker();renderCatSelect();renderCatAdmin();route();if(window.emailjs&&S.emailjs&&S.emailjs.publicKey){try{emailjs.init({publicKey:S.emailjs.publicKey});}catch(e){}}setTimeout(function(){if(!S._prodsReady){S._prodsReady=true;renderHomeProducts();renderShopProducts();}},3500);renderCaptchaWidgets();});
+document.addEventListener('DOMContentLoaded',function(){loadCart();loadShopState();renderHomeProducts();renderLookbook();renderShopProducts();renderShowcaseProducts();updateCartBadge();renderTicker();renderCatSelect();renderCatAdmin();route();if(window.emailjs&&S.emailjs&&S.emailjs.publicKey){try{emailjs.init({publicKey:S.emailjs.publicKey});}catch(e){}}setTimeout(function(){if(!S._prodsReady){S._prodsReady=true;renderHomeProducts();renderShopProducts();}},3500);renderCaptchaWidgets();startPromoWatch();});
 document.addEventListener('contextmenu',function(e){if(e.target&&e.target.tagName==='IMG')e.preventDefault();});
 document.addEventListener('dragstart',function(e){if(e.target&&e.target.tagName==='IMG')e.preventDefault();});
 
@@ -1562,6 +1599,30 @@ function promoApplies(p){
   if(pr.cat&&pr.cat!=='全部'&&p.cat!==pr.cat)return false;
   if(pr.excludeNew&&p.isNew)return false;
   return true;
+}
+function promoSig(){
+  var pr=S.promo||{};
+  var sig=(pr.enabled?'1':'0')+'|'+(pr.type||'')+'|'+(pr.amount||0)+'|'+(pr.percent||0)+'|'+(pr.cat||'')+'|'+discActive(pr);
+  (S.discounts||[]).forEach(function(d){sig+='|'+(d.code||'')+':'+discActive(d);});
+  (S.gifts||[]).forEach(function(g){sig+='|g'+(g.name||'')+':'+discActive(g);});
+  return sig;
+}
+function repaintPromo(){
+  renderHomeProducts();renderShopProducts();
+  var pc=document.getElementById('page-cart');
+  if(pc&&pc.classList.contains('active'))renderCart();
+  var pp=document.getElementById('page-product');
+  if(pp&&pp.classList.contains('active')&&S._openProductId!=null&&typeof renderProductPage==='function')renderProductPage(S._openProductId);
+}
+function startPromoWatch(){
+  if(S._promoTimer)clearInterval(S._promoTimer);
+  S._promoSig=promoSig();
+  S._promoTimer=setInterval(function(){
+    var sig=promoSig();
+    if(sig===S._promoSig)return;
+    S._promoSig=sig;
+    repaintPromo();
+  },60000);
 }
 function promoPrice(base,p){
   if(!promoApplies(p))return base;
@@ -2661,6 +2722,7 @@ function placeOrder(total){
   if(_pv){showToast('「'+_pv.name+'」目前為搶先預覽、尚未開放購買，請先從購物車移除');return;}
   var _sc=S.cart.find(function(i){var p=S.products.find(function(x){return x.id===i.id;});return p&&p.showcase;});
   if(_sc){showToast('「'+_sc.name+'」為展示作品、不開放購買，請先從購物車移除');return;}
+  if(S._staleBuild){showToast('網站已更新，請先按下方「立即更新」重新整理後再送出訂單');showUpdateBar((S._lastCfg||{}).siteVersion);return;}
   var _stkMsg=checkCartStock();
   if(_stkMsg){
     S._shipConfirmed=false;
