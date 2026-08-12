@@ -991,7 +991,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0811a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0813b</div>
 </footer>
 
 <!-- MODALS -->
@@ -1052,7 +1052,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
       <div class="fg" style="grid-column:1/-1"><label>材質（可留空）</label><input id="editMaterial" placeholder="例：UV 膠、乾燥花、合金"></div>
       <div class="fg" style="display:flex;align-items:center;gap:10px"><input type="checkbox" id="editHot" style="width:auto"><label style="margin-bottom:0">熱銷商品</label></div>
       <div class="fg" style="display:flex;align-items:center;gap:10px"><input type="checkbox" id="editNew" style="width:auto"><label style="margin-bottom:0">新品標籤</label></div>
-      <div class="fg"><label>銷售方式</label><select id="editSaleMode" onchange="toggleSaleMode()"><option value="instock">現貨（可立即出貨）</option><option value="preorder">預購（接單後製作，不限量）</option></select></div>
+      <div class="fg"><label>銷售方式</label><select id="editSaleMode" onchange="toggleSaleMode()"><option value="instock">現貨（可立即出貨）</option><option value="preorder">預購（接單後製作，不限量）</option><option value="plimit">限量預購（接單後製作，限組數）</option></select></div>
       <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editNoDiscount" style="width:auto"><label style="margin-bottom:0">禁止使用所有折扣（此作品不參與折扣碼、會員優惠與分類促銷）</label></div>
       <div class="fg" id="stockField"><label id="stockFieldLabel">庫存數量（可留空＝不限量）</label><input type="number" id="editStock" placeholder="例：5"></div>
       <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editCanCustom" style="width:auto"><label style="margin-bottom:0">可客製（可改顏色／字樣，不需訂金）</label></div>
@@ -1458,23 +1458,81 @@ function specStockMap(p){
   var m={};(p.specs||[]).forEach(function(s){if(s&&(s.name||'').trim()&&s.stock!=null&&s.stock!=='')m[s.name]=parseInt(s.stock,10)||0;});
   return m;
 }
-function applyOrderStock(o,sign){
-  if(!o||!o.items)return;
-  o.items.forEach(function(it){
+function orderStockJobs(items){
+  var jobs={};
+  (items||[]).forEach(function(it){
     var p=S.products.find(function(x){return x.id===it.id;});
-    if(!p)return;
+    if(!p||!p._docId)return;
+    var j=jobs[p._docId]||(jobs[p._docId]={p:p,need:0,specs:{}});
     if(p.specs&&p.specs.length){
       var sp=getSpecObj(p,it.spec);
       if(!sp||sp.stock==null||sp.stock==='')return;
-      var n=Math.max(0,(parseInt(sp.stock,10)||0)+sign*it.qty);
-      sp.stock=n;
-      if(p._docId&&window.FB&&window.FB.updateProduct){window.FB.updateProduct(p._docId,{specStock:specStockMap(p)}).catch(function(e){console.error('stock update',e&&(e.code||e.message));});}
+      var k=sp.name||'';j.specs[k]=(j.specs[k]||0)+it.qty;
     }else{
       if(p.stock==null||p.stock==='')return;
-      var n2=Math.max(0,(parseInt(p.stock,10)||0)+sign*it.qty);
-      p.stock=n2;
-      if(p._docId&&window.FB&&window.FB.updateProduct){window.FB.updateProduct(p._docId,{stock:n2}).catch(function(e){console.error('stock update',e&&(e.code||e.message));});}
+      j.need+=it.qty;
     }
+  });
+  return jobs;
+}
+function reserveOrderStock(items){
+  if(!window.FB||!window.FB.reserveStock)return Promise.resolve({ok:true,legacy:true});
+  var jobs=orderStockJobs(items);
+  var ids=Object.keys(jobs).filter(function(d){return jobs[d].need||Object.keys(jobs[d].specs).length;});
+  if(!ids.length)return Promise.resolve({ok:true});
+  var done=[];
+  return ids.reduce(function(chain,docId){
+    return chain.then(function(){
+      var j=jobs[docId];
+      return window.FB.reserveStock(docId,j.need,j.specs).then(function(){done.push(docId);});
+    });
+  },Promise.resolve()).then(function(){return {ok:true};}).catch(function(e){
+    done.forEach(function(docId){
+      var j=jobs[docId],back={};
+      Object.keys(j.specs).forEach(function(k){back[k]=j.specs[k];});
+      if(window.FB.adjustStock)window.FB.adjustStock(docId,j.need,back).catch(function(){});
+    });
+    return {ok:false,err:e||{}};
+  });
+}
+function applyOrderStock(o,sign,localOnly){
+  if(!o||!o.items)return;
+  var jobs={};
+  o.items.forEach(function(it){
+    var p=S.products.find(function(x){return x.id===it.id;});
+    if(!p||!p._docId)return;
+    var j=jobs[p._docId]||(jobs[p._docId]={p:p,delta:0,specs:{}});
+    if(p.specs&&p.specs.length){
+      var sp=getSpecObj(p,it.spec);
+      if(!sp||sp.stock==null||sp.stock==='')return;
+      sp.stock=Math.max(0,(parseInt(sp.stock,10)||0)+sign*it.qty);
+      var key=sp.name||'';
+      j.specs[key]=(j.specs[key]||0)+sign*it.qty;
+    }else{
+      if(p.stock==null||p.stock==='')return;
+      p.stock=Math.max(0,(parseInt(p.stock,10)||0)+sign*it.qty);
+      j.delta+=sign*it.qty;
+    }
+  });
+  if(!localOnly)Object.keys(jobs).forEach(function(docId){
+    var j=jobs[docId];
+    if(!j.delta&&!Object.keys(j.specs).length)return;
+    if(!window.FB)return;
+    var run;
+    if(window.FB.adjustStock){run=window.FB.adjustStock(docId,j.delta,j.specs);}
+    else if(window.FB.updateProduct){
+      var patch={};
+      if(j.delta)patch.stock=j.p.stock;
+      if(Object.keys(j.specs).length)patch.specStock=specStockMap(j.p);
+      run=window.FB.updateProduct(docId,patch);
+    }else{return;}
+    run.catch(function(e){
+      var code=(e&&(e.code||e.message))||'unknown';
+      console.error('stock update failed',docId,code);
+      o.stockSyncFailed=true;o.stockSyncErr=String(code);
+      try{persistOrder(o);}catch(_e){}
+      if(S.currentUser&&S.currentUser.isAdmin)showToast('\u5eab\u5b58\u540c\u6b65\u5931\u6557\uff1a'+code);
+    });
   });
   if(S._prodsReady){renderHomeProducts();renderShopProducts();}
   var pa=document.getElementById('page-admin');if(pa&&pa.classList.contains('active'))renderInventory();
@@ -1533,7 +1591,7 @@ function pCard(p){
   var btnHtml=p.preview
     ?'</div><button class="add-btn" onclick="event.preventDefault();event.stopPropagation();openDetail('+p.id+')">搶先看</button>'
     :soldOut
-    ?'</div><button class="add-btn" disabled style="opacity:.45;cursor:not-allowed" onclick="event.preventDefault();event.stopPropagation()">售完</button>'
+    ?'</div><button class="add-btn" disabled style="opacity:.45;cursor:not-allowed" onclick="event.preventDefault();event.stopPropagation()">'+(p.limitedPre?'已額滿':'售完')+'</button>'
     :(hasSpecs
       ?'</div><button class="add-btn" onclick="event.preventDefault();event.stopPropagation();openDetail('+p.id+')">選規格</button>'
       :'</div><button class="add-btn" onclick="event.preventDefault();event.stopPropagation();addToCart('+p.id+')">+ 加入</button>');
@@ -1546,7 +1604,7 @@ function pCard(p){
     +'</div><div class="product-info">'
     +'<div class="product-name">'+p.name+'</div>'
     +(hasPromo?'<div style="margin:2px 0 4px"><span style="display:inline-block;background:var(--gold);color:#fff;font-size:11px;border-radius:12px;padding:1px 9px">'+((S.promo&&S.promo.label)||'優惠')+'</span></div>':'')
-    +((p.inStock&&!p.showcase)?'<div style="margin:2px 0 5px"><span style="display:inline-block;background:#E7F3EA;color:#2E6B3E;font-size:11px;border-radius:12px;padding:1px 9px">現貨</span></div>':'')
+    +((p.inStock&&!p.showcase)?'<div style="margin:2px 0 5px"><span style="display:inline-block;background:#E7F3EA;color:#2E6B3E;font-size:11px;border-radius:12px;padding:1px 9px">現貨</span></div>':((p.limitedPre&&!p.showcase&&!p.preview)?'<div style="margin:2px 0 5px"><span style="display:inline-block;background:#FBF0DC;color:#8A6A22;font-size:11px;border-radius:12px;padding:1px 9px">限量預購</span></div>':''))
     +(p.showcase
       ?'<div class="product-price-row" style="justify-content:center"><button class="add-btn" onclick="event.preventDefault();event.stopPropagation();openDetail('+p.id+')">看作品</button>'
       :'<div class="product-price-row"><div>'+priceHtml+btnHtml)
@@ -1576,6 +1634,11 @@ function renderTicker(){
 }
 
 function isLive(p){return !p.draft&&!p.showcase;}
+function topProdOrder(){
+  var mx=0;
+  (S.products||[]).forEach(function(p){var o=parseInt(p.order,10)||0;if(o>mx)mx=o;});
+  return mx+1000;
+}
 function cmpProducts(a,b){
   var ap=a.pinned?1:0,bp=b.pinned?1:0;
   if(ap!==bp)return bp-ap;
@@ -1903,7 +1966,7 @@ function openOrderDetail(id,isAdmin){
     +'<div class="sum-row total"><span>合計</span><span>NT$ '+o.total+'</span></div>'
     +(depOnly?'<div class="sum-row" style="color:var(--dusty-rose);font-weight:600;border-top:1px dashed var(--taupe);padding-top:8px;margin-top:2px"><span>本次應付（一般＋訂金）</span><span>NT$ '+payNow+'</span></div>'
       +'<div class="sum-row" style="color:var(--text-light);font-size:13px"><span>尾款（含運費'+(_sp.discToRemain?'，已折抵優惠 NT$ '+_sp.discToRemain:'')+'，客製完成後通知）</span><span>NT$ '+remainder+'</span></div>':'')
-    +'</div>'+moneyStatusBlock(o);
+    +'</div>'+((isAdmin&&o.stockSyncFailed)?'<div style="background:#FBEAEA;border:1.5px solid #E4B7B7;border-radius:10px;padding:10px 12px;font-size:12.5px;color:#8B3A3A;margin-top:10px;line-height:1.7">\u26a0\ufe0f \u6b64\u55ae\u7684\u5eab\u5b58\u81ea\u52d5\u6263\u9664\u5931\u6557\uff08'+esc(o.stockSyncErr||'')+'\uff09\uff0c\u8acb\u5230\u300c\u5eab\u5b58\u300d\u624b\u52d5\u6838\u5c0d\u3002</div>':'')+moneyStatusBlock(o);
   if(o.payment==='bank'){
     html+='<div class="pay-info" style="margin-top:14px"><strong> 台新銀行（812）</strong>帳號：20730100008145<br>本次應付 <strong>NT$ '+payNow+'</strong></div>';
   }else if(o.payment==='linepay'){
@@ -2091,10 +2154,14 @@ function stockNumFor(p,spec){if(p&&p.specs&&p.specs.length)return specStockNum(g
 function stockBadgeHtml(p,spec){
   if(p.showcase)return '<div style="margin:-4px 0 12px"><span style="display:inline-block;background:#EFE9E1;color:#6B5B4B;font-size:12px;border-radius:14px;padding:3px 12px">展示作品・絕版（材料已無法再製）</span></div>';
   var soldOut=stockTracksFor(p,spec)&&stockNumFor(p,spec)<=0;
-  if(soldOut)return '<div style="margin:-4px 0 12px"><span style="display:inline-block;background:#FBEAEA;color:#B23B3B;font-size:12px;border-radius:14px;padding:3px 12px">售完</span></div>';
+  if(soldOut)return '<div style="margin:-4px 0 12px"><span style="display:inline-block;background:#FBEAEA;color:#B23B3B;font-size:12px;border-radius:14px;padding:3px 12px">'+(p.limitedPre?'已額滿':'售完')+'</span></div>';
   if(p.inStock){
     var n=stockNumFor(p,spec);
     return '<div style="margin:-4px 0 12px"><span style="display:inline-block;background:#E7F3EA;color:#2E6B3E;font-size:12px;border-radius:14px;padding:3px 12px">現貨'+(n!=null?'　庫存 '+n+' 件':'')+'</span></div>';
+  }
+  if(p.limitedPre){
+    var n2=stockNumFor(p,spec);
+    return '<div style="margin:-4px 0 12px"><span style="display:inline-block;background:#FBF0DC;color:#8A6A22;font-size:12px;border-radius:14px;padding:3px 12px">限量預購'+(n2!=null?'　還可接單 '+n2+' 組':'')+'</span></div>';
   }
   return '';
 }
@@ -2108,7 +2175,7 @@ function addCartBtnHtml(p,spec){
       +'<button class="sub-btn" disabled style="opacity:.5;cursor:not-allowed">尚未開放購買</button>';
   }
   var soldOut=stockTracksFor(p,spec)&&stockNumFor(p,spec)<=0;
-  if(soldOut)return '<button class="sub-btn" disabled style="opacity:.5;cursor:not-allowed">已售完</button>';
+  if(soldOut)return '<button class="sub-btn" disabled style="opacity:.5;cursor:not-allowed">'+(p.limitedPre?'已額滿、不再接單':'已售完')+'</button>';
   S._selQty=1;
   var stepper='<div style="display:flex;align-items:center;gap:14px;margin-bottom:12px">'
     +'<span style="font-size:13px;color:var(--cocoa);font-weight:500">數量</span>'
@@ -2136,6 +2203,40 @@ function allSpecsSoldOut(p){
   if(!tracked.length||tracked.length<p.specs.length)return false;
   return tracked.every(function(s){return specStockNum(s)<=0;});
 }
+function checkCartStock(){
+  var msgs=[],changed=false,want={};
+  S.cart.forEach(function(i){var k=i.id+'||'+(i.spec||'');want[k]=(want[k]||0)+i.qty;});
+  Object.keys(want).forEach(function(k){
+    var cut=k.indexOf('||'),id=parseInt(k.slice(0,cut),10),spec=k.slice(cut+2);
+    var p=S.products.find(function(x){return x.id===id;});
+    var label='';
+    if(!p||p.draft){
+      label=(S.cart.find(function(i){return i.id===id;})||{}).name||'部分作品';
+      S.cart=S.cart.filter(function(i){return i.id!==id;});changed=true;
+      msgs.push('\u300c'+label+'\u300d\u5df2\u4e0b\u67b6\uff0c\u5df2\u5f9e\u8cfc\u7269\u8eca\u79fb\u9664');return;
+    }
+    if(!stockTracksFor(p,spec))return;
+    var have=stockNumFor(p,spec);
+    if(want[k]<=have)return;
+    changed=true;
+    label=p.name+(spec?'\uff08'+spec+'\uff09':'');
+    if(have<=0){
+      S.cart=S.cart.filter(function(i){return !(i.id===id&&(i.spec||'')===spec);});
+      msgs.push('\u300c'+label+'\u300d\u5df2\u552e\u5b8c\uff0c\u5df2\u5f9e\u8cfc\u7269\u8eca\u79fb\u9664');
+    }else{
+      var left=have;
+      S.cart.forEach(function(i){
+        if(i.id!==id||(i.spec||'')!==spec)return;
+        var take=Math.min(i.qty,left);left-=take;i.qty=take;
+      });
+      S.cart=S.cart.filter(function(i){return i.qty>0;});
+      msgs.push('\u300c'+label+'\u300d\u50c5\u5269 '+have+' \u4ef6\uff0c\u5df2\u81ea\u52d5\u8abf\u6574\u6578\u91cf');
+    }
+  });
+  if(!changed)return '';
+  saveCart();updateCartBadge();
+  return msgs.join('\uff1b');
+}
 function cartQtyOf(id,spec){var sp=spec||'';return S.cart.reduce(function(s,i){return s+((i.id===id&&(i.spec||'')===sp)?i.qty:0);},0);}
 function addToCart(id,spec,qty){
   var p=S.products.find(function(x){return x.id===id;});if(!p)return;
@@ -2143,7 +2244,7 @@ function addToCart(id,spec,qty){
   if(p.preview){showToast('此作品搶先預覽中，尚未開放購買'+(p.previewNote?'（'+p.previewNote+'）':''));return;}
   spec=spec||'';
   qty=parseInt(qty,10)||1;if(qty<1)qty=1;var capped=false;
-  if(stockTracksFor(p,spec)){var _num=stockNumFor(p,spec);var _left=_num-cartQtyOf(id,spec);if(_left<=0){showToast(_num<=0?'此規格已售完':'已達庫存上限，僅剩 '+_num+' 件');return;}if(qty>_left){qty=_left;capped=true;}}
+  if(stockTracksFor(p,spec)){var _num=stockNumFor(p,spec);var _left=_num-cartQtyOf(id,spec);if(_left<=0){showToast(_num<=0?(p.limitedPre?'此項已額滿、不再接單':'此規格已售完'):'已達庫存上限，僅剩 '+_num+' 件');return;}if(qty>_left){qty=_left;capped=true;}}
   var so=getSpecObj(p,spec);
   var base=(so&&so.price!=null&&so.price!=='')?so.price:p.price;
   var price=promoPrice(base,p);
@@ -2560,6 +2661,13 @@ function placeOrder(total){
   if(_pv){showToast('「'+_pv.name+'」目前為搶先預覽、尚未開放購買，請先從購物車移除');return;}
   var _sc=S.cart.find(function(i){var p=S.products.find(function(x){return x.id===i.id;});return p&&p.showcase;});
   if(_sc){showToast('「'+_sc.name+'」為展示作品、不開放購買，請先從購物車移除');return;}
+  var _stkMsg=checkCartStock();
+  if(_stkMsg){
+    S._shipConfirmed=false;
+    if(!S.cart.length){renderCart();showPage('cart');showToast(_stkMsg+'，購物車已清空');return;}
+    repriceCart();revalidateDiscount();renderCart();
+    showToast(_stkMsg+'，請確認後再送出');return;
+  }
   if(revalidateDiscount()){renderCart();return;}
   total=orderTotal(); /* 以當下狀態重算，避免按鈕上的金額過期 */
   var nm=(document.getElementById('rcvName')||{}).value||'';
@@ -2641,7 +2749,7 @@ function placeOrder(total){
   var ci=S.cart.filter(function(i){return i.isCustom;});
   var td=ci.reduce(function(s,i){return s+i.deposit*i.qty;},0);
   S._placing=true;
-  function finish(oid){
+  function finish(oid,reserved){
   var o={id:oid,userId:(S.currentUser?S.currentUser.id:(S._guestUid||'guest')),userName:(S.currentUser?S.currentUser.name:'訪客'),
     items:S.cart.slice(),subtotal:S.cart.reduce(function(s,i){return s+i.price*i.qty;},0),
     shipping:calcShip(),discount:appliedDiscAmt(),
@@ -2653,7 +2761,7 @@ function placeOrder(total){
     customRemainChoice:S.customRemainChoice,totalDeposit:td,depositPaid:false,balancePaid:false,
     status:'pending',date:new Date().toLocaleDateString('zh-TW'),created:new Date().toISOString()};
   if(!S.currentUser){o.guest=true;o.email=gEmail;}
-  applyOrderStock(o,-1);o.stockApplied=true;
+  applyOrderStock(o,-1,!!reserved);o.stockApplied=true;
   S.orders.unshift(o);persistOrder(o);
   if(S.appliedDiscount&&S.appliedDiscount._couponId&&S.currentUser){var _cid=S.appliedDiscount._couponId,_cc=(S.currentUser.coupons||[]).find(function(x){return x.id===_cid;});if(_cc){_cc.used=true;_cc.usedOrderId=o.id;_cc.usedDate=o.date;persistMember(S.currentUser);}}
   sendOrderEmail(o);
@@ -2689,20 +2797,51 @@ function placeOrder(total){
   S._placing=false;
   resetCaptcha('pay');
   }
+  function finishGuarded(oid){
+    return reserveOrderStock(S.cart.slice()).then(function(r){
+      if(r.ok){finish(oid,!r.legacy);return;}
+      S._placing=false;S._shipConfirmed=false;
+      var e=r.err||{};
+      if(e.docId){
+        var _p=S.products.find(function(x){return x._docId===e.docId;});
+        if(_p){
+          if(e.spec){var _sp=getSpecObj(_p,e.spec);if(_sp)_sp.stock=e.have;}
+          else if(_p.stock!=null&&_p.stock!=='')_p.stock=e.have;
+        }
+      }
+      var msg;
+      if(e.code==='insufficient'){
+        msg='「'+(e.pname||'部分作品')+'」'+(e.spec?'（'+e.spec+'）':'')
+          +(e.have>0?('在您結帳的期間被其他人買走，目前僅剩 '+e.have+' 件'):'剛剛被買走、已售完');
+      }else if(e.code==='gone'){
+        msg='購物車中有作品已下架';
+      }else{
+        msg='庫存確認失敗，訂單尚未送出，請稍後再試';
+      }
+      var fix=checkCartStock();
+      repriceCart();revalidateDiscount();renderCart();
+      if(!S.cart.length)showPage('cart');
+      showToast(msg+(fix?'，已自動調整購物車':'')+'，請確認後再送出');
+    }).catch(function(e){
+      console.error('reserveStock',e&&(e.code||e.message));
+      S._placing=false;S._shipConfirmed=false;
+      showToast('庫存確認失敗，訂單尚未送出，請稍後再試');
+    });
+  }
   if(!S.currentUser){
     /* 訪客：先匿名登入取得 uid，失敗則中止（否則訂單無法寫入雲端） */
     if(!(window.FB&&window.FB.signInGuest)){S._placing=false;showToast('訪客結帳暫時無法使用，請先登入會員');return;}
     window.FB.signInGuest().then(function(uid){
       S._guestUid=uid;
       return window.FB.nextOrderId?window.FB.nextOrderId().catch(function(){return localOrderId();}):localOrderId();
-    }).then(finish).catch(function(e){
+    }).then(finishGuarded).catch(function(e){
       console.error('guest signin',e&&(e.code||e.message));
       S._placing=false;
       showToast('訪客結帳暫時無法使用，請先登入會員或稍後再試');
     });
     return;
   }
-  if(window.FB&&window.FB.nextOrderId){window.FB.nextOrderId().then(finish).catch(function(){finish(localOrderId());});}else{finish(localOrderId());}
+  if(window.FB&&window.FB.nextOrderId){window.FB.nextOrderId().then(finishGuarded).catch(function(){finishGuarded(localOrderId());});}else{finishGuarded(localOrderId());}
 }
 function localOrderId(){var mx=S.orders.reduce(function(m,o){return Math.max(m,o.id||0);},1000);var n=Math.max(S.nextOrderId||1001,mx+1);S.nextOrderId=n+1;return n;}
 
@@ -3603,7 +3742,14 @@ function renderAdminProds(){
       +'<button class="abtn dg" onclick="delProd('+p.id+')">刪除</button></td></tr>';
   }).join('');
   if(!rows)rows='<tr><td colspan="8" style="text-align:center;color:var(--text-light);padding:24px">此分類沒有作品</td></tr>';
-  document.getElementById('adminProductList').innerHTML=chips+bar+'<div class="table-scroll"><table class="dtable"><thead><tr><th></th><th>圖</th><th>名稱</th><th>分類</th><th>售價</th><th>客製</th><th>訂金</th><th>操作</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  var _host=document.getElementById('adminProductList');
+  var _old=_host.querySelector('.table-scroll');
+  var _sl=_old?_old.scrollLeft:0;
+  var _sy=(window.pageYOffset||document.documentElement.scrollTop||0);
+  _host.innerHTML=chips+bar+'<div class="table-scroll"><table class="dtable"><thead><tr><th></th><th>圖</th><th>名稱</th><th>分類</th><th>售價</th><th>客製</th><th>訂金</th><th>操作</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  var _new=_host.querySelector('.table-scroll');
+  if(_new&&_sl)_new.scrollLeft=_sl;
+  if(_sy)window.scrollTo(0,_sy);
 }
 function togglePin(id){
   var p=S.products.find(function(x){return x.id===id;});if(!p||!p._docId||!window.FB)return;
@@ -3651,6 +3797,7 @@ function duplicateProduct(id){
   copy.id=Date.now();
   copy.name=(p.name||'')+'（複製）';
   copy.draft=true;copy.pinned=false;delete copy.pinOrder;
+  copy.order=topProdOrder();
   window.FB.addProduct(copy).then(function(){showToast('已複製為草稿，編輯後再上架');}).catch(function(e){showToast('複製失敗：'+(e.code||e.message));});
 }
 
@@ -3841,12 +3988,12 @@ function renderInventory(){
   var el=document.getElementById('inventoryList');if(!el)return;
   var all=S.products.slice().sort(function(a,b){return (a.cat>b.cat?1:(a.cat<b.cat?-1:((a.name>b.name)?1:-1)));});
   if(!all.length){el.innerHTML='<p style="color:var(--text-light);text-align:center;padding:30px">尚無作品</p>';return;}
-  var inS=all.filter(function(p){return !!p.inStock;});
+  var inS=all.filter(function(p){return !!p.inStock||!!p.limitedPre;});
   var nOff=all.length-inS.length;
   var ps=S._invAll?all:inS;
   var bar='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">'
-    +'<span style="font-size:12px;color:var(--cocoa)"><b>'+(S._invAll?'全部作品':'現貨作品')+'</b>　'+ps.length+' 件</span>'
-    +'<button class="abtn '+(S._invAll?'pr':'sc')+'" onclick="toggleInvAll()">'+(S._invAll?'只看現貨':('顯示全部（另有 '+nOff+' 件非現貨）'))+'</button></div>';
+    +'<span style="font-size:12px;color:var(--cocoa)"><b>'+(S._invAll?'全部作品':'有管庫存的作品')+'</b>　'+ps.length+' 件</span>'
+    +'<button class="abtn '+(S._invAll?'pr':'sc')+'" onclick="toggleInvAll()">'+(S._invAll?'只看有管庫存的':('顯示全部（另有 '+nOff+' 件）'))+'</button></div>';
   if(!ps.length){
     el.innerHTML=bar+'<p style="color:var(--text-light);text-align:center;padding:24px;font-size:13px;line-height:1.9">目前沒有標示為現貨的作品。<br>按上方「顯示全部」即可把作品設為現貨，或到「作品管理」編輯販售模式。</p>';
     return;
@@ -3873,7 +4020,7 @@ function renderInventory(){
           +'<button class="abtn sc" style="padding:4px 10px" onclick="adjustStock('+p.id+',1)">＋</button></div>';
       }
       return '<tr><td>'+img+'</td><td>'+esc(p.name)+(p.draft?'<br><span style="font-size:11px;color:var(--dusty-rose)">草稿</span>':'')+'</td><td>'+esc(p.cat)+'</td>'
-        +'<td><button class="abtn '+(on?'pr':'sc')+'" onclick="toggleInStock('+p.id+')">'+(on?'✓ 現貨':'設為現貨')+'</button></td>'
+        +'<td>'+(p.limitedPre?'<span style="display:inline-block;background:#FBF0DC;color:#8A6A22;font-size:11px;border-radius:12px;padding:3px 10px">限量預購</span>':'<button class="abtn '+(on?'pr':'sc')+'" onclick="toggleInStock('+p.id+')">'+(on?'✓ 現貨':'設為現貨')+'</button>')+'</td>'
         +'<td>'+stockCell+'</td></tr>';
     }).join('')+'</tbody></table></div>';
 }
@@ -4056,7 +4203,7 @@ function exportProducts(){
 function exportProductsCSV(){
   var rows=[['作品名稱','分類','售價','原價','款式/顏色','款式加價','款式庫存','總庫存','客製','訂金','狀態']];
   (S.products||[]).forEach(function(p){
-    var st=p.draft?'未上架':(p.preOrder?'預購':'現貨');
+    var st=p.draft?'未上架':(p.limitedPre?'限量預購':(p.preOrder?'預購':'現貨'));
     var specs=(p.specs||[]).filter(function(s){return (s.name||'').trim();});
     if(!specs.length){
       rows.push([p.name,p.cat,p.price,p.original||'','','','',(p.stock==null?'':p.stock),p.isCustom?'是':'',p.deposit||'',st]);
@@ -4076,7 +4223,8 @@ function renderBanners(){
   var el=document.getElementById('bannerSettings');if(!el)return;
   var html='<div class="fg"><label>新增跑馬燈訊息</label><div style="display:flex;gap:8px">'
     +'<input id="tkNewText" placeholder="例如： 新會員首購輸入 JU2024 折 $50" style="flex:1">'
-    +'<button class="abtn pr" style="flex-shrink:0" onclick="addTickerMsg()">新增</button></div></div>';
+    +'<button class="abtn pr" style="flex-shrink:0" onclick="addTickerMsg()">新增</button></div>'
+    +'<p style="font-size:11px;color:var(--text-light);margin-top:6px">依下方順序輪播，可用 ↑ ↓ 調整</p></div>';
   html+='<div style="margin-top:10px;display:flex;flex-direction:column;gap:10px">';
   if(!S.ticker.length)html+='<p style="font-size:13px;color:var(--text-light)">尚未設定，首頁橫幅下方將不顯示跑馬燈。</p>';
   html+=S.ticker.map(function(t,i){
@@ -4084,8 +4232,11 @@ function renderBanners(){
       return '<div class="disc-card" style="flex-direction:column;align-items:stretch;gap:8px"><input id="tkEditText" value="'+(t.text||'').replace(/"/g,'&quot;')+'" style="width:100%;box-sizing:border-box">'
         +'<div style="display:flex;gap:6px;justify-content:flex-end"><button class="abtn pr" onclick="saveTickerEdit('+i+')">儲存</button><button class="abtn sc" onclick="cancelTickerEdit()">取消</button></div></div>';
     }
-    return '<div class="disc-card" style="flex-direction:column;align-items:stretch;gap:10px"><span style="font-size:13px;display:block;line-height:1.6;'+(t.enabled?'':'color:var(--text-light);text-decoration:line-through')+'">'+t.text+'</span>'
+    var upOn=i>0,dnOn=i<S.ticker.length-1;
+    return '<div class="disc-card" style="flex-direction:column;align-items:stretch;gap:10px"><span style="font-size:13px;display:block;line-height:1.6;'+(t.enabled?'':'color:var(--text-light);text-decoration:line-through')+'"><span style="color:var(--text-light);font-size:11px">'+(i+1)+'.　</span>'+esc(t.text)+'</span>'
       +'<div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">'
+      +'<button class="abtn sc" '+(upOn?'':'disabled')+' style="opacity:'+(upOn?'1':'.35')+'" onclick="moveTickerMsg('+i+',-1)">↑</button>'
+      +'<button class="abtn sc" '+(dnOn?'':'disabled')+' style="opacity:'+(dnOn?'1':'.35')+'" onclick="moveTickerMsg('+i+',1)">↓</button>'
       +'<button class="abtn sc" onclick="editTickerMsg('+i+')">編輯</button>'
       +'<button class="abtn sc" onclick="dupTickerMsg('+i+')">複製</button>'
       +'<button class="abtn sc" onclick="toggleTickerMsg('+i+')">'+(t.enabled?'停用':'啟用')+'</button>'
@@ -4099,6 +4250,13 @@ function addTickerMsg(){
   var inp=document.getElementById('tkNewText');var v=(inp.value||'').trim();if(!v)return;
   S.ticker.push({text:v,enabled:true});inp.value='';
   persistTicker();renderBanners();renderTicker();showToast('跑馬燈訊息已新增');
+}
+function moveTickerMsg(i,dir){
+  var j=i+dir;
+  if(!S.ticker[i]||j<0||j>=S.ticker.length)return;
+  var t=S.ticker[i];S.ticker[i]=S.ticker[j];S.ticker[j]=t;
+  if(S._tkEdit===i)S._tkEdit=j;else if(S._tkEdit===j)S._tkEdit=i;
+  persistTicker();renderBanners();renderTicker();showToast('已調整順序');
 }
 function toggleTickerMsg(i){S.ticker[i].enabled=!S.ticker[i].enabled;persistTicker();renderBanners();renderTicker();}
 function delTickerMsg(i){if(!confirm('確定刪除此跑馬燈訊息？'))return;S.ticker.splice(i,1);if(S._tkEdit===i)S._tkEdit=null;persistTicker();renderBanners();renderTicker();showToast('已刪除');}
@@ -4344,11 +4502,12 @@ function toggleSaleMode(){
   var m=document.getElementById('editSaleMode').value;
   var hasSpecs=(S.editSpecs||[]).length>0;
   var sf=document.getElementById('stockField');
-  sf.style.display=(m==='instock')?'':'none';
+  sf.style.display=(m!=='preorder')?'':'none';
   var lbl=document.getElementById('stockFieldLabel');
   var inp=document.getElementById('editStock');
-  if(hasSpecs){lbl.textContent='庫存數量（已改用下方各規格分別填寫）';inp.disabled=true;inp.value='';inp.placeholder='已用規格庫存';}
-  else{lbl.textContent='庫存數量（可留空＝不限量）';inp.disabled=false;inp.placeholder='例：5';}
+  var word=(m==='plimit')?'可接單組數':'庫存數量';
+  if(hasSpecs){lbl.textContent=word+'（已改用下方各規格分別填寫）';inp.disabled=true;inp.value='';inp.placeholder='已用規格庫存';}
+  else{lbl.textContent=word+((m==='plimit')?'（接滿就自動停單）':'（可留空＝不限量）');inp.disabled=false;inp.placeholder='例：5';}
   renderSpecEditor();
 }
 function renderGalleryEditor(){
@@ -4422,7 +4581,7 @@ function renderSpecEditor(){
   var el=document.getElementById('specEditor');if(!el)return;
   var specs=S.editSpecs||[];
   var isC=document.getElementById('editCustom')&&document.getElementById('editCustom').checked;
-  var isStockMode=document.getElementById('editSaleMode')&&document.getElementById('editSaleMode').value==='instock';
+  var isStockMode=document.getElementById('editSaleMode')&&document.getElementById('editSaleMode').value!=='preorder';
   if(!specs.length){el.innerHTML='<p style="font-size:12px;color:var(--text-light)">尚未新增規格（例如：顏色、款式）</p>';return;}
   var istyle='padding:8px 8px;border:1.5px solid var(--linen);border-radius:8px;font-family:inherit;font-size:13px;background:var(--cream)';
   el.innerHTML=(isStockMode?'<p style="font-size:11px;color:var(--text-light);margin:-2px 0 6px">各規格庫存可留空＝該規格不限量；填數字則各自扣減，扣到 0 顯示售完</p>':'')
@@ -4468,7 +4627,7 @@ function openProductModal(id){
     document.getElementById('editCanCustom').checked=!!p.canCustom;
     document.getElementById('editHot').checked=p.hot;
     document.getElementById('editNew').checked=p.isNew;
-    document.getElementById('editSaleMode').value=((p.inStock||(p.stock!=null&&p.stock!==''))?'instock':'preorder');
+    document.getElementById('editSaleMode').value=(p.limitedPre?'plimit':((p.inStock||(p.stock!=null&&p.stock!=='')||(p.specs&&p.specs.some(function(_s){return _s.stock!=null&&_s.stock!=='';})))?'instock':'preorder'));
     document.getElementById('editNoDiscount').checked=!!p.noDiscount;
     document.getElementById('editStock').value=(p.stock!=null?p.stock:'');
     document.getElementById('editCustom').checked=p.isCustom;
@@ -4595,7 +4754,8 @@ function saveProduct(){
     hot:document.getElementById('editHot').checked,
     isNew:document.getElementById('editNew').checked,
     inStock:(document.getElementById('editSaleMode').value==='instock'),
-    preOrder:(document.getElementById('editSaleMode').value==='preorder'),
+    preOrder:(document.getElementById('editSaleMode').value!=='instock'),
+    limitedPre:(document.getElementById('editSaleMode').value==='plimit'),
     noDiscount:document.getElementById('editNoDiscount').checked,
     stock:(document.getElementById('editSaleMode').value==='preorder'?null:(document.getElementById('editStock').value===''?null:(parseInt(document.getElementById('editStock').value)||0))),
     isCustom:isC,deposit:isC?(parseInt(document.getElementById('editDeposit').value)||0):0,
@@ -4615,7 +4775,8 @@ function saveProduct(){
     if(cur&&cur._docId){window.FB.updateProduct(cur._docId,data).then(function(){showToast('作品已更新');}).catch(function(e){showToast(e.code==='invalid-argument'?'更新失敗：圖片太大，請減少照片數量或換較小的圖片':'更新失敗：'+(e.code||e.message));});}
   }else{
     data.id=Date.now();
-    window.FB.addProduct(data).then(function(){showToast('新增作品成功');}).catch(function(e){showToast(e.code==='invalid-argument'?'新增失敗：圖片太大，請減少照片數量或換較小的圖片':'新增失敗：'+(e.code||e.message));});
+    data.order=topProdOrder();
+    window.FB.addProduct(data).then(function(){showToast('新增作品成功（已放在列表最上方）');}).catch(function(e){showToast(e.code==='invalid-argument'?'新增失敗：圖片太大，請減少照片數量或換較小的圖片':'新增失敗：'+(e.code||e.message));});
   }
   closeModal('productEditModal');
 }
@@ -4816,6 +4977,68 @@ window.FB={
     },function(err){console.error('products subscribe error',err);});
   },
   addProduct:function(data){return addDoc(collection(db,'products'),data);},
+  reserveStock:function(docId,need,specNeeds){
+    var ref=doc(db,'products',docId);
+    return runTransaction(db,function(tx){
+      return tx.get(ref).then(function(snap){
+        function fail(code,name,spec,have){
+          var err=new Error(code);
+          err.code=code;err.pname=name||'';err.spec=spec||'';err.have=have==null?0:have;err.docId=docId;
+          return err;
+        }
+        if(!snap.exists())throw fail('gone','');
+        var d=snap.data(),patch={};
+        if(specNeeds){
+          var keys=Object.keys(specNeeds);
+          if(keys.length){
+            var m=Object.assign({},d.specStock||{}),touched=false;
+            for(var i=0;i<keys.length;i++){
+              var k=keys[i];
+              if(!Object.prototype.hasOwnProperty.call(m,k))continue;
+              var have=parseInt(m[k],10)||0;
+              if(have<specNeeds[k])throw fail('insufficient',d.name,k,have);
+              m[k]=have-specNeeds[k];touched=true;
+            }
+            if(touched)patch.specStock=m;
+          }
+        }
+        if(need&&d.stock!=null&&d.stock!==''){
+          var h=parseInt(d.stock,10)||0;
+          if(h<need)throw fail('insufficient',d.name,'',h);
+          patch.stock=h-need;
+        }
+        if(Object.keys(patch).length)tx.update(ref,patch);
+        return patch;
+      });
+    });
+  },
+  adjustStock:function(docId,delta,specDeltas){
+    var ref=doc(db,'products',docId);
+    return runTransaction(db,function(tx){
+      return tx.get(ref).then(function(snap){
+        if(!snap.exists())return null;
+        var d=snap.data(),patch={};
+        if(specDeltas){
+          var keys=Object.keys(specDeltas);
+          if(keys.length){
+            var m=Object.assign({},d.specStock||{});
+            var touched=false;
+            keys.forEach(function(k){
+              if(!Object.prototype.hasOwnProperty.call(m,k))return;
+              m[k]=Math.max(0,(parseInt(m[k],10)||0)+specDeltas[k]);touched=true;
+            });
+            if(touched)patch.specStock=m;
+          }
+        }
+        if(delta&&d.stock!=null&&d.stock!==''){
+          patch.stock=Math.max(0,(parseInt(d.stock,10)||0)+delta);
+        }
+        if(!Object.keys(patch).length)return null;
+        tx.update(ref,patch);
+        return patch;
+      });
+    });
+  },
   updateProduct:function(docId,data){return updateDoc(doc(db,'products',docId),data);},
   deleteProduct:function(docId){return deleteDoc(doc(db,'products',docId));},
   uploadImage:function(dataURL,folder){
