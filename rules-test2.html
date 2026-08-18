@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Firestore 規則檢測 ‧ 啾手作</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#5C4033;
+  --muted:#9B8A7B;
+  --line:#E8DED3;
+  --bg:#FBF7F2;
+  --card:#FFFFFF;
+  --ok:#2E6F53;
+  --ok-bg:#EAF3EE;
+  --bad:#A83232;
+  --bad-bg:#FBEAEA;
+  --warn:#8A6A17;
+  --warn-bg:#FAF3E0;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;padding:0 16px 64px;
+  background:var(--bg);color:var(--ink);
+  font-family:'Noto Serif TC',serif;
+  font-size:15px;line-height:1.75;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:560px;margin:0 auto}
+header{padding:32px 0 20px;border-bottom:1.5px solid var(--line)}
+h1{margin:0;font-size:22px;letter-spacing:.04em}
+.sub{margin:6px 0 0;color:var(--muted);font-size:13px;font-family:var(--mono)}
+h2{font-size:16px;margin:30px 0 4px;letter-spacing:.03em}
+.lead{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.7}
+
+.panel{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:16px;margin-top:12px}
+.who{font-family:var(--mono);font-size:12.5px;color:var(--muted);word-break:break-all}
+.who b{color:var(--ink);font-family:'Noto Serif TC',serif;font-size:14px}
+
+button{
+  font-family:inherit;font-size:14.5px;
+  background:var(--ink);color:#fff;border:none;border-radius:10px;
+  padding:11px 16px;cursor:pointer;margin:6px 6px 0 0;
+}
+button.ghost{background:none;color:var(--ink);border:1.5px solid var(--line)}
+button.danger{background:var(--bad)}
+button:disabled{opacity:.42;cursor:default}
+button:focus-visible{outline:2.5px solid var(--ink);outline-offset:2px}
+
+input,select{
+  font-family:inherit;font-size:16px;width:100%;
+  padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;
+  margin-top:8px;background:#fff;color:var(--ink);
+}
+label{display:block;font-size:13px;color:var(--muted);margin-top:12px}
+
+/* 檢測結果列：左側的鎖是這一頁的重點 —— 關著代表擋住了 */
+.row{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:none}
+.lock{flex:0 0 26px;font-size:17px;line-height:1.5;text-align:center}
+.body{flex:1;min-width:0}
+.name{font-size:14.5px;font-weight:600}
+.detail{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:3px;word-break:break-all;line-height:1.6}
+.tag{display:inline-block;font-size:11.5px;font-family:var(--mono);padding:2px 8px;border-radius:20px;margin-top:5px}
+.t-ok{background:var(--ok-bg);color:var(--ok)}
+.t-bad{background:var(--bad-bg);color:var(--bad)}
+.t-warn{background:var(--warn-bg);color:var(--warn)}
+.t-run{background:#F0EBE4;color:var(--muted)}
+
+.summary{margin-top:14px;padding:13px 15px;border-radius:12px;font-size:14px;line-height:1.7}
+.s-ok{background:var(--ok-bg);color:var(--ok)}
+.s-bad{background:var(--bad-bg);color:var(--bad)}
+
+.note{background:var(--warn-bg);border:1.5px solid #EADDBE;border-radius:12px;padding:13px 15px;font-size:13px;color:var(--warn);line-height:1.75;margin-top:12px}
+.empty{color:var(--muted);font-size:13.5px;padding:6px 0}
+footer{margin-top:40px;padding-top:18px;border-top:1.5px solid var(--line);color:var(--muted);font-size:12px;font-family:var(--mono)}
+@media (prefers-reduced-motion:no-preference){
+  .row{animation:in .28s ease both}
+  @keyframes in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Firestore 規則檢測</h1>
+  <p class="sub">rt2-0818a ‧ ju-accessories-shop</p>
+</header>
+
+<h2>一、目前身分</h2>
+<p class="lead">規則會依身分給不同權限。請先以訪客身分登入，跑完一輪之後，再用一個「一般會員」帳號登入跑第二輪。</p>
+<div class="panel">
+  <p class="who" id="who"><b>尚未登入</b></p>
+  <button id="btnGuest">以訪客身分登入</button>
+  <button class="ghost" id="btnOut">登出</button>
+  <label for="em">會員 Email（選填，測第二輪用）</label>
+  <input id="em" type="email" autocomplete="username" placeholder="member@example.com">
+  <label for="pw">密碼</label>
+  <input id="pw" type="password" autocomplete="current-password" placeholder="••••••">
+  <button class="ghost" id="btnLogin">以會員身分登入</button>
+  <div id="authNote"></div>
+</div>
+
+<h2>二、讀取權限</h2>
+<p class="lead">完全不會改到任何資料。重點是會員與訂單：如果這兩項顯示「可讀取」，任何打開網站的人都撈得到全部客人的姓名、電話、地址。</p>
+<div class="panel">
+  <button id="btnRead">開始檢測讀取權限</button>
+  <div id="readOut"><p class="empty">尚未執行。</p></div>
+</div>
+
+<h2>三、寫入權限</h2>
+<p class="lead">會嘗試寫入，但每一項若不慎成功都會立刻還原或刪除，並在結果中告訴妳。</p>
+<div class="panel">
+  <button id="btnWrite">開始檢測寫入權限</button>
+  <div id="writeOut"><p class="empty">尚未執行。</p></div>
+</div>
+
+<h2>四、庫存扣減實測</h2>
+<p class="lead">這一項<b>會真的動到庫存</b>：先扣 1，再補回 1。請選一個賣完也不心疼的商品（例如展示用或絕版品）。</p>
+<div class="panel">
+  <label for="prod">選擇商品</label>
+  <select id="prod"><option value="">請先執行「讀取權限」載入商品</option></select>
+  <label for="spec">選擇規格（有規格庫存時）</label>
+  <select id="spec"><option value="">總庫存 stock</option></select>
+  <button class="danger" id="btnStock" disabled>扣 1 再補回</button>
+  <div id="stockOut"><p class="empty">尚未執行。</p></div>
+</div>
+
+<div class="note" id="adminWarn" style="display:none">
+  ⚠️ 妳目前是用<b>管理員帳號</b>登入。管理員本來就有全部權限，這樣測出來每一項都會是「可讀取／可寫入」，看不出問題。請先登出，改用訪客身分。
+</div>
+
+<footer>
+  這是內部檢測工具，請勿放進網站選單或分享給客人。<br>
+  頁面若載入失敗，網址後面加上 ?v=2 再試一次。
+</footer>
+
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js';
+import { getAuth, signInAnonymously, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc, deleteField, runTransaction } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAETCZAk1fOUsFMPt5eb2q3DlrQlkr5GUc",
+  authDomain: "ju-accessories-shop.firebaseapp.com",
+  projectId: "ju-accessories-shop",
+  storageBucket: "ju-accessories-shop.firebasestorage.app",
+  messagingSenderId: "857716351561",
+  appId: "1:857716351561:web:181c555334b35bdcb4d598"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const ADMIN_EMAILS = ['turisms09@gmail.com','suntop.biotech22@gmail.com'];
+const PROBE = 'zz_rules_probe_zz';   // 一個不會存在的文件 ID
+const PROBE_FIELD = '__rulesProbe';
+
+const $ = id => document.getElementById(id);
+const esc = s => (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+let products = [];
+
+/* ---------- 身分 ---------- */
+onAuthStateChanged(auth, u => {
+  const w = $('who');
+  if (!u) {
+    w.innerHTML = '<b>尚未登入</b>';
+    $('adminWarn').style.display = 'none';
+    return;
+  }
+  const kind = u.isAnonymous ? '訪客（匿名登入）' : '會員';
+  w.innerHTML = '<b>' + kind + '</b><br>uid: ' + esc(u.uid) + (u.email ? '<br>' + esc(u.email) : '');
+  const isAdmin = !!u.email && ADMIN_EMAILS.indexOf(u.email.trim().toLowerCase()) >= 0;
+  $('adminWarn').style.display = isAdmin ? 'block' : 'none';
+});
+
+$('btnGuest').addEventListener('click', () => {
+  $('authNote').innerHTML = '';
+  signInAnonymously(auth).catch(e => {
+    $('authNote').innerHTML = '<div class="note">訪客登入失敗：' + esc(e.code || e.message) +
+      '。若代碼是 operation-not-allowed，表示 Firebase Console 尚未啟用匿名登入。</div>';
+  });
+});
+
+$('btnOut').addEventListener('click', () => signOut(auth));
+
+$('btnLogin').addEventListener('click', () => {
+  const e = $('em').value.trim(), p = $('pw').value;
+  $('authNote').innerHTML = '';
+  if (!e || !p) { $('authNote').innerHTML = '<div class="note">請填寫 Email 與密碼。</div>'; return; }
+  signInWithEmailAndPassword(auth, e, p).then(() => { $('pw').value = ''; })
+    .catch(err => {
+      const c = err && err.code;
+      const msg = c === 'auth/multi-factor-auth-required'
+        ? '這個帳號有雙重驗證，是管理員帳號。請改用一般會員帳號測試。'
+        : ('登入失敗：' + esc(c || err.message));
+      $('authNote').innerHTML = '<div class="note">' + msg + '</div>';
+    });
+});
+
+/* ---------- 探測核心 ---------- */
+// 回傳 'allowed' / 'denied' / 'error'
+async function attempt(fn) {
+  try {
+    const value = await fn();
+    return { r: 'allowed', value: value };
+  } catch (e) {
+    const c = (e && e.code) || '';
+    if (c === 'permission-denied' || /insufficient permissions|Missing or insufficient/i.test(e.message || ''))
+      return { r: 'denied' };
+    if (c === 'not-found')
+      return { r: 'allowed', note: '文件不存在，但規則已放行寫入' };
+    return { r: 'error', note: c || (e && e.message) || '未知錯誤' };
+  }
+}
+
+function render(container, rows) {
+  if (!rows.length) { container.innerHTML = '<p class="empty">尚未執行。</p>'; return; }
+  let risky = 0, broken = 0;
+  const html = rows.map(row => {
+    let lock, tag, cls;
+    if (row.state === 'running') { lock = '⋯'; tag = '檢測中'; cls = 't-run'; }
+    else if (row.expect === 'deny') {
+      if (row.r === 'denied') { lock = '🔒'; tag = '已擋住 ‧ 安全'; cls = 't-ok'; }
+      else if (row.r === 'allowed') { lock = '🔓'; tag = '未擋住 ‧ 有風險'; cls = 't-bad'; risky++; }
+      else { lock = '⚠'; tag = '無法判定'; cls = 't-warn'; }
+    } else {
+      if (row.r === 'allowed') { lock = '✓'; tag = '正常放行'; cls = 't-ok'; }
+      else if (row.r === 'denied') { lock = '⚠'; tag = '被擋住 ‧ 網站功能可能失效'; cls = 't-warn'; broken++; }
+      else { lock = '⚠'; tag = '無法判定'; cls = 't-warn'; }
+    }
+    return '<div class="row"><div class="lock">' + lock + '</div><div class="body">' +
+      '<div class="name">' + esc(row.name) + '</div>' +
+      '<div class="detail">' + esc(row.detail || '') + (row.note ? ' ‧ ' + esc(row.note) : '') + '</div>' +
+      '<span class="tag ' + cls + '">' + tag + '</span>' +
+      '</div></div>';
+  }).join('');
+  const done = rows.every(r => r.state !== 'running');
+  let sum = '';
+  if (done) {
+    if (risky) sum = '<div class="summary s-bad">有 ' + risky + ' 項該擋沒擋住，需要修改 Firestore 規則。</div>';
+    else if (broken) sum = '<div class="summary s-ok">沒有安全風險，但有 ' + broken + ' 項該放行卻被擋住，網站對應功能可能壞掉。</div>';
+    else sum = '<div class="summary s-ok">全數通過，這一輪沒有發現問題。</div>';
+  }
+  container.innerHTML = html + sum;
+}
+
+/* ---------- 二、讀取 ---------- */
+$('btnRead').addEventListener('click', async () => {
+  const btn = $('btnRead'), out = $('readOut');
+  if (!auth.currentUser) { out.innerHTML = '<div class="note">請先登入（訪客或會員皆可）。</div>'; return; }
+  btn.disabled = true;
+
+  const tests = [
+    { name: '讀取商品列表', detail: 'products（整個集合）', expect: 'allow',
+      fn: () => getDocs(collection(db, 'products')).then(s => s.docs.map(d => { const o = d.data(); o._docId = d.id; return o; })) },
+    { name: '讀取網站設定', detail: 'config/site', expect: 'allow',
+      fn: () => getDoc(doc(db, 'config', 'site')) },
+    { name: '列出全部會員資料', detail: 'members（整個集合）', expect: 'deny',
+      fn: () => getDocs(collection(db, 'members')) },
+    { name: '讀取別人的會員資料', detail: 'members/' + PROBE, expect: 'deny',
+      fn: () => getDoc(doc(db, 'members', PROBE)) },
+    { name: '列出全部訂單', detail: 'orders（整個集合）', expect: 'deny',
+      fn: () => getDocs(collection(db, 'orders')) },
+    { name: '讀取別人的訂單', detail: 'orders/' + PROBE, expect: 'deny',
+      fn: () => getDoc(doc(db, 'orders', PROBE)) }
+  ];
+
+  const rows = tests.map(t => ({ name: t.name, detail: t.detail, expect: t.expect, state: 'running' }));
+  render(out, rows);
+
+  for (let i = 0; i < tests.length; i++) {
+    const res = await attempt(tests[i].fn);
+    rows[i].state = 'done';
+    rows[i].r = res.r;
+    rows[i].note = res.note;
+    if (i === 0 && res.r === 'allowed' && Array.isArray(res.value)) {
+      products = res.value;
+      fillProducts();
+    }
+    if (i === 2 && res.r === 'allowed' && res.value && res.value.size != null)
+      rows[i].note = '撈到 ' + res.value.size + ' 筆會員資料';
+    if (i === 4 && res.r === 'allowed' && res.value && res.value.size != null)
+      rows[i].note = '撈到 ' + res.value.size + ' 筆訂單';
+    render(out, rows);
+  }
+  btn.disabled = false;
+});
+
+/* ---------- 三、寫入 ---------- */
+$('btnWrite').addEventListener('click', async () => {
+  const btn = $('btnWrite'), out = $('writeOut');
+  if (!auth.currentUser) { out.innerHTML = '<div class="note">請先登入（訪客或會員皆可）。</div>'; return; }
+  if (!products.length) { out.innerHTML = '<div class="note">請先執行「讀取權限」，載入商品資料後再測。</div>'; return; }
+
+  const p = products.find(x => x._docId && x.price != null) || products[0];
+  btn.disabled = true;
+
+  const tests = [
+    {
+      name: '偷改商品價格',
+      detail: 'products/' + (p._docId || '?') + ' ‧ ' + (p.name || '(無名稱)'),
+      expect: 'deny',
+      fn: async () => {
+        const orig = p.price;
+        await updateDoc(doc(db, 'products', p._docId), { price: (parseInt(orig, 10) || 0) + 1 });
+        try { await updateDoc(doc(db, 'products', p._docId), { price: orig }); return '已自動還原原價'; }
+        catch (e) { return '⚠ 還原失敗，請到後台把價格改回 ' + orig; }
+      }
+    },
+    {
+      name: '偷改網站設定（跑馬燈、公告）',
+      detail: 'config/site',
+      expect: 'deny',
+      fn: async () => {
+        const o = {}; o[PROBE_FIELD] = Date.now();
+        await updateDoc(doc(db, 'config', 'site'), o);
+        const c = {}; c[PROBE_FIELD] = deleteField();
+        try { await updateDoc(doc(db, 'config', 'site'), c); return '已自動清除測試欄位'; }
+        catch (e) { return '⚠ 清除失敗，請到 Console 刪除 config/site 的 ' + PROBE_FIELD; }
+      }
+    },
+    {
+      name: '新增假商品',
+      detail: 'products（新增文件）',
+      expect: 'deny',
+      fn: async () => {
+        const ref = await addDoc(collection(db, 'products'), { name: '__規則檢測用_請刪除__', __probe: true, price: 0 });
+        try { await deleteDoc(ref); return '已自動刪除'; }
+        catch (e) { return '⚠ 刪除失敗，請到 Console 刪除 products/' + ref.id; }
+      }
+    },
+    {
+      name: '竄改別人的會員資料',
+      detail: 'members/' + PROBE,
+      expect: 'deny',
+      fn: async () => {
+        await setDoc(doc(db, 'members', PROBE), { __probe: true, name: '__規則檢測用_請刪除__' });
+        try { await deleteDoc(doc(db, 'members', PROBE)); return '已自動刪除'; }
+        catch (e) { return '⚠ 刪除失敗，請到 Console 刪除 members/' + PROBE; }
+      }
+    },
+    {
+      name: '竄改別人的訂單狀態',
+      detail: 'orders/' + PROBE,
+      expect: 'deny',
+      fn: () => updateDoc(doc(db, 'orders', PROBE), { status: 'shipped' })
+    }
+  ];
+
+  const rows = tests.map(t => ({ name: t.name, detail: t.detail, expect: t.expect, state: 'running' }));
+  render(out, rows);
+
+  for (let i = 0; i < tests.length; i++) {
+    const res = await attempt(tests[i].fn);
+    rows[i].state = 'done';
+    rows[i].r = res.r;
+    rows[i].note = res.note || (typeof res.value === 'string' ? res.value : '');
+    render(out, rows);
+  }
+  btn.disabled = false;
+});
+
+/* ---------- 四、庫存 ---------- */
+function fillProducts() {
+  const sel = $('prod');
+  sel.innerHTML = '<option value="">請選擇</option>' + products
+    .filter(p => p._docId)
+    .map(p => '<option value="' + esc(p._docId) + '">' + esc(p.name || '(無名稱)') + '</option>')
+    .join('');
+  $('btnStock').disabled = true;
+}
+
+$('prod').addEventListener('change', () => {
+  const p = products.find(x => x._docId === $('prod').value);
+  const sel = $('spec');
+  if (!p) { sel.innerHTML = '<option value="">總庫存 stock</option>'; $('btnStock').disabled = true; return; }
+  const m = p.specStock || {};
+  const keys = Object.keys(m);
+  let opts = '';
+  if (p.stock != null && p.stock !== '') opts += '<option value="">總庫存 stock（目前 ' + esc(p.stock) + '）</option>';
+  opts += keys.map(k => '<option value="' + esc(k) + '">' + esc(k) + '（目前 ' + esc(m[k]) + '）</option>').join('');
+  sel.innerHTML = opts || '<option value="">這個商品沒有設定庫存</option>';
+  $('btnStock').disabled = !opts;
+});
+
+$('btnStock').addEventListener('click', async () => {
+  const p = products.find(x => x._docId === $('prod').value);
+  if (!p) return;
+  const specKey = $('spec').value;
+  const label = specKey ? (p.name + ' ‧ ' + specKey) : (p.name + ' ‧ 總庫存');
+  if (!window.confirm('即將把「' + label + '」扣 1，再補回 1。\n\n如果補回失敗，庫存會少 1，需要妳到後台手動加回。\n\n確定要繼續嗎？')) return;
+
+  const btn = $('btnStock'), out = $('stockOut');
+  btn.disabled = true;
+
+  const rows = [
+    { name: '扣掉 1 個庫存', detail: label, expect: 'deny', state: 'running' },
+    { name: '把庫存補回 1', detail: label, expect: 'allow', state: 'running' }
+  ];
+  render(out, rows);
+
+  function move(delta) {
+    const ref = doc(db, 'products', p._docId);
+    return runTransaction(db, tx => tx.get(ref).then(snap => {
+      if (!snap.exists()) throw new Error('商品不存在');
+      const d = snap.data(), patch = {};
+      if (specKey) {
+        const m = Object.assign({}, d.specStock || {});
+        if (!Object.prototype.hasOwnProperty.call(m, specKey)) throw new Error('找不到這個規格');
+        m[specKey] = Math.max(0, (parseInt(m[specKey], 10) || 0) + delta);
+        patch.specStock = m;
+      } else {
+        patch.stock = Math.max(0, (parseInt(d.stock, 10) || 0) + delta);
+      }
+      tx.update(ref, patch);
+      return patch;
+    }));
+  }
+
+  const dec = await attempt(() => move(-1));
+  rows[0].state = 'done'; rows[0].r = dec.r; rows[0].note = dec.note;
+  render(out, rows);
+
+  if (dec.r !== 'allowed') {
+    rows[1].state = 'done';
+    rows[1].r = 'denied';
+    rows[1].note = '扣減沒成功，不需要補回';
+    rows[1].expect = 'deny';
+    render(out, rows);
+    out.insertAdjacentHTML('beforeend',
+      '<div class="summary s-ok">規則有擋住直接扣庫存，這個風險不存在。</div>');
+    btn.disabled = false;
+    return;
+  }
+
+  const inc = await attempt(() => move(1));
+  rows[1].state = 'done'; rows[1].r = inc.r; rows[1].note = inc.note;
+  render(out, rows);
+
+  const tail = inc.r === 'allowed'
+    ? '<div class="summary s-bad">訪客／會員可以直接扣庫存，不需要真的下單。有人若反覆呼叫，就能把全站商品變成售罄。庫存已補回，資料無誤。</div>'
+    : '<div class="summary s-bad">訪客／會員可以直接扣庫存，而且扣了補不回來。<b>「' + esc(label) + '」現在少了 1，請到後台手動加回。</b></div>';
+  out.insertAdjacentHTML('beforeend', tail);
+  btn.disabled = false;
+});
+</script>
+</body>
+</html>
