@@ -1028,7 +1028,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0825a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0825b</div>
 </footer>
 
 <!-- MODALS -->
@@ -1835,7 +1835,7 @@ function pCard(p){
     +(p.isNew&&!hs&&!p.preview&&!p.showcase?'<div class="badge nb">NEW</div>':'')
     +(p.isCustom?'<div class="badge cb" style="top:'+((hs||p.isNew||p.preview||p.showcase)?'34px':'10px')+'">客製</div>':'')
     +'</div><div class="product-info">'
-    +'<div class="product-name">'+p.name+'</div>'
+    +'<div class="product-name">'+esc(p.name)+'</div>'
     +(hasPromo?'<div style="margin:2px 0 4px"><span style="display:inline-block;background:var(--gold);color:#fff;font-size:11px;border-radius:12px;padding:1px 9px">'+((S.promo&&S.promo.label)||'優惠')+'</span></div>':'')
     +((p.inStock&&!p.showcase)?'<div style="margin:2px 0 5px"><span style="display:inline-block;background:#E7F3EA;color:#2E6B3E;font-size:11px;border-radius:12px;padding:1px 9px">現貨</span></div>':((p.limitedPre&&!p.showcase&&!p.preview)?'<div style="margin:2px 0 5px"><span style="display:inline-block;background:#FBF0DC;color:#8A6A22;font-size:11px;border-radius:12px;padding:1px 9px">限量預購</span></div>':''))
     +(p.showcase
@@ -2313,23 +2313,23 @@ function renderProductPage(id){
   var basePrice=shownPrice;
   var promoDP=promoPrice(basePrice,p);
   var hasPromo=promoDP<basePrice;
-  var main=cover?('<img loading="lazy" id="detailMain" src="'+cover+'" alt="'+p.name+'" style="width:100%;border-radius:12px;margin-bottom:10px">'):'<div class="mimg">'+(p.emoji||IMG_PH)+'</div>';
+  var main=cover?('<img loading="lazy" id="detailMain" src="'+cover+'" alt="'+esc(p.name)+'" style="width:100%;border-radius:12px;margin-bottom:10px">'):'<div class="mimg">'+(p.emoji||IMG_PH)+'</div>';
   var thumbs=imgs.length>1?('<div style="display:flex;gap:8px;margin-bottom:16px">'+imgs.map(function(s,i){return '<img loading="lazy" src="'+s+'" onclick="setDetailImg('+id+','+i+')" style="width:56px;height:56px;object-fit:cover;border-radius:8px;cursor:pointer;border:1px solid var(--linen)">';}).join('')+'</div>'):'';
   var specsHtml='';
   if(p.specs&&p.specs.length){
     specsHtml='<p style="font-size:13px;color:var(--cocoa);font-weight:500;margin-bottom:8px">選擇規格</p><div id="specChips" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">'
       +p.specs.map(function(s,i){
         var th=s.img?('<img loading="lazy" src="'+s.img+'" style="width:40px;height:40px;object-fit:cover;border-radius:6px">'):'';
-        return '<div class="spec-chip'+(i===0?' sel':'')+'" onclick="selectSpec('+id+','+i+',this)">'+th+'<span>'+s.name+(s.price?'　NT$ '+s.price:'')+'</span></div>';
+        return '<div class="spec-chip'+(i===0?' sel':'')+'" onclick="selectSpec('+id+','+i+',this)">'+th+'<span>'+esc(s.name)+(s.price?'　NT$ '+s.price:'')+'</span></div>';
       }).join('')+'</div>';
   }
   document.getElementById('productPageContent').innerHTML=main+thumbs
-    +'<h3>'+p.name+'</h3><p class="msub">'+p.cat+(p.isCustom?' · 客製作品':'')+(p.canCustom?' · 可客製':'')+'</p>'
+    +'<h3>'+esc(p.name)+'</h3><p class="msub">'+esc(p.cat)+(p.isCustom?' · 客製作品':'')+(p.canCustom?' · 可客製':'')+'</p>'
     +'<div id="stockBadgeWrap">'+stockBadgeHtml(p,S._selSpec)+'</div>'
     +(p.isCustom?'<div style="background:#FFF8F0;border:1.5px solid var(--rose);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--cocoa);margin-bottom:12px"> 客製作品需先支付訂金 <span id="detailDep">NT$ '+shownDep+'</span> 才會開始製作</div>':'')
     +(p.canCustom?'<div style="background:var(--warm-ivory);border:1.5px solid var(--gold);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--cocoa);margin-bottom:12px;line-height:1.7">如需客製（改顏色／字樣），請私訊粉專 <a href="https://www.instagram.com/ju.accessories.tw?igsh=MW5jMmsyMzRma2ZlOQ%3D%3D&utm_source=qr" target="_blank" rel="noopener" style="color:var(--dusty-rose);font-weight:600;text-decoration:underline">@ju.accessories.tw</a> 另外報價，不可直接下單</div>':'')
-    +(p.preOrder?'<p style="font-size:12px;color:var(--cocoa);margin-bottom:12px;line-height:1.7;padding:8px 12px;background:#FFF8F0;border-radius:8px"><span style="font-weight:600">預購商品</span>　此款為接單後手工製作，完成後再安排出貨</p>':'')+'<p style="font-size:13px;color:var(--text-light);margin-bottom:16px;line-height:1.8;white-space:pre-wrap">'+p.desc+'</p>'
-    +(p.material?'<p style="font-size:12px;color:var(--text-light);margin-bottom:16px"><span style="color:var(--cocoa);font-weight:500">材質：</span>'+p.material+'</p>':'')
+    +(p.preOrder?'<p style="font-size:12px;color:var(--cocoa);margin-bottom:12px;line-height:1.7;padding:8px 12px;background:#FFF8F0;border-radius:8px"><span style="font-weight:600">預購商品</span>　此款為接單後手工製作，完成後再安排出貨</p>':'')+'<p style="font-size:13px;color:var(--text-light);margin-bottom:16px;line-height:1.8;white-space:pre-wrap">'+esc(p.desc)+'</p>'
+    +(p.material?'<p style="font-size:12px;color:var(--text-light);margin-bottom:16px"><span style="color:var(--cocoa);font-weight:500">材質：</span>'+esc(p.material)+'</p>':'')
     +specsHtml
     +productGiftBlock(id)
     +(p.showcase?'':('<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">'
@@ -2515,22 +2515,46 @@ function calcShip(){
   return cod?38:60;
 }
 
+/* 購物車文字保險絲：商品已刪除時仍確保名稱不含可執行內容 */
+function cartTextSafe(v){
+  var s=(v==null?'':String(v));
+  s=s.replace(/[\u0000-\u001F\u007F]/g,'').replace(/[<>{}$`|\\]/g,'');
+  return s.length>60?s.slice(0,60):s;
+}
 function repriceCart(){
-  var changed=false;
+  var changed=false;   /* 需要存檔 */
+  var priceChg=false;  /* 需要提醒顧客重新確認金額 */
   S.cart.forEach(function(item){
-    var p=S.products.find(function(x){return x.id===item.id;});if(!p)return;
+    var p=S.products.find(function(x){return x.id===item.id;});
+    /* 名稱與規格一律以商品資料為準：購物車存在 localStorage，內容可被竄改，
+       重建後 placeOrder 存進 Firestore 的就一定是真實商品名 */
+    if(!p){
+      var _n0=cartTextSafe(item.name),_s0=cartTextSafe(item.spec);
+      if(item.name!==_n0){item.name=_n0;changed=true;}
+      if((item.spec||'')!==_s0){item.spec=_s0;changed=true;}
+      return;
+    }
     var so=getSpecObj(p,item.spec||'');
+    if(item.name!==p.name){item.name=p.name;changed=true;}
+    if(so){
+      if(item.spec!==so.name){item.spec=so.name;changed=true;}
+    }else if(item.spec){
+      var _s1=cartTextSafe(item.spec);
+      if(item.spec!==_s1){item.spec=_s1;changed=true;}
+    }
+    if(!!item.isCustom!==!!p.isCustom){item.isCustom=!!p.isCustom;changed=true;}
     var base=(so&&so.price!=null&&so.price!=='')?so.price:p.price;
     var price=promoPrice(base,p);
     var dep=(so&&so.deposit!==''&&so.deposit!=null)?so.deposit:p.deposit;
     var label=(price<base?((S.promo&&S.promo.label)||'限時優惠'):'');
     var nd=!!p.noDiscount;
     if(item.price!==price||item.origPrice!==base||item.promoLabel!==label||item.deposit!==dep||!!item.noDiscount!==nd){
-      item.price=price;item.origPrice=base;item.promoLabel=label;item.deposit=dep;item.noDiscount=nd;changed=true;
+      item.price=price;item.origPrice=base;item.promoLabel=label;item.deposit=dep;item.noDiscount=nd;
+      changed=true;priceChg=true;
     }
   });
   if(changed)saveCart();
-  return changed;
+  return priceChg;
 }
 function renderCart(){
   repriceCart();
@@ -2547,7 +2571,7 @@ function renderCart(){
     var img=item.imgData?('<img loading="lazy" src="'+item.imgData+'" style="width:100%;height:100%;object-fit:cover;border-radius:10px">'):(item.emoji||IMG_PH);
     return '<div class="cart-item"><div class="cart-item-img" style="cursor:pointer" onclick="openDetail('+item.id+')">'+img+'</div>'
       +'<div class="ci-info"><div class="ci-name" style="cursor:pointer" onclick="openDetail('+item.id+')">'+esc(item.name)+((item.origPrice&&item.price<item.origPrice)?' <span style="color:var(--dusty-rose);font-weight:700">＊</span>':'')+(item.isCustom?'':'')+'</div>'
-      +(item.spec?'<div style="font-size:12px;color:var(--text-light)">規格：'+item.spec+'</div>':'')
+      +(item.spec?'<div style="font-size:12px;color:var(--text-light)">規格：'+esc(item.spec)+'</div>':'')
       +(item.noDiscount?'<div style="font-size:11.5px;color:var(--text-light)">此作品不參與折扣</div>':'')
       +'<div class="ci-price">NT$ '+item.price+((item.origPrice&&item.price<item.origPrice)?' <span style="font-size:12px;color:var(--text-light);text-decoration:line-through;font-weight:400">NT$ '+item.origPrice+'</span>':'')+'</div>'
       +'<div class="qty-ctrl" style="margin-top:6px">'
@@ -3134,7 +3158,7 @@ function orderCardHtml(o){
     +(cancelled?'<div style="font-size:13px;color:#8A6F66;background:#F0E4E0;border-radius:10px;padding:8px 12px;margin-top:4px">此訂單已取消</div>'
       :returned?'<div style="font-size:13px;color:#7A4A70;background:#EEE0EC;border-radius:10px;padding:8px 12px;margin-top:4px">此訂單已退貨</div>'
       :'<div class="prog-bar">'+bars+'</div>')
-    +'<div style="font-size:13px;color:var(--text-light);margin-top:8px">'+o.items.map(function(i){return i.name;}).join('、')+'</div>'
+    +'<div style="font-size:13px;color:var(--text-light);margin-top:8px">'+o.items.map(function(i){return esc(i.name);}).join('、')+'</div>'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px"><div style="font-size:14px;font-weight:600;color:var(--cocoa)">合計 NT$ '+o.total+'</div>'
     +'<div style="font-size:12px;color:var(--dusty-rose);font-weight:500">'+(o.paymentProof?'✓ 已通知付款':((o.payment==='cod'&&!(o.hasCustom&&o.customDepositChoice==='deposit'))?'查看明細 ›':'查看明細 / 上傳付款截圖 ›'))+'</div></div></div>';
 }
@@ -3840,7 +3864,7 @@ function openMergePicker(id){
     body+=cand.map(function(o){
       return '<div style="border:1.5px solid var(--linen);border-radius:12px;padding:12px 14px;margin-bottom:10px">'
         +'<div style="display:flex;justify-content:space-between;font-size:14px;font-weight:500"><span>訂單 #'+o.id+'</span><span>NT$ '+o.total+'</span></div>'
-        +'<div style="font-size:12px;color:var(--text-light);margin:4px 0 8px">'+o.date+'　'+o.items.map(function(i){return i.name+'×'+i.qty;}).join('、')+'</div>'
+        +'<div style="font-size:12px;color:var(--text-light);margin:4px 0 8px">'+o.date+'　'+o.items.map(function(i){return esc(i.name)+'×'+i.qty;}).join('、')+'</div>'
         +'<button class="abtn pr" style="border-radius:20px" onclick="mergeOrders('+id+','+o.id+')">合併此單</button></div>';
     }).join('');
   }
@@ -4003,7 +4027,7 @@ function renderAdminProds(){
     }
     var rowBg=ck?'background:var(--warm-ivory)':(p.pinned?'background:#FFFAF2':'');
     return '<tr'+(rowBg?' style="'+rowBg+'"':'')+'><td><input type="checkbox" class="prodSel" onclick="toggleSelProd('+p.id+',this)" '+(ck?'checked':'')+'></td>'
-      +'<td style="font-size:24px">'+img+'</td><td>'+p.name+(p.draft?'<br><span style="font-size:11px;color:var(--dusty-rose)"> 草稿（未上架）</span>':'')+(p.preview&&!p.draft?'<br><span style="font-size:11px;color:var(--cocoa)"> 搶先預覽（未開放購買）</span>':'')+(p.showcase?'<br><span style="font-size:11px;color:#6B5B4B"> 展示・絕版（不開放購買）</span>':'')+pinTag+'</td><td>'+p.cat+'</td><td>NT$ '+p.price+'</td>'
+      +'<td style="font-size:24px">'+img+'</td><td>'+esc(p.name)+(p.draft?'<br><span style="font-size:11px;color:var(--dusty-rose)"> 草稿（未上架）</span>':'')+(p.preview&&!p.draft?'<br><span style="font-size:11px;color:var(--cocoa)"> 搶先預覽（未開放購買）</span>':'')+(p.showcase?'<br><span style="font-size:11px;color:#6B5B4B"> 展示・絕版（不開放購買）</span>':'')+pinTag+'</td><td>'+esc(p.cat)+'</td><td>NT$ '+p.price+'</td>'
       +'<td>'+(p.isCustom?'✓':'—')+'</td><td>'+(p.isCustom?'NT$ '+p.deposit:'—')+'</td>'
       +'<td>'+(p.preview&&!p.draft?'<button class="abtn pr" onclick="openForSale('+p.id+')">開放購買</button>':'')+'<button class="abtn '+(p.draft?'pr':'sc')+'" onclick="togglePublish('+p.id+')">'+(p.draft?'上架':'下架')+'</button>'
       +'<button class="abtn '+(p.pinned?'ok':'sc')+'" onclick="togglePin('+p.id+')">'+(p.pinned?'取消置頂':'置頂')+'</button>'
