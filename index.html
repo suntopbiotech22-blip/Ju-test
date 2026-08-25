@@ -1028,7 +1028,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0825b</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0825c</div>
 </footer>
 
 <!-- MODALS -->
@@ -1747,7 +1747,20 @@ function applyOrderStock(o,sign,localOnly){
   var pa=document.getElementById('page-admin');if(pa&&pa.classList.contains('active'))renderInventory();
 }
 function persistOrder(o){if(o&&window.FB&&window.FB.saveOrder){window.FB.saveOrder(o).then(function(did){if(did)o._docId=did;}).catch(function(e){console.error('saveOrder',e&&(e.code||e.message));});}}
-function persistOrderDelete(o){if(o&&o._docId&&window.FB&&window.FB.deleteOrder){window.FB.deleteOrder(o._docId).catch(function(e){console.error('deleteOrder',e&&(e.code||e.message));});}}
+function persistOrderDelete(o){
+  if(!(o&&window.FB&&window.FB.deleteOrder))return Promise.resolve({ok:false,skip:'no-fb'});
+  if(!o._docId){
+    /* 沒有 _docId 代表這筆還沒同步到 Firestore（或訂閱尚未回填），
+       此時只從畫面移除是危險的：訂閱一回來它就會復活 */
+    console.warn('deleteOrder: 缺少 _docId，訂單 #'+(o.id||'?')+' 未刪除雲端資料');
+    return Promise.resolve({ok:false,id:o.id,err:{code:'no-docid'}});
+  }
+  return window.FB.deleteOrder(o._docId).then(function(){return {ok:true,id:o.id};})
+    .catch(function(e){
+      console.error('deleteOrder',e&&(e.code||e.message));
+      return {ok:false,id:o.id,err:e||{}};
+    });
+}
 function persistMember(m){if(m&&!m.isAdmin&&window.FB&&window.FB.saveMember){window.FB.saveMember(m).then(function(did){if(did)m._docId=did;}).catch(function(e){console.error('saveMember',e&&(e.code||e.message));});}}
 function isFav(id){return getFavs().indexOf(id)>=0;}
 function toggleFav(id,btn){
@@ -3839,10 +3852,26 @@ function restoreOrder(id){
 function deleteOrder(id){
   askConfirm('確定永久刪除訂單 #'+id+'？此動作無法復原。',function(){
     var i=S.orders.findIndex(function(x){return x.id===id;});if(i<0)return;
-    if(S.orders[i].stockApplied)applyOrderStock(S.orders[i],1);
-    persistOrderDelete(S.orders[i]);S.orders.splice(i,1);
-    renderAdmin();closeModal('orderDetailModal');showToast('訂單 #'+id+' 已刪除');
+    var o=S.orders[i],restored=false;
+    if(o.stockApplied){applyOrderStock(o,1);o.stockApplied=false;restored=true;}
+    S.orders.splice(i,1);
+    renderAdmin();closeModal('orderDetailModal');
+    persistOrderDelete(o).then(function(r){
+      if(r.ok){showToast('訂單 #'+id+' 已刪除');return;}
+      /* 雲端沒刪成功：把庫存扣回去，避免顧客重新整理後訂單復活但庫存已多加 */
+      if(restored){applyOrderStock(o,-1);o.stockApplied=true;}
+      if(S.orders.indexOf(o)<0){S.orders.push(o);S.orders.sort(function(a,b){return (b.id||0)-(a.id||0);});}
+      renderAdmin();
+      showToast(deleteFailMsg(r,'訂單 #'+id));
+    });
   });
+}
+/* 刪除失敗時給出可行動的訊息，而不是靜默失敗 */
+function deleteFailMsg(r,what){
+  var c=(r&&r.err&&(r.err.code||r.err.message))||'';
+  if(c==='no-docid')return what+' 尚未同步到雲端，請重新整理頁面後再刪一次';
+  if(String(c).indexOf('permission')>=0)return what+' 刪除失敗：權限不足，請確認已用管理員帳號登入';
+  return what+' 刪除失敗：'+(c||'請檢查網路後再試');
 }
 function recalcOrder(o){
   o.subtotal=(o.items||[]).reduce(function(s,i){return s+i.price*i.qty;},0);
@@ -4221,14 +4250,38 @@ function toggleSelAllOrders(el){
 function batchDeleteOrders(){
   var sel=(S._selOrders||[]).slice();
   if(!sel.length){showToast('請先勾選訂單');return;}
-  if(!window.confirm('確定要刪除勾選的 '+sel.length+' 筆訂單嗎？此動作無法復原。'))return;
+  if(!window.confirm('確定要刪除勾選的 '+sel.length+' 筆訂單嗎？此動作無法復原。\n（已扣的庫存會一併還原）'))return;
+  var picked=[];
   sel.forEach(function(id){
     var i=S.orders.findIndex(function(o){return o.id===id;});
-    if(i>=0){persistOrderDelete(S.orders[i]);S.orders.splice(i,1);}
+    if(i<0)return;
+    var o=S.orders[i],restored=false;
+    /* 與單筆刪除一致：把這筆訂單扣掉的庫存加回去 */
+    if(o.stockApplied){applyOrderStock(o,1);o.stockApplied=false;restored=true;}
+    S.orders.splice(i,1);
+    picked.push({o:o,restored:restored});
   });
   S._selOrders=[];
   renderAdmin();
-  showToast('已刪除 '+sel.length+' 筆訂單');
+  if(!picked.length){showToast('沒有可刪除的訂單');return;}
+  showToast('刪除中…（'+picked.length+' 筆）');
+  Promise.all(picked.map(function(it){
+    return persistOrderDelete(it.o).then(function(r){return {r:r,it:it};});
+  })).then(function(res){
+    var fail=res.filter(function(x){return !x.r.ok;});
+    fail.forEach(function(x){
+      if(x.it.restored){applyOrderStock(x.it.o,-1);x.it.o.stockApplied=true;}
+      if(S.orders.indexOf(x.it.o)<0)S.orders.push(x.it.o);
+    });
+    if(fail.length){
+      S.orders.sort(function(a,b){return (b.id||0)-(a.id||0);});
+      renderAdmin();
+      var ids=fail.map(function(x){return '#'+(x.it.o.id||'?');}).join('、');
+      showToast(deleteFailMsg(fail[0].r,ids)+(res.length-fail.length?'（其餘 '+(res.length-fail.length)+' 筆已刪除）':''));
+    }else{
+      showToast('已刪除 '+res.length+' 筆訂單，庫存已還原');
+    }
+  });
 }
 
 function renderAdminMembs(){
