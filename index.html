@@ -1028,7 +1028,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0819a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0825a</div>
 </footer>
 
 <!-- MODALS -->
@@ -1512,11 +1512,12 @@ function doLogout(){
 
 
 function doRegister(){
-  var name=document.getElementById('regName').value.trim();
+  var name=guardClean('name',document.getElementById('regName').value).trim();
   var email=document.getElementById('regEmail').value.trim();
   var pwd=document.getElementById('regPwd').value;
-  var phone=document.getElementById('regPhone').value.trim();
-  var ig=document.getElementById('regIG').value.trim();
+  var phone=guardClean('phone',document.getElementById('regPhone').value).trim();
+  var ig=guardClean('ig',document.getElementById('regIG').value).trim();
+  if(hostileInput(name)||hostileInput(phone)||hostileInput(ig)){showToast('\u8CC7\u6599\u542B\u6709\u4E0D\u5141\u8A31\u7684\u5B57\u5143\uFF0C\u8ACB\u91CD\u65B0\u586B\u5BEB');return;}
   if(!name||!email||!pwd){showToast('請填寫姓名、Email 與密碼');return;}
   if(pwd.length<6){showToast('密碼至少 6 位');return;}
   if(isAdminEmail(email)){showToast('此 Email 為管理帳號，請改用登入');return;}
@@ -1554,6 +1555,108 @@ function doRegister(){
   });
 }
 function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+/* ══ 輸入防護 IG-0825 ══════════════════════════════════════════
+   目的：讓惡意/掃描字串「打不進來」。
+   1) 逐鍵過濾（含貼上）：不合法字元直接不會出現在欄位裡
+   2) 長度上限：避免被灌爆信件與 Firestore 文件
+   3) 送出前硬擋：偵測到注入樣式一律拒絕，不再只是警告
+   4) 下單頻率限制：同一裝置 20 秒內／每小時上限                     */
+var GUARD_RULE={
+  name :{max:30 ,bad:/[^\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFFA-Za-z0-9\u3105-\u312F\s\u00B7\uFF0E\u30FB\-]/g,lbl:'\u59D3\u540D'},
+  phone:{max:20 ,bad:/[^0-9+\-()#\s]/g,lbl:'\u96FB\u8A71'},
+  email:{max:100,bad:/[^A-Za-z0-9@._+\-]/g,lbl:'\u96FB\u5B50\u90F5\u4EF6'},
+  ig   :{max:40 ,bad:/[^A-Za-z0-9@._]/g,lbl:'Instagram'},
+  zip  :{max:6  ,bad:/[^0-9]/g,lbl:'\u90F5\u905E\u5340\u865F'},
+  addr :{max:100,bad:/[<>{}\[\]$`|\\^~"'=;]/g,lbl:'\u5730\u5740'},
+  store:{max:40 ,bad:/[<>{}\[\]$`|\\^~"'=;]/g,lbl:'\u9580\u5E02'},
+  note :{max:200,bad:/[<>{}$`|\\=]/g,lbl:'\u5099\u8A3B'},
+  code :{max:32 ,bad:/[^A-Za-z0-9_\-]/g,lbl:'\u6298\u6263\u78BC'}
+};
+var GUARD_FIELD={
+  rcvName:'name',abName:'name',regName:'name',memberName:'name',
+  rcvPhone:'phone',abPhone:'phone',regPhone:'phone',
+  rcvEmail:'email',regEmail:'email',memberEmail:'email',
+  rcvIG:'ig',abIG:'ig',regIG:'ig',memberIG:'ig',
+  zipInput:'zip',abZip:'zip',
+  addrInput:'addr',abAddr:'addr',storeAddrInput:'addr',abStoreAddr:'addr',
+  storeInput:'store',abStore:'store',abLabel:'store',
+  orderNote:'note',discountInput:'code'
+};
+function guardClean(kind,v){
+  var r=GUARD_RULE[kind];var s=(v==null?'':String(v));
+  if(!r)return s;
+  s=s.replace(kind==='note'?/[\u0000-\u0009\u000B-\u001F\u007F\u200B-\u200F\u2028\u2029\uFEFF]/g
+                           :/[\u0000-\u001F\u007F\u200B-\u200F\u2028\u2029\uFEFF]/g,'');
+  s=s.replace(r.bad,'');
+  s=s.replace(/[ \t]{3,}/g,' ');
+  if(kind==='note')s=s.replace(/\n{4,}/g,'\n\n');
+  if(s.length>r.max)s=s.slice(0,r.max);
+  return s;
+}
+/* 明顯的注入 / 掃描樣式 —— 出現就整筆拒收 */
+function hostileInput(v){
+  var s=(v==null?'':String(v));
+  if(!s)return false;
+  return /<\s*\/?\s*[a-zA-Z!]/.test(s)
+    || /(javascript|vbscript|data)\s*:/i.test(s)
+    || /\{\{|\$\{|<%|%3C|&#x?\d/i.test(s)
+    || /\bon(error|load|click|focus|mouse\w+)\s*=/i.test(s)
+    || /(\.\.\/|\.\.\\|%2e%2e|%252e)/i.test(s)
+    || /\b(select|drop|union|insert|update|delete)\b[\s\S]{0,25}\b(table|from|into|set|where)\b/i.test(s)
+    || /(^|[^a-z])(or|and)\s+['"]?\d+['"]?\s*=\s*['"]?\d+/i.test(s)
+    || /__proto__|\bconstructor\b\s*[\[.(]|\bprototype\b\s*\[/.test(s)
+    || /%0d%0a|\r\n/i.test(s)
+    || /\bfile:\/\/|\/etc\/passwd|system32/i.test(s)
+    || /\{\s*"\$(ne|gt|lt|gte|lte|regex|where)"/i.test(s);
+}
+var _guardTipAt=0;
+function guardTip(lbl,cut){
+  var now=Date.now();if(now-_guardTipAt<2500)return;_guardTipAt=now;
+  try{showToast(cut?('\u300C'+lbl+'\u300D\u5DF2\u9054\u5B57\u6578\u4E0A\u9650'):('\u300C'+lbl+'\u300D\u542B\u6709\u4E0D\u5141\u8A31\u7684\u5B57\u5143\uFF0C\u5DF2\u81EA\u52D5\u79FB\u9664'));}catch(e){}
+}
+(function(){
+  function hook(e){
+    var t=e.target;if(!t||!t.id)return;
+    var kind=GUARD_FIELD[t.id];if(!kind)return;
+    var r=GUARD_RULE[kind];
+    try{if(!t.getAttribute('maxlength'))t.setAttribute('maxlength',String(r.max));}catch(_){}
+    var v=t.value==null?'':String(t.value),c=guardClean(kind,v);
+    if(c===v)return;
+    var pos=0;try{pos=t.selectionStart||0;}catch(_){}
+    t.value=c;
+    var np=Math.max(0,pos-(v.length-c.length));
+    try{t.setSelectionRange(np,np);}catch(_){}
+    guardTip(r.lbl,c.length>=r.max&&v.length>r.max);
+  }
+  document.addEventListener('input',hook,true);
+  document.addEventListener('change',hook,true);
+  document.addEventListener('focusin',function(e){
+    var t=e.target;if(!t||!t.id)return;
+    var kind=GUARD_FIELD[t.id];if(!kind)return;
+    try{if(!t.getAttribute('maxlength'))t.setAttribute('maxlength',String(GUARD_RULE[kind].max));}catch(_){}
+  },true);
+})();
+/* 下單頻率限制（同一裝置） */
+function orderRateCheck(){
+  try{
+    var a=JSON.parse(localStorage.getItem('ju_ordts')||'[]'),now=Date.now();
+    if(!Array.isArray(a))a=[];
+    a=a.filter(function(t){return now-t<3600000;});
+    localStorage.setItem('ju_ordts',JSON.stringify(a));
+    if(a.length>=6)return '\u77ED\u6642\u9593\u5167\u4E0B\u55AE\u6B21\u6578\u904E\u591A\uFF0C\u8ACB\u7A0D\u5F8C\u518D\u8A66\uFF0C\u6216\u76F4\u63A5\u79C1\u8A0A\u6211\u5011';
+    if(a.length&&now-a[a.length-1]<20000)return '\u4E0B\u55AE\u904E\u65BC\u983B\u7E41\uFF0C\u8ACB\u7A0D\u5019\u518D\u8A66';
+    return '';
+  }catch(e){return '';}
+}
+function orderRateMark(){
+  try{
+    var a=JSON.parse(localStorage.getItem('ju_ordts')||'[]');
+    if(!Array.isArray(a))a=[];
+    a.push(Date.now());localStorage.setItem('ju_ordts',JSON.stringify(a));
+  }catch(e){}
+}
+/* ══ 輸入防護 end ═══════════════════════════════════════════ */
+
 var HEART_SVG='<svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke-linejoin="round"/></svg>';
 function getFavs(){try{return JSON.parse(localStorage.getItem('ju_favs')||'[]');}catch(e){return [];}}
 function saveCart(){try{localStorage.setItem('ju_cart',JSON.stringify(S.cart));}catch(e){}}
@@ -2781,6 +2884,7 @@ function selShip(t){
 
 function placeOrder(total){
   if(S._placing)return;
+  if(!S._shipConfirmed){var _rt=orderRateCheck();if(_rt){showToast(_rt);return;}}
   if(!S.currentUser&&S.emailjs&&S.emailjs.recaptchaSiteKey&&!captchaVerified('pay')){showToast('請先完成「我不是機器人」驗證');return;}
   if(!S.paymentMethod){showToast('請選擇付款方式');return;}
   if(!S.currentUser&&S.paymentMethod==='cod'){showToast('訪客結帳僅提供銀行匯款與 LINE Pay，貨到付款請先登入會員');return;}
@@ -2829,6 +2933,29 @@ function placeOrder(total){
   }
   var noteV=(document.getElementById('orderNote')||{}).value||'';
   var igV=(document.getElementById('rcvIG')||{}).value||'';
+  /* ── 輸入防護：先硬擋原始值，再清洗（IG-0825）─────────── */
+  var _gchk=[['\u59D3\u540D',nm],['\u96FB\u8A71',ph],['Instagram',igV],['\u5099\u8A3B',noteV],
+             ['\u96FB\u5B50\u90F5\u4EF6',gEmail],['\u9580\u5E02',_storeV],['\u5730\u5740',_storeAddrV],
+             ['\u5730\u5740',_addrRaw],['\u53D6\u8CA8\u5730\u5740',addr]];
+  for(var _gi=0;_gi<_gchk.length;_gi++){
+    if(hostileInput(_gchk[_gi][1])){
+      showToast('\u300C'+_gchk[_gi][0]+'\u300D\u542B\u6709\u4E0D\u5141\u8A31\u7684\u5167\u5BB9\uFF0C\u8ACB\u91CD\u65B0\u586B\u5BEB');
+      S._shipConfirmed=false;return;
+    }
+  }
+  nm=guardClean('name',nm);ph=guardClean('phone',ph);
+  igV=guardClean('ig',igV);noteV=guardClean('note',noteV);
+  gEmail=guardClean('email',gEmail);
+  _storeV=guardClean('store',_storeV);_storeAddrV=guardClean('addr',_storeAddrV);
+  _zipV=guardClean('zip',_zipV);_addrRaw=guardClean('addr',_addrRaw);
+  /* 由清洗過的欄位重組地址，避免整串被長度上限截斷 */
+  if(S.paymentMethod==='cod'){addr='7-11 \u8CE3\u8CA8\u4FBF\uFF08\u4E0B\u55AE\u5F8C\u63D0\u4F9B\u53D6\u8CA8\u8CC7\u8A0A\uFF09';}
+  else if(S.shippingMethod==='711'){addr=_storeV?(_storeV+(_storeAddrV?'\uFF08'+_storeAddrV+'\uFF09':'')):'';}
+  else if(S.shippingMethod==='home'){addr=((_zipV?_zipV+' ':'')+_addrRaw).trim();}
+  if(!nm.trim()||!ph.trim()){showToast('\u8ACB\u586B\u5BEB\u6B63\u78BA\u7684\u6536\u4EF6\u4EBA\u8CC7\u8A0A');S._shipConfirmed=false;return;}
+  if(/[^0-9]/.test(_halfw(ph).replace(/[\s\-()+#]/g,''))){showToast('\u96FB\u8A71\u53EA\u80FD\u586B\u5BEB\u6578\u5B57');S._shipConfirmed=false;return;}
+  if(S.paymentMethod!=='cod'&&!addr.trim()){showToast('\u8ACB\u586B\u5BEB\u53D6\u8CA8\u5730\u5740\u6216\u5E97\u540D');S._shipConfirmed=false;return;}
+  /* ── 輸入防護 end ──────────────────────────────────────── */
   if(hasC&&!S.customDepositChoice){showToast('請選擇客製訂金匯款方式');return;}
   if(hasC&&S.customDepositChoice==='full'&&S.paymentMethod==='cod'){showToast('客製作品選擇匯全額時無法使用貨到付款，請改用銀行匯款或 LINE Pay');return;}
   if(hasC&&S.customDepositChoice==='deposit'&&!S.customRemainChoice){
@@ -2893,6 +3020,7 @@ function placeOrder(total){
     status:'pending',date:new Date().toLocaleDateString('zh-TW'),created:new Date().toISOString()};
   if(!S.currentUser){o.guest=true;o.email=gEmail;}
   applyOrderStock(o,-1,!!reserved);o.stockApplied=true;
+  orderRateMark();
   S.orders.unshift(o);persistOrder(o);
   if(S.appliedDiscount&&S.appliedDiscount._couponId&&S.currentUser){var _cid=S.appliedDiscount._couponId,_cc=(S.currentUser.coupons||[]).find(function(x){return x.id===_cid;});if(_cc){_cc.used=true;_cc.usedOrderId=o.id;_cc.usedDate=o.date;persistMember(S.currentUser);}}
   sendOrderEmail(o);
@@ -3469,8 +3597,11 @@ function delAddrEntry(id){
 function saveAddrEntry(){
   if(!S.currentUser)return;
   var g=function(id){return ((document.getElementById(id)||{}).value||'').trim();};
-  var e={label:g('abLabel'),name:g('abName'),phone:g('abPhone'),ig:g('abIG'),
-    zip:g('abZip'),addr:g('abAddr'),store:g('abStore'),storeAddr:g('abStoreAddr')};
+  var e={label:guardClean('store',g('abLabel')),name:guardClean('name',g('abName')),
+    phone:guardClean('phone',g('abPhone')),ig:guardClean('ig',g('abIG')),
+    zip:guardClean('zip',g('abZip')),addr:guardClean('addr',g('abAddr')),
+    store:guardClean('store',g('abStore')),storeAddr:guardClean('addr',g('abStoreAddr'))};
+  for(var _ek in e){if(hostileInput(e[_ek])){showToast('\u5BC4\u9001\u8CC7\u6599\u542B\u6709\u4E0D\u5141\u8A31\u7684\u5167\u5BB9\uFF0C\u8ACB\u91CD\u65B0\u586B\u5BEB');return;}}
   if(!e.name){showToast('請填寫收件人姓名');return;}
   if(!e.phone){showToast('請填寫電話');return;}
   if(!e.addr&&!e.store){showToast('請至少填寫宅配地址或 7-11 門市');return;}
@@ -3755,6 +3886,14 @@ function sendOrderEmail(o){
       customer_name:o.receiver,customer_phone:o.phone,member_email:memberEmail,
       customer_ig:(o.ig||(S.currentUser&&(S.currentUser.defaultIG||S.currentUser.ig))||'')||'未提供',
       items:items,total:o.total,deposit:o.totalDeposit||0,pay_now:mailPayInfo(o).pay_now,balance:mailPayInfo(o).balance,payment:pay,shipping:ship,address:o.address,note:o.note||''};
+    /* 信件欄位長度上限，避免被灌爆（IG-0825） */
+    var _mcap={customer_name:30,customer_phone:20,member_email:100,customer_ig:40,address:120,note:200,items:600};
+    for(var _mk in _mcap){
+      if(params[_mk]==null)continue;
+      var _mv=String(params[_mk]).replace(/[\u0000-\u0009\u000B-\u001F\u007F]/g,'');
+      if(_mv.length>_mcap[_mk])_mv=_mv.slice(0,_mcap[_mk])+'…(\u5DF2\u622A\u65B7)';
+      params[_mk]=_mv;
+    }
     /* reCAPTCHA token 驗證一次即作廢：只附在「賣家信」上（賣家模板開啟驗證），
        顧客信不帶 token（顧客模板需在 EmailJS 後台關閉 reCAPTCHA 驗證），否則會 timeout-or-duplicate */
     var tok=cfg.recaptchaSiteKey?captchaToken('pay'):'';
