@@ -57,6 +57,7 @@ background:#F7F1E7;color:#5C4636;margin-right:8px;}
 <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js">
 <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js">
 <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.15.0/firebase-app-check.js">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Noto+Serif+TC:wght@500;600;700&family=Parisienne&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1028,7 +1029,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0825c</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 0907a</div>
 </footer>
 
 <!-- MODALS -->
@@ -1153,7 +1154,7 @@ var S={
 
 /* 版本廣播：SITE_BUILD 只能遞增（YYYYMMDD + 當日第幾個版）。
    舊分頁會從 config 即時收到新 build，就知道自己過期了。 */
-var SITE_VER='0813d',SITE_BUILD=202608135;
+var SITE_VER='0907a',SITE_BUILD=202609071;
 function publishSiteBuild(cfg){
   if(!(cfg&&typeof cfg==='object'))cfg={};
   var cur=parseInt(cfg.siteBuild,10)||0;
@@ -1298,7 +1299,7 @@ function handleAuthUser(user){
     var abA=document.getElementById('adminBtn');if(abA)abA.style.display='none';
     if(window.FB.subscribeMyOrders){S._unsubOrders=window.FB.subscribeMyOrders(user.uid,function(list){
       if(!Array.isArray(list))return;
-      S.orders=list.slice().sort(function(a,b){return (b.id||0)-(a.id||0);});
+      S.orders=normOrders(list.slice()).sort(function(a,b){return (b.id||0)-(a.id||0);});
       var pg=document.getElementById('page-guestorders');if(pg&&pg.classList.contains('active'))renderGuestOrders();
     });}
     return;
@@ -1310,7 +1311,7 @@ function handleAuthUser(user){
     if(window.FB.seedIfEmpty&&typeof DEFAULT_PRODUCTS!=='undefined'){window.FB.seedIfEmpty(DEFAULT_PRODUCTS);}
     if(window.FB.subscribeOrders){S._unsubOrders=window.FB.subscribeOrders(function(list){
       if(!Array.isArray(list))return;
-      S.orders=list.slice().sort(function(a,b){return (b.id||0)-(a.id||0);});
+      S.orders=normOrders(list.slice()).sort(function(a,b){return (b.id||0)-(a.id||0);});
       var mx=S.orders.reduce(function(m,o){return Math.max(m,o.id||0);},1000);
       S.nextOrderId=Math.max(S.nextOrderId||1001,mx+1);
       if(window.FB.ensureOrderCounter)window.FB.ensureOrderCounter(mx);
@@ -1344,7 +1345,7 @@ function handleAuthUser(user){
       if(S._prodsReady)renderShopProducts();
       if(window.FB.subscribeMyOrders){S._unsubOrders=window.FB.subscribeMyOrders(user.uid,function(list){
         if(!Array.isArray(list))return;
-        S.orders=list.slice().sort(function(a,b){return (b.id||0)-(a.id||0);});
+        S.orders=normOrders(list.slice()).sort(function(a,b){return (b.id||0)-(a.id||0);});
         var pm=document.getElementById('page-member');if(pm&&pm.classList.contains('active'))renderMemberProfile();
       });}
       refreshAuthUI();
@@ -1544,7 +1545,7 @@ function doRegister(){
     S.currentUser=u;
     var mb=document.getElementById('memberBtn');if(mb)mb.textContent=u.name;
     var ab=document.getElementById('adminBtn');if(ab)ab.style.display='none';
-    if(window.FB.subscribeMyOrders){if(S._unsubOrders){try{S._unsubOrders();}catch(e){}}S._unsubOrders=window.FB.subscribeMyOrders(uid,function(list){if(Array.isArray(list)){S.orders=list.slice().sort(function(a,b){return (b.id||0)-(a.id||0);});var pm=document.getElementById('page-member');if(pm&&pm.classList.contains('active'))renderMemberProfile();}});}
+    if(window.FB.subscribeMyOrders){if(S._unsubOrders){try{S._unsubOrders();}catch(e){}}S._unsubOrders=window.FB.subscribeMyOrders(uid,function(list){if(Array.isArray(list)){S.orders=normOrders(list.slice()).sort(function(a,b){return (b.id||0)-(a.id||0);});var pm=document.getElementById('page-member');if(pm&&pm.classList.contains('active'))renderMemberProfile();}});}
     S._justRegistered=true;
     showToast('註冊成功，歡迎加入 Ju！');showPage('home');
     return window.FB.saveMember(u).then(function(){S._registering=false;}).catch(function(){S._registering=false;});
@@ -2204,8 +2205,8 @@ function openOrderDetail(id,isAdmin){
   var depOnly=o.hasCustom&&o.customDepositChoice==='deposit';
   var _sp=orderPaySplit(o),remainder=_sp.remainder,payNow=_sp.payNow;
   var lines=o.items.map(function(i){return '<div style="display:flex;justify-content:space-between;font-size:13px;margin:5px 0"><span>'+esc(i.name)+(i.spec?'（'+esc(i.spec)+'）':'')+(i.isCustom?'':'')+' ×'+i.qty+'</span><span>NT$ '+(i.price*i.qty)+'</span></div>';}).join('');
-  var html='<h3 style="margin-bottom:4px">訂單 #'+o.id+'</h3>'
-    +'<p class="msub" style="margin-bottom:12px">'+o.date+'　<span class="sbadge s-'+o.status+'">'+sLabel(o.status)+'</span>'+(o.guest?'　<span class="sbadge" style="background:var(--warm-ivory);color:var(--cocoa)">訪客</span>':'')+'</p>'
+  var html='<h3 style="margin-bottom:4px">訂單 #'+esc(oidLabel(o))+'</h3>'
+    +'<p class="msub" style="margin-bottom:12px">'+esc(o.date||'—')+'　<span class="sbadge s-'+esc(o.status)+'">'+sLabel(o.status)+'</span>'+(o.guest?'　<span class="sbadge" style="background:var(--warm-ivory);color:var(--cocoa)">訪客</span>':'')+'</p>'
     +'<div class="order-sum">'+lines
     +'<div class="sum-row"><span>運費</span><span>'+(o.shipping===0?'免費':'NT$ '+o.shipping)+'</span></div>'
     +(o.discount?'<div class="sum-row" style="color:var(--dusty-rose)"><span>折扣</span><span>-NT$ '+o.discount+'</span></div>':'')
@@ -3166,7 +3167,7 @@ function orderCardHtml(o){
       +'<div class="prog-lbl'+(act?' act':'')+'">'+labels[i]+'</div></div>';
   }).join('');
   return '<div class="ord-card" style="cursor:pointer" onclick="openOrderDetail('+o.id+')"><div class="ord-hdr">'
-    +'<div><div style="font-size:14px;font-weight:500">訂單 #'+o.id+'</div><div style="font-size:12px;color:var(--text-light)">'+o.date+'</div></div>'
+    +'<div><div style="font-size:14px;font-weight:500">訂單 #'+esc(oidLabel(o))+'</div><div style="font-size:12px;color:var(--text-light)">'+esc(o.date||'—')+'</div></div>'
     +'<span class="sbadge s-'+o.status+'">'+sLabel(o.status)+'</span></div>'
     +(cancelled?'<div style="font-size:13px;color:#8A6F66;background:#F0E4E0;border-radius:10px;padding:8px 12px;margin-top:4px">此訂單已取消</div>'
       :returned?'<div style="font-size:13px;color:#7A4A70;background:#EEE0EC;border-radius:10px;padding:8px 12px;margin-top:4px">此訂單已退貨</div>'
@@ -3892,7 +3893,7 @@ function openMergePicker(id){
   }else{
     body+=cand.map(function(o){
       return '<div style="border:1.5px solid var(--linen);border-radius:12px;padding:12px 14px;margin-bottom:10px">'
-        +'<div style="display:flex;justify-content:space-between;font-size:14px;font-weight:500"><span>訂單 #'+o.id+'</span><span>NT$ '+o.total+'</span></div>'
+        +'<div style="display:flex;justify-content:space-between;font-size:14px;font-weight:500"><span>訂單 #'+esc(oidLabel(o))+'</span><span>NT$ '+o.total+'</span></div>'
         +'<div style="font-size:12px;color:var(--text-light);margin:4px 0 8px">'+o.date+'　'+o.items.map(function(i){return esc(i.name)+'×'+i.qty;}).join('、')+'</div>'
         +'<button class="abtn pr" style="border-radius:20px" onclick="mergeOrders('+id+','+o.id+')">合併此單</button></div>';
     }).join('');
@@ -4803,6 +4804,36 @@ function updStatus(id,ns){
   else if(ns==='shipped')o.status='shipped';
   persistOrder(o);renderAdmin();showToast('訂單 #'+id+' 狀態已更新');
 }
+/* ══ 訂單防呆 IG-0907 ══════════════════════════════════════════
+   來源不明／欄位殘缺的訂單（例如繞過前端直接寫入 Firestore 的假單）
+   不應該讓後台整片顯示 undefined。這裡在資料進 S.orders 之前補齊，
+   缺的金額用「小計＋運費－折扣」推算，缺的文字補空字串。
+   注意：不動 o.id（onclick 內嵌需要原值），顯示端另外做 fallback。 */
+function normOrder(o){
+  if(!o||typeof o!=='object')return o;
+  if(!Array.isArray(o.items))o.items=[];
+  o.items=o.items.map(function(i){
+    if(!i||typeof i!=='object')i={};
+    if(typeof i.name!=='string'||!i.name)i.name='(品項資料缺失)';
+    if(i.spec!=null&&typeof i.spec!=='string')i.spec=String(i.spec);
+    i.qty=Number(i.qty)||0;
+    i.price=Number(i.price)||0;
+    return i;
+  });
+  var sub=o.items.reduce(function(s,i){return s+i.price*i.qty;},0);
+  if(typeof o.subtotal!=='number'||isNaN(o.subtotal))o.subtotal=sub;
+  if(typeof o.shipping!=='number'||isNaN(o.shipping))o.shipping=0;
+  if(typeof o.discount!=='number'||isNaN(o.discount))o.discount=0;
+  if(typeof o.total!=='number'||isNaN(o.total))o.total=Math.max(0,o.subtotal+o.shipping-o.discount);
+  if(typeof o.status!=='string'||!o.status)o.status='pending';
+  if(typeof o.date!=='string')o.date='';
+  if(typeof o.receiver!=='string')o.receiver='';
+  if(typeof o.phone!=='string')o.phone='';
+  return o;
+}
+function normOrders(list){return (Array.isArray(list)?list:[]).map(normOrder);}
+/* 顯示用單號：缺 id 時不要印出 undefined */
+function oidLabel(o){return (o&&o.id!=null&&o.id!=='')?o.id:'—';}
 function sLabel(s){return{pending:'待確認',paid:'已收款',making:'製作中',shipped:'已出貨',done:'已完成',returned:'已退貨',cancelled:'已取消'}[s]||s;}
 function orderVoided(o){return !!o&&(o.status==='cancelled'||o.status==='returned');}
 function orderClosed(o){return !!o&&(o.status==='cancelled'||o.status==='returned'||o.status==='done');}
@@ -5283,6 +5314,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.15.0/fireba
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, getMultiFactorResolver, TotpMultiFactorGenerator, onAuthStateChanged, signOut, sendPasswordResetEmail, deleteUser, EmailAuthProvider, reauthenticateWithCredential } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js';
 import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, setDoc, getDoc, query, where, runTransaction } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 import { getStorage, ref as storageRef, uploadString, getDownloadURL } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-storage.js';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-app-check.js';
 const firebaseConfig = {
   apiKey: "AIzaSyAETCZAk1fOUsFMPt5eb2q3DlrQlkr5GUc",
   authDomain: "ju-accessories-shop.firebaseapp.com",
@@ -5293,6 +5325,14 @@ const firebaseConfig = {
   measurementId: "G-W6W806EL2M"
 };
 const app=initializeApp(firebaseConfig);
+/* App Check：驗證請求來自本網站，擋掉繞過前端直接寫 Firestore 的行為。
+   必須在存取任何 Firebase 服務之前初始化。 */
+try{
+  initializeAppCheck(app,{
+    provider:new ReCaptchaEnterpriseProvider('6Le6h60tAAAAAIBfvAEhX1hmvpvrIA5NQtMXipMG'),
+    isTokenAutoRefreshEnabled:true
+  });
+}catch(e){console.warn('AppCheck init failed',e&&(e.code||e.message));}
 const auth=getAuth(app);
 const db=getFirestore(app);
 const storage=getStorage(app);
