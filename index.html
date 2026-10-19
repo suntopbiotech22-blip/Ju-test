@@ -356,7 +356,8 @@ input:not([type=checkbox]):not([type=radio]):not([type=file]),select,textarea{fo
 .fav-chip svg{width:15px;height:15px;stroke:var(--dusty-rose);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .fav-chip.on{background:var(--dusty-rose);color:#fff;border-color:var(--dusty-rose);}
 .fav-chip.on svg{fill:#fff;stroke:#fff;}
-.fav-row{text-align:center;margin-top:2px;}
+.fav-row{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:8px;margin:2px 0 18px;}
+.fav-row .fav-chip{margin-bottom:0;line-height:1.2;}
 .ship-box{margin-top:14px;padding:14px 14px 4px;border:1px solid var(--linen);border-radius:14px;background:var(--white);}
 .ship-box-h{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--cocoa);margin-bottom:10px;}
 .ship-box-h svg{flex-shrink:0;}
@@ -593,7 +594,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <p class="section-title">全部作品</p>
     <div class="divider">◇</div>
     <div class="cat-tabs" id="catTabs"></div>
-    <div class="fav-row"><button class="fav-chip" id="favChip" onclick="toggleFavFilter()"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke-linejoin="round"/></svg>只看最愛</button><button class="fav-chip" id="instockChip" onclick="showPage('instock')" style="display:none;margin-left:6px">現貨・可立即出貨 →</button></div>
+    <div class="fav-row"><button class="fav-chip" id="favChip" onclick="toggleFavFilter()"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke-linejoin="round"/></svg>只看最愛</button><button class="fav-chip" id="instockChip" onclick="showPage('instock')" style="display:none">現貨・可立即出貨 →</button></div>
     <div class="product-grid" id="shopProducts"></div>
     <div id="shopPager" class="pager"></div>
     <div id="shopShowcaseLink" style="display:none;text-align:center;margin-top:18px"><button class="see-all-btn" onclick="showPage('showcase')">◈ 查看展示・絕版作品（僅供欣賞）→</button></div>
@@ -1043,7 +1044,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1019a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1019b</div>
 </footer>
 
 <!-- MODALS -->
@@ -1168,7 +1169,7 @@ var S={
 
 /* 版本廣播：SITE_BUILD 只能遞增（YYYYMMDD + 當日第幾個版）。
    舊分頁會從 config 即時收到新 build，就知道自己過期了。 */
-var SITE_VER='1019a',SITE_BUILD=202610191;
+var SITE_VER='1019b',SITE_BUILD=202610192;
 function publishSiteBuild(cfg){
   if(!(cfg&&typeof cfg==='object'))cfg={};
   var cur=parseInt(cfg.siteBuild,10)||0;
@@ -2076,7 +2077,7 @@ function prodSoldOut(p){
   var hasSpecs=p.specs&&p.specs.length>0;
   return hasSpecs?allSpecsSoldOut(p):(p.stock!=null&&p.stock!==''&&(parseInt(p.stock,10)||0)<=0);
 }
-function instockList(){return S.products.filter(function(p){return isLive(p)&&!!p.inStock&&!p.preview&&!prodSoldOut(p);}).slice().sort(cmpProductsFront);}
+function instockList(){return S.products.filter(function(p){return isLive(p)&&!!p.inStock&&(p.preview||!prodSoldOut(p));}).slice().sort(cmpProductsFront);}
 function filterInstockCat(c){S._instockCat=c;renderInstockProducts();}
 function renderInstockProducts(){
   var has=S._prodsReady?instockList():[];
