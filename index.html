@@ -1044,7 +1044,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1019b</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1023a</div>
 </footer>
 
 <!-- MODALS -->
@@ -1169,7 +1169,7 @@ var S={
 
 /* 版本廣播：SITE_BUILD 只能遞增（YYYYMMDD + 當日第幾個版）。
    舊分頁會從 config 即時收到新 build，就知道自己過期了。 */
-var SITE_VER='1019b',SITE_BUILD=202610192;
+var SITE_VER='1023a',SITE_BUILD=202610231;
 function publishSiteBuild(cfg){
   if(!(cfg&&typeof cfg==='object'))cfg={};
   var cur=parseInt(cfg.siteBuild,10)||0;
@@ -5042,7 +5042,7 @@ function openProductModal(id){
     document.getElementById('editCanCustom').checked=!!p.canCustom;
     document.getElementById('editHot').checked=p.hot;
     document.getElementById('editNew').checked=p.isNew;
-    document.getElementById('editSaleMode').value=(p.limitedPre?'plimit':((p.inStock||(p.stock!=null&&p.stock!=='')||(p.specs&&p.specs.some(function(_s){return _s.stock!=null&&_s.stock!=='';})))?'instock':'preorder'));
+    document.getElementById('editSaleMode').value=(p.limitedPre?'plimit':(p.inStock?'instock':(p.preOrder===true?'preorder':(((p.stock!=null&&p.stock!=='')||(p.specs&&p.specs.some(function(_s){return _s.stock!=null&&_s.stock!=='';})))?'instock':'preorder'))));
     document.getElementById('editNoDiscount').checked=!!p.noDiscount;
     document.getElementById('editStock').value=(p.stock!=null?p.stock:'');
     document.getElementById('editCustom').checked=p.isCustom;
@@ -5181,6 +5181,7 @@ function saveProduct(){
     showcaseNote:document.getElementById('editShowcase').checked?document.getElementById('editShowcaseNote').value.trim():'',
     images:imgs,imgData:imgs[0]||'',thumbs:thumbs,imgThumb:thumbs[0]||imgs[0]||'',
     specs:(S.editSpecs||[]).filter(function(s){return (s.name||'').trim();}),emoji:''};
+  if(document.getElementById('editSaleMode').value==='preorder')data.specs=data.specs.map(function(s){var c=Object.assign({},s);c.stock='';return c;});
   data.specStock=specStockMap(data);
   var _bytes;try{_bytes=new Blob([JSON.stringify(data)]).size;}catch(e){_bytes=JSON.stringify(data).length;}
   if(_bytes>1000000){showToast('圖片太大（約 '+Math.round(_bytes/1024)+'KB，上限約 1MB），請減少照片數量或換較小的圖片');return;}
