@@ -1044,7 +1044,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1023a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1025a</div>
 </footer>
 
 <!-- MODALS -->
@@ -1108,9 +1108,9 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
       <div class="fg"><label>銷售方式</label><select id="editSaleMode" onchange="toggleSaleMode()"><option value="instock">現貨（可立即出貨）</option><option value="preorder">預購（接單後製作，不限量）</option><option value="plimit">限量預購（接單後製作，限組數）</option></select></div>
       <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editNoDiscount" style="width:auto"><label style="margin-bottom:0">禁止使用所有折扣（此作品不參與折扣碼、會員優惠與分類促銷）</label></div>
       <div class="fg" id="stockField"><label id="stockFieldLabel">庫存數量（可留空＝不限量）</label><input type="number" id="editStock" placeholder="例：5"></div>
-      <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editCanCustom" style="width:auto"><label style="margin-bottom:0">可客製（可改顏色／字樣，不需訂金）</label></div>
+      <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editCanCustom" style="width:auto"><label style="margin-bottom:0">可客製（可改顏色／字樣）</label></div>
       <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editCustom" style="width:auto" onchange="toggleDeposit()"><label style="margin-bottom:0">客製作品</label></div>
-      <div class="fg" id="depositField" style="grid-column:1/-1;display:none"><label>訂金金額 (NT$)</label><input type="number" id="editDeposit" placeholder="例：200"></div>
+      <div class="fg" id="depositField" style="grid-column:1/-1;display:none!important"><label>訂金金額 (NT$)</label><input type="number" id="editDeposit" placeholder="例：200"></div>
       <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editDraft" style="width:auto"><label style="margin-bottom:0">存為隱藏草稿（先不上架，稍後在後台手動上架）</label></div>
       <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editPreview" style="width:auto" onchange="document.getElementById('previewNoteField').style.display=this.checked?'block':'none'"><label style="margin-bottom:0">搶先預覽（顧客可看介紹與價格，但暫不開放下單）</label></div>
       <div class="fg" id="previewNoteField" style="grid-column:1/-1;display:none"><label>預計開放購買時間（顯示給顧客，可留空）</label><input id="editPreviewNote" placeholder="例：預計 8/1 中午 12:00 開放"></div>
@@ -1169,7 +1169,7 @@ var S={
 
 /* 版本廣播：SITE_BUILD 只能遞增（YYYYMMDD + 當日第幾個版）。
    舊分頁會從 config 即時收到新 build，就知道自己過期了。 */
-var SITE_VER='1023a',SITE_BUILD=202610231;
+var SITE_VER='1025a',SITE_BUILD=202610251;
 function publishSiteBuild(cfg){
   if(!(cfg&&typeof cfg==='object'))cfg={};
   var cur=parseInt(cfg.siteBuild,10)||0;
@@ -2377,7 +2377,7 @@ function renderProductPage(id){
   document.getElementById('productPageContent').innerHTML=main+thumbs
     +'<h3>'+esc(p.name)+'</h3><p class="msub">'+esc(p.cat)+(p.isCustom?' · 客製作品':'')+(p.canCustom?' · 可客製':'')+'</p>'
     +'<div id="stockBadgeWrap">'+stockBadgeHtml(p,S._selSpec)+'</div>'
-    +(p.isCustom?'<div style="background:#FFF8F0;border:1.5px solid var(--rose);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--cocoa);margin-bottom:12px"> 客製作品需先支付訂金 <span id="detailDep">NT$ '+shownDep+'</span> 才會開始製作</div>':'')
+    +(p.isCustom?'<div style="background:#FFF8F0;border:1.5px solid var(--rose);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--cocoa);margin-bottom:12px"> 客製作品需先以銀行匯款付清全額，確認收款後才會開始製作</div>':'')
     +(p.canCustom?'<div style="background:var(--warm-ivory);border:1.5px solid var(--gold);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--cocoa);margin-bottom:12px;line-height:1.7">如需客製（改顏色／字樣），請私訊粉專 <a href="https://www.instagram.com/ju.accessories.tw?igsh=MW5jMmsyMzRma2ZlOQ%3D%3D&utm_source=qr" target="_blank" rel="noopener" style="color:var(--dusty-rose);font-weight:600;text-decoration:underline">@ju.accessories.tw</a> 另外報價，不可直接下單</div>':'')
     +(p.preOrder?'<p style="font-size:12px;color:var(--cocoa);margin-bottom:12px;line-height:1.7;padding:8px 12px;background:#FFF8F0;border-radius:8px"><span style="font-weight:600">預購商品</span>　此款為接單後手工製作，完成後再安排出貨</p>':'')+'<p style="font-size:13px;color:var(--text-light);margin-bottom:16px;line-height:1.8;white-space:pre-wrap">'+esc(p.desc)+'</p>'
     +(p.material?'<p style="font-size:12px;color:var(--text-light);margin-bottom:16px"><span style="color:var(--cocoa);font-weight:500">材質：</span>'+esc(p.material)+'</p>':'')
@@ -2782,9 +2782,9 @@ function checkoutForm(total,hasC){
     +'<div class="radio-grp">'
     +'<label class="radio-opt" id="pay-bank" onclick="selPay(\'bank\')">'
     +'<input type="radio" name="pay" value="bank" onchange="selPay(\'bank\')"> 銀行匯款</label>'
-    +'<label class="radio-opt" id="pay-linepay" onclick="selPay(\'linepay\')">'
+    +'<label class="radio-opt" id="pay-linepay"'+(hasC?' style="display:none"':'')+' onclick="selPay(\'linepay\')">'
     +'<input type="radio" name="pay" value="linepay" onchange="selPay(\'linepay\')"> LINE Pay</label>'
-    +(guest?'':'<label class="radio-opt" id="pay-cod"'+((hasC&&S.customDepositChoice==='full')?' style="display:none"':'')+' onclick="selPay(\'cod\')">'
+    +(guest?'':'<label class="radio-opt" id="pay-cod"'+(hasC?' style="display:none"':'')+' onclick="selPay(\'cod\')">'
       +'<input type="radio" name="pay" value="cod" onchange="selPay(\'cod\')"> 7-11 賣貨便（貨到付款 NT$ 38）</label>')
     +'</div>'
     +'<div id="prepaidSection" style="display:none;margin-top:14px">'
@@ -2824,23 +2824,12 @@ function checkoutForm(total,hasC){
 }
 
 function customBox(){
-  /* 付訂金後7-11貨到付款：選僅匯訂金時，剩餘金額選項改為貨到付款或通知匯款 */
+  /* 1025a：取消訂金，客製作品一律全額銀行匯款 */
+  S.customDepositChoice='full';S.customRemainChoice=null;
   var ci=S.cart.filter(function(i){return i.isCustom;});
-  var td=ci.reduce(function(s,i){return s+i.deposit*i.qty;},0);
   return '<div class="custom-box"><h4><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-1 2-2 0-1.3-1-1.6-1-2.6 0-.8.7-1.4 1.6-1.4H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"/><circle cx="8" cy="11" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="10" r="1" fill="currentColor" stroke="none"/></svg>您的訂單包含客製作品</h4><ul>'
-    +ci.map(function(i){return '<li>'+esc(i.name)+' — 訂金 NT$ '+i.deposit+'</li>';}).join('')
-    +'</ul><p style="margin-top:8px;font-size:12px;color:var(--text-light)">客製作品需先匯款訂金，確認後才開始製作</p>'
-    +'<p style="font-weight:500;margin-top:6px">請選擇匯款金額：</p>'
-    +'<div class="opt-row">'
-    +'<label><input type="radio" name="custDep" value="deposit" onchange="S.customDepositChoice=\'deposit\';updateRemain();updateCodOption();refreshTotals()"> 僅匯訂金 NT$ '+td+'</label>'
-    +'<label><input type="radio" name="custDep" value="full" onchange="S.customDepositChoice=\'full\';updateRemain();updateCodOption();refreshTotals()"> 匯全額</label>'
-    +'</div>'
-    +'<div id="remainOpts" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--linen)">'
-    +'<p style="font-size:12px;margin-bottom:6px">尾款處理方式：</p>'
-    +'<div class="opt-row">'
-    +'<label><input type="radio" name="custRemain" value="cod"> 付訂金後，餘款 7-11 貨到付款</label>'
-    +'<label><input type="radio" name="custRemain" value="notify"> 完成後通知支付尾款及告知運送方式</label>'
-    +'</div></div></div>';
+    +ci.map(function(i){return '<li>'+esc(i.name)+'</li>';}).join('')
+    +'</ul><p style="margin-top:8px;font-size:12px;color:var(--text-light)">客製作品需先以「銀行匯款」付清全額，確認收款後才會開始製作</p></div>';
 }
 
 function updateCodOption(){
@@ -2918,7 +2907,7 @@ function updateRemain(){
 
 /* 付款/運送選擇 - 分開 onclick 和 onchange 確保 radio 可點 */
 function selPay(t){
-  if(t==='cod'&&S.cart.some(function(i){return i.isCustom;})&&S.customDepositChoice==='full'){showToast('已選擇匯全額，無法使用貨到付款，請改用銀行匯款或 LINE Pay');return;}
+  if(t!=='bank'&&S.cart.some(function(i){return i.isCustom;})){showToast('客製作品僅提供銀行匯款');return;}
   S.paymentMethod=t;S.shippingMethod=null;
   /* 更新樣式 */
   ['pay-bank','pay-linepay','pay-cod'].forEach(function(id){
@@ -3031,8 +3020,7 @@ function placeOrder(total){
   if(/[^0-9]/.test(_halfw(ph).replace(/[\s\-()+#]/g,''))){showToast('\u96FB\u8A71\u53EA\u80FD\u586B\u5BEB\u6578\u5B57');S._shipConfirmed=false;return;}
   if(S.paymentMethod!=='cod'&&!addr.trim()){showToast('\u8ACB\u586B\u5BEB\u53D6\u8CA8\u5730\u5740\u6216\u5E97\u540D');S._shipConfirmed=false;return;}
   /* ── 輸入防護 end ──────────────────────────────────────── */
-  if(hasC&&!S.customDepositChoice){showToast('請選擇客製訂金匯款方式');return;}
-  if(hasC&&S.customDepositChoice==='full'&&S.paymentMethod==='cod'){showToast('客製作品選擇匯全額時無法使用貨到付款，請改用銀行匯款或 LINE Pay');return;}
+  if(hasC){S.customDepositChoice='full';S.customRemainChoice=null;if(S.paymentMethod!=='bank'){showToast('客製作品僅提供銀行匯款，請改選「銀行匯款」');return;}}
   if(hasC&&S.customDepositChoice==='deposit'&&!S.customRemainChoice){
     /* 讀取已勾選的 radio */
     var rr=document.querySelector('input[name="custRemain"]:checked');
@@ -3080,7 +3068,7 @@ function placeOrder(total){
     try{persistMember(S.currentUser);}catch(e){}
   }
   var ci=S.cart.filter(function(i){return i.isCustom;});
-  var td=ci.reduce(function(s,i){return s+i.deposit*i.qty;},0);
+  var td=0;
   S._placing=true;
   function finish(oid,reserved){
   var o={id:oid,userId:(S.currentUser?S.currentUser.id:(S._guestUid||'guest')),userName:(S.currentUser?S.currentUser.name:'訪客'),
@@ -5006,7 +4994,7 @@ function renderSpecEditor(){
       +'<div onclick="pickSpecPhoto('+i+')" style="cursor:pointer;flex-shrink:0">'+thumb+'</div>'
       +'<input value="'+(s.name||'').replace(/"/g,'&quot;')+'" oninput="updateSpecName('+i+',this.value)" placeholder="規格名稱（例：粉色）" style="flex:1;min-width:90px;'+istyle+'">'
       +'<input type="number" value="'+(s.price||'')+'" oninput="updateSpecPrice('+i+',this.value)" placeholder="價格" style="width:72px;flex-shrink:0;'+istyle+'">'
-      +(isC?'<input type="number" value="'+(s.deposit===0?0:(s.deposit||''))+'" oninput="updateSpecDeposit('+i+',this.value)" placeholder="訂金" style="width:72px;flex-shrink:0;'+istyle+'">':'')
+      
       +(isStockMode?'<input type="number" value="'+(s.stock===0?0:(s.stock||''))+'" oninput="updateSpecStock('+i+',this.value)" placeholder="庫存" style="width:72px;flex-shrink:0;'+istyle+'">':'')
       +'<button type="button" onclick="removeSpec('+i+')" style="border:none;background:none;color:var(--dusty-rose);cursor:pointer;font-size:18px">✕</button></div>';
   }).join('');
@@ -5173,7 +5161,7 @@ function saveProduct(){
     limitedPre:(document.getElementById('editSaleMode').value==='plimit'),
     noDiscount:document.getElementById('editNoDiscount').checked,
     stock:(document.getElementById('editSaleMode').value==='preorder'?null:(document.getElementById('editStock').value===''?null:(parseInt(document.getElementById('editStock').value)||0))),
-    isCustom:isC,deposit:isC?(parseInt(document.getElementById('editDeposit').value)||0):0,
+    isCustom:isC,deposit:0,
     draft:document.getElementById('editDraft').checked,
     preview:document.getElementById('editPreview').checked,
     previewNote:document.getElementById('editPreview').checked?document.getElementById('editPreviewNote').value.trim():'',
