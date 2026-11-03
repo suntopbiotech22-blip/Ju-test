@@ -1044,7 +1044,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1025a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1103a</div>
 </footer>
 
 <!-- MODALS -->
@@ -1169,7 +1169,7 @@ var S={
 
 /* 版本廣播：SITE_BUILD 只能遞增（YYYYMMDD + 當日第幾個版）。
    舊分頁會從 config 即時收到新 build，就知道自己過期了。 */
-var SITE_VER='1025a',SITE_BUILD=202610251;
+var SITE_VER='1103a',SITE_BUILD=202611031;
 function publishSiteBuild(cfg){
   if(!(cfg&&typeof cfg==='object'))cfg={};
   var cur=parseInt(cfg.siteBuild,10)||0;
@@ -3927,15 +3927,19 @@ function openMergePicker(id){
   document.getElementById('orderDetailContent').innerHTML=body;
 }
 function mergeOrders(targetId,sourceId){
-  askConfirm('確定把訂單 #'+sourceId+' 併入 #'+targetId+'？（原單將被移除，折扣以保留單為準）',function(){
+  askConfirm('確定把訂單 #'+sourceId+' 併入 #'+targetId+'？（原單將被移除，兩張單的折扣都會保留）',function(){
     var t=S.orders.find(function(x){return x.id===targetId;});
     var s=S.orders.find(function(x){return x.id===sourceId;});
     if(!t||!s)return;
     (s.items||[]).forEach(function(it){
-      var ex=(t.items||[]).find(function(x){return x.id===it.id&&(x.spec||'')===(it.spec||'');});
+      /* 1103a：價格不同（例如一張有限時優惠、一張沒有）就分開列，避免優惠價被另一張的原價蓋掉 */
+      var ex=(t.items||[]).find(function(x){return x.id===it.id&&(x.spec||'')===(it.spec||'')&&x.price===it.price;});
       if(ex){ex.qty+=it.qty;}else{t.items.push(Object.assign({},it));}
     });
     if(s.note){t.note=(t.note?t.note+'；':'')+'(併入#'+sourceId+') '+s.note;}
+    /* 1103a：折扣碼金額相加，不再只保留一張單的折扣 */
+    if(s.discount){t.discount=(t.discount||0)+s.discount;}
+    if(s.discountCode&&(t.discountCode||'').split('+').indexOf(s.discountCode)<0){t.discountCode=t.discountCode?(t.discountCode+'+'+s.discountCode):s.discountCode;}
     if(s.stockApplied)t.stockApplied=true;
     recalcOrder(t);
     var i=S.orders.findIndex(function(x){return x.id===sourceId;});if(i>=0){persistOrderDelete(S.orders[i]);S.orders.splice(i,1);}
@@ -3997,15 +4001,24 @@ function sendMailSafe(cfg,tpl,params,label,attempt){
   }catch(e){console.error('email send error:',label,e);}
 }
 
+function orderMonthKey(o){
+  var d=null;
+  if(o&&o.created){d=new Date(o.created);}
+  if((!d||isNaN(d))&&o&&o.date){var m=String(o.date).match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);if(m)d=new Date(+m[1],+m[2]-1,+m[3]);}
+  if(!d||isNaN(d))return '';
+  return d.getFullYear()+'-'+(d.getMonth()+1);
+}
 function renderDash(){
-  var rev=S.orders.reduce(function(s,o){return s+(orderVoided(o)?0:o.total);},0);
+  var _now=new Date(),_mk=_now.getFullYear()+'-'+(_now.getMonth()+1);
+  var _mo=S.orders.filter(function(o){return !orderVoided(o)&&orderMonthKey(o)===_mk;});
+  var rev=_mo.reduce(function(s,o){return s+(o.total||0);},0);
   var awN=awaitingPayList().length;
   var awAlert=awN>0?('<div onclick="goAdmin(\'orders\')" style="grid-column:1/-1;cursor:pointer;background:#FFF4E5;border:1.5px solid #E8A33D;border-radius:12px;padding:12px 16px;font-size:13px;color:#8a5a12;font-weight:600"><span style="color:#D8453B">●</span> 有 '+awN+' 筆訂單顧客已回報匯款，待你確認收款 ›</div>'):'';
   document.getElementById('statsGrid').innerHTML=
-    awAlert+'<div class="stat-card" style="cursor:pointer" onclick="goAdmin(\'orders\')"><div class="stat-num">'+S.orders.length+'</div><div class="stat-lbl">訂單數</div></div>'
+    awAlert+'<div class="stat-card" style="cursor:pointer" onclick="goAdmin(\'orders\')"><div class="stat-num">'+_mo.length+'</div><div class="stat-lbl">'+(_now.getMonth()+1)+' 月訂單數</div></div>'
     +'<div class="stat-card" style="cursor:pointer" onclick="goAdmin(\'members\')"><div class="stat-num">'+S.members.filter(function(m){return !m.isAdmin;}).length+'</div><div class="stat-lbl">會員人數</div></div>'
     +'<div class="stat-card" style="cursor:pointer" onclick="goAdmin(\'products\')"><div class="stat-num">'+S.products.length+'</div><div class="stat-lbl">作品數</div></div>'
-    +'<div class="stat-card" style="cursor:pointer" onclick="goAdmin(\'sales\')"><div class="stat-num">'+rev.toLocaleString()+'</div><div class="stat-lbl">累計營業額</div></div>';
+    +'<div class="stat-card" style="cursor:pointer" onclick="goAdmin(\'sales\')"><div class="stat-num">'+rev.toLocaleString()+'</div><div class="stat-lbl">'+(_now.getMonth()+1)+' 月營業額</div></div>';
   var recRows=S.orders.slice(0,5).map(function(o){
       var rowStyle='cursor:pointer'+(orderClosed(o)?';opacity:.55':'');
       return '<tr style="'+rowStyle+'" onclick="openOrderDetail('+o.id+',true)"><td>#'+o.id+'<br><span style="font-size:11px;color:var(--text-light)">'+o.date+'</span></td>'
