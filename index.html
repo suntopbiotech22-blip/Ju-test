@@ -870,7 +870,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
         </ul>
         <h5>2. 下單與寄送</h5>
         <ul>
-          <li>收件人姓名、聯絡電話</li>
+          <li>收件人姓名、聯絡電話、Instagram 帳號</li>
           <li>宅配地址（郵遞區號、縣市、鄉鎮市區、詳細地址）</li>
           <li>或 7-ELEVEN 取貨門市名稱／店號與門市地址</li>
           <li>訂單備註（由您自行填寫之內容）</li>
@@ -975,7 +975,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
           <li><b>宅配地址或超商門市</b>：無法寄送商品</li>
           <li><b>電子郵件（訪客結帳）</b>：無法寄送訂單通知信，也無法查詢訂單</li>
           <li><b>註冊會員資料</b>：無法使用折扣碼、專屬優惠券、訂單查詢與貨到付款</li>
-          <li><b>Instagram 帳號（選填）</b>：不影響交易，僅可能影響客製溝通之便利性</li>
+          <li><b>Instagram 帳號（下單必填）</b>：無法成立訂單，出貨與客製問題無法即時聯繫您</li>
         </ul>
       </div>
 
@@ -1044,7 +1044,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1103a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1110a</div>
 </footer>
 
 <!-- MODALS -->
@@ -1169,7 +1169,7 @@ var S={
 
 /* 版本廣播：SITE_BUILD 只能遞增（YYYYMMDD + 當日第幾個版）。
    舊分頁會從 config 即時收到新 build，就知道自己過期了。 */
-var SITE_VER='1103a',SITE_BUILD=202611031;
+var SITE_VER='1110a',SITE_BUILD=202611101;
 function publishSiteBuild(cfg){
   if(!(cfg&&typeof cfg==='object'))cfg={};
   var cur=parseInt(cfg.siteBuild,10)||0;
@@ -2803,14 +2803,14 @@ function checkoutForm(total,hasC){
     +'<label class="radio-opt" id="ship-home" onclick="selShip(\'home\')">'
     +'<input type="radio" name="ship" value="home" onchange="selShip(\'home\')"> 宅配到府</label>'
     +'</div>'
-    +'<div id="field-711" style="display:none;margin-top:10px" class="fg"><label>7-11 店名或店號</label><input id="storeInput" value="'+esc(actF('store'))+'" placeholder="例：信義門市，或 6 碼店號"><label style="margin-top:10px">門市地址（必填）</label><input id="storeAddrInput" value="'+esc(actF('storeAddr'))+'" placeholder="門市完整地址，方便我們核對門市"><div style="margin-top:6px;font-size:11.5px;color:var(--text-light)">不確定門市全名？<a href="https://emap.pcsc.com.tw/" target="_blank" rel="noopener" style="color:var(--dusty-rose)">開啟 7-11 官方門市查詢 &rsaquo;</a></div></div>'
-    +'<div id="field-home" style="display:none;margin-top:10px" class="fg"><label>收件地址</label><div style="display:flex;gap:8px"><input id="zipInput" inputmode="numeric" maxlength="6" value="'+esc(defAddrParts().zip)+'" placeholder="郵遞區號" style="width:104px;flex:none;box-sizing:border-box"><input id="addrInput" value="'+esc(defAddrParts().rest)+'" placeholder="縣市、鄉鎮市區、詳細地址" style="flex:1;min-width:0;box-sizing:border-box"></div></div>'
+    +'<div id="field-711" style="display:none;margin-top:10px" class="fg"><label>7-11 店名或店號（必填）</label><input id="storeInput" value="'+esc(actF('store'))+'" placeholder="例：信義門市，或 6 碼店號"><label style="margin-top:10px">門市地址（必填）</label><input id="storeAddrInput" value="'+esc(actF('storeAddr'))+'" placeholder="門市完整地址，方便我們核對門市"><div style="margin-top:6px;font-size:11.5px;color:var(--text-light)">不確定門市全名？<a href="https://emap.pcsc.com.tw/" target="_blank" rel="noopener" style="color:var(--dusty-rose)">開啟 7-11 官方門市查詢 &rsaquo;</a></div></div>'
+    +'<div id="field-home" style="display:none;margin-top:10px" class="fg"><label>收件地址（含郵遞區號，必填）</label><div style="display:flex;gap:8px"><input id="zipInput" inputmode="numeric" maxlength="6" value="'+esc(defAddrParts().zip)+'" placeholder="郵遞區號" style="width:104px;flex:none;box-sizing:border-box"><input id="addrInput" value="'+esc(defAddrParts().rest)+'" placeholder="縣市、鄉鎮市區、詳細地址" style="flex:1;min-width:0;box-sizing:border-box"></div></div>'
     +'</div>'
     +'<div class="fsec"><h3><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.3v9.4L12 21l-8-4.3V7.3z"/><path d="M4 7.3 12 11l8-3.7M12 11v10"/></svg>收件人資訊</h3>'
     +'<div class="fg"><label>姓名</label><input id="rcvName" placeholder="收件人姓名" value="'+esc(S.currentUser?(actF('name')||S.currentUser.name||''):'')+'"></div>'
     +'<div class="fg"><label>電話</label><input id="rcvPhone" placeholder="0912-345-678" value="'+esc(S.currentUser?(actF('phone')||S.currentUser.phone||''):'')+'"></div>'
     +(guest?'<div class="fg"><label>電子郵件（必填，寄送訂單通知）</label><input id="rcvEmail" type="email" placeholder="your@email.com"></div>':'')
-    +'<div class="fg"><label>Instagram 帳號</label><input id="rcvIG" placeholder="@yourname" value="'+esc(S.currentUser?(actF('ig')||S.currentUser.ig||''):'')+'"></div>'
+    +'<div class="fg"><label>Instagram 帳號（必填）</label><input id="rcvIG" placeholder="@yourname" value="'+esc(S.currentUser?(actF('ig')||S.currentUser.ig||''):'')+'"></div>'
     +(S.currentUser?'<label style="display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--text-light);line-height:1.6;cursor:pointer"><input type="checkbox" id="saveDefaultsChk" style="width:auto;flex:none;margin:2px 0 0"'+(hasShipDefaults()?'':' checked')+'> 儲存這次填寫的寄送資料（會另存成一筆，可在會員頁切換預設）</label>':'')
     +'</div>'
     +'<div class="fg" style="margin-top:14px"><label>備註</label>'
@@ -3019,6 +3019,9 @@ function placeOrder(total){
   if(!nm.trim()||!ph.trim()){showToast('\u8ACB\u586B\u5BEB\u6B63\u78BA\u7684\u6536\u4EF6\u4EBA\u8CC7\u8A0A');S._shipConfirmed=false;return;}
   if(/[^0-9]/.test(_halfw(ph).replace(/[\s\-()+#]/g,''))){showToast('\u96FB\u8A71\u53EA\u80FD\u586B\u5BEB\u6578\u5B57');S._shipConfirmed=false;return;}
   if(S.paymentMethod!=='cod'&&!addr.trim()){showToast('\u8ACB\u586B\u5BEB\u53D6\u8CA8\u5730\u5740\u6216\u5E97\u540D');S._shipConfirmed=false;return;}
+  if(!igV.replace(/@/g,'').trim()){showToast('請填寫 Instagram 帳號');S._shipConfirmed=false;try{document.getElementById('rcvIG').focus();}catch(e){}return;}
+  if(S.paymentMethod!=='cod'&&S.shippingMethod==='home'&&!_zipV){showToast('請填寫郵遞區號');S._shipConfirmed=false;return;}
+  if(S.paymentMethod!=='cod'&&S.shippingMethod==='home'&&!_addrRaw){showToast('請填寫收件地址');S._shipConfirmed=false;return;}
   /* ── 輸入防護 end ──────────────────────────────────────── */
   if(hasC){S.customDepositChoice='full';S.customRemainChoice=null;if(S.paymentMethod!=='bank'){showToast('客製作品僅提供銀行匯款，請改選「銀行匯款」');return;}}
   if(hasC&&S.customDepositChoice==='deposit'&&!S.customRemainChoice){
@@ -3630,7 +3633,7 @@ function addrEditForm(){
   return '<div class="fg"><label>名稱（方便辨識，可留空）</label><input id="abLabel" value="'+esc(a.label||'')+'" placeholder="例：家裡、公司、媽媽家"></div>'
     +'<div class="fg"><label>收件人姓名</label><input id="abName" value="'+esc(a.name||'')+'" placeholder="收件人姓名"></div>'
     +'<div class="fg"><label>電話</label><input id="abPhone" value="'+esc(a.phone||'')+'" placeholder="0912-345-678"></div>'
-    +'<div class="fg"><label>Instagram 帳號</label><input id="abIG" value="'+esc(a.ig||'')+'" placeholder="@yourname"></div>'
+    +'<div class="fg"><label>Instagram 帳號（必填）</label><input id="abIG" value="'+esc(a.ig||'')+'" placeholder="@yourname"></div>'
     +'<div class="fg"><label>宅配地址</label><div style="display:flex;gap:8px">'
     +'<input id="abZip" inputmode="numeric" maxlength="6" value="'+esc(a.zip||'')+'" placeholder="郵遞區號" style="width:104px;flex:none;box-sizing:border-box">'
     +'<input id="abAddr" value="'+esc(a.addr||'')+'" placeholder="縣市、鄉鎮市區、詳細地址" style="flex:1;min-width:0;box-sizing:border-box"></div></div>'
@@ -3667,7 +3670,10 @@ function saveAddrEntry(){
   for(var _ek in e){if(hostileInput(e[_ek])){showToast('\u5BC4\u9001\u8CC7\u6599\u542B\u6709\u4E0D\u5141\u8A31\u7684\u5167\u5BB9\uFF0C\u8ACB\u91CD\u65B0\u586B\u5BEB');return;}}
   if(!e.name){showToast('請填寫收件人姓名');return;}
   if(!e.phone){showToast('請填寫電話');return;}
+  if(!e.ig.replace(/@/g,'').trim()){showToast('請填寫 Instagram 帳號');return;}
   if(!e.addr&&!e.store){showToast('請至少填寫宅配地址或 7-11 門市');return;}
+  if((e.addr||e.zip)&&(!e.addr||!e.zip)){showToast('宅配地址請填寫郵遞區號與詳細地址');return;}
+  if((e.store||e.storeAddr)&&(!e.store||!e.storeAddr)){showToast('7-11 請填寫店名與門市地址');return;}
   var w=[],t;
   t=phoneIssue(e.phone);if(t)w.push(t);
   if(e.zip||e.addr){t=zipIssue(e.zip,e.addr);if(t)w.push(t);t=addrIssue(e.addr);if(t)w.push(t);}
@@ -3927,19 +3933,15 @@ function openMergePicker(id){
   document.getElementById('orderDetailContent').innerHTML=body;
 }
 function mergeOrders(targetId,sourceId){
-  askConfirm('確定把訂單 #'+sourceId+' 併入 #'+targetId+'？（原單將被移除，兩張單的折扣都會保留）',function(){
+  askConfirm('確定把訂單 #'+sourceId+' 併入 #'+targetId+'？（原單將被移除，折扣以保留單為準）',function(){
     var t=S.orders.find(function(x){return x.id===targetId;});
     var s=S.orders.find(function(x){return x.id===sourceId;});
     if(!t||!s)return;
     (s.items||[]).forEach(function(it){
-      /* 1103a：價格不同（例如一張有限時優惠、一張沒有）就分開列，避免優惠價被另一張的原價蓋掉 */
-      var ex=(t.items||[]).find(function(x){return x.id===it.id&&(x.spec||'')===(it.spec||'')&&x.price===it.price;});
+      var ex=(t.items||[]).find(function(x){return x.id===it.id&&(x.spec||'')===(it.spec||'');});
       if(ex){ex.qty+=it.qty;}else{t.items.push(Object.assign({},it));}
     });
     if(s.note){t.note=(t.note?t.note+'；':'')+'(併入#'+sourceId+') '+s.note;}
-    /* 1103a：折扣碼金額相加，不再只保留一張單的折扣 */
-    if(s.discount){t.discount=(t.discount||0)+s.discount;}
-    if(s.discountCode&&(t.discountCode||'').split('+').indexOf(s.discountCode)<0){t.discountCode=t.discountCode?(t.discountCode+'+'+s.discountCode):s.discountCode;}
     if(s.stockApplied)t.stockApplied=true;
     recalcOrder(t);
     var i=S.orders.findIndex(function(x){return x.id===sourceId;});if(i>=0){persistOrderDelete(S.orders[i]);S.orders.splice(i,1);}
@@ -4001,24 +4003,15 @@ function sendMailSafe(cfg,tpl,params,label,attempt){
   }catch(e){console.error('email send error:',label,e);}
 }
 
-function orderMonthKey(o){
-  var d=null;
-  if(o&&o.created){d=new Date(o.created);}
-  if((!d||isNaN(d))&&o&&o.date){var m=String(o.date).match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);if(m)d=new Date(+m[1],+m[2]-1,+m[3]);}
-  if(!d||isNaN(d))return '';
-  return d.getFullYear()+'-'+(d.getMonth()+1);
-}
 function renderDash(){
-  var _now=new Date(),_mk=_now.getFullYear()+'-'+(_now.getMonth()+1);
-  var _mo=S.orders.filter(function(o){return !orderVoided(o)&&orderMonthKey(o)===_mk;});
-  var rev=_mo.reduce(function(s,o){return s+(o.total||0);},0);
+  var rev=S.orders.reduce(function(s,o){return s+(orderVoided(o)?0:o.total);},0);
   var awN=awaitingPayList().length;
   var awAlert=awN>0?('<div onclick="goAdmin(\'orders\')" style="grid-column:1/-1;cursor:pointer;background:#FFF4E5;border:1.5px solid #E8A33D;border-radius:12px;padding:12px 16px;font-size:13px;color:#8a5a12;font-weight:600"><span style="color:#D8453B">●</span> 有 '+awN+' 筆訂單顧客已回報匯款，待你確認收款 ›</div>'):'';
   document.getElementById('statsGrid').innerHTML=
-    awAlert+'<div class="stat-card" style="cursor:pointer" onclick="goAdmin(\'orders\')"><div class="stat-num">'+_mo.length+'</div><div class="stat-lbl">'+(_now.getMonth()+1)+' 月訂單數</div></div>'
+    awAlert+'<div class="stat-card" style="cursor:pointer" onclick="goAdmin(\'orders\')"><div class="stat-num">'+S.orders.length+'</div><div class="stat-lbl">訂單數</div></div>'
     +'<div class="stat-card" style="cursor:pointer" onclick="goAdmin(\'members\')"><div class="stat-num">'+S.members.filter(function(m){return !m.isAdmin;}).length+'</div><div class="stat-lbl">會員人數</div></div>'
     +'<div class="stat-card" style="cursor:pointer" onclick="goAdmin(\'products\')"><div class="stat-num">'+S.products.length+'</div><div class="stat-lbl">作品數</div></div>'
-    +'<div class="stat-card" style="cursor:pointer" onclick="goAdmin(\'sales\')"><div class="stat-num">'+rev.toLocaleString()+'</div><div class="stat-lbl">'+(_now.getMonth()+1)+' 月營業額</div></div>';
+    +'<div class="stat-card" style="cursor:pointer" onclick="goAdmin(\'sales\')"><div class="stat-num">'+rev.toLocaleString()+'</div><div class="stat-lbl">累計營業額</div></div>';
   var recRows=S.orders.slice(0,5).map(function(o){
       var rowStyle='cursor:pointer'+(orderClosed(o)?';opacity:.55':'');
       return '<tr style="'+rowStyle+'" onclick="openOrderDetail('+o.id+',true)"><td>#'+o.id+'<br><span style="font-size:11px;color:var(--text-light)">'+o.date+'</span></td>'
