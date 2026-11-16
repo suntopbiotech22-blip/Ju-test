@@ -1044,7 +1044,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1110a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1112a</div>
 </footer>
 
 <!-- MODALS -->
@@ -1169,7 +1169,7 @@ var S={
 
 /* 版本廣播：SITE_BUILD 只能遞增（YYYYMMDD + 當日第幾個版）。
    舊分頁會從 config 即時收到新 build，就知道自己過期了。 */
-var SITE_VER='1110a',SITE_BUILD=202611101;
+var SITE_VER='1112a',SITE_BUILD=202611121;
 function publishSiteBuild(cfg){
   if(!(cfg&&typeof cfg==='object'))cfg={};
   var cur=parseInt(cfg.siteBuild,10)||0;
@@ -2267,7 +2267,8 @@ function openOrderDetail(id,isAdmin){
   html+='<div style="font-size:13px;color:var(--text-light);margin-top:12px;line-height:1.9">'
     +(o.hasCustom?'客製付款：<span style="color:var(--dusty-rose);font-weight:600">'+(o.customDepositChoice==='deposit'?('僅匯訂金'+(o.customRemainChoice==='cod'?'（尾款 7-11 貨到付款）':o.customRemainChoice==='notify'?'（完成後通知付尾款）':'')):o.customDepositChoice==='full'?'全額匯款':'未選擇')+'</span><br>':'')
     +'寄送方式：'+(o.shippingMethod==='711'?'7-11 超商取貨':o.shippingMethod==='home'?'宅配到府':'7-11 賣貨便貨到付款')
-    +'<br>取貨/地址：'+esc(o.address||'—')+'<br>收件人：'+esc(o.receiver)+'　'+esc(o.phone)+(o.ig?'　IG '+esc(o.ig):'')+(o.guest&&o.email?'<br>Email：'+esc(o.email):'')+(o.note?'<br>備註：'+esc(o.note):'')+'</div>';
+    +'<br>取貨/地址：'+esc(o.address||'—')+'<br>收件人：'+esc(o.receiver)+'　'+esc(o.phone)+(o.ig?'　IG '+esc(o.ig):'')+(o.guest&&o.email?'<br>Email：'+esc(o.email):'')+(o.note?'<br>備註：'+esc(o.note):'')
+    +(o.invoiceNo?'<br>發票號碼：<b style="color:var(--cocoa)">'+esc(o.invoiceNo)+'</b>':'')+'</div>';
   if(o.payment!=='cod'||depOnly){
     var reported=o.paymentProof||o.paymentNote;
     if(isAdmin){
@@ -2290,6 +2291,12 @@ function openOrderDetail(id,isAdmin){
       }
       html+='<input type="file" id="proofInput" accept="image/*" style="display:none" onchange="uploadPaymentProof(this,'+o.id+')"></div>';
     }
+  }
+  if(isAdmin&&o.status!=='cancelled'&&o.status!=='returned'){
+    html+='<div class="fg" style="margin-top:16px"><label>發票號碼'+(o.status==='done'?'':'（完成訂單時一併儲存）')+'</label>'
+      +'<div style="display:flex;gap:8px"><input id="invoiceInput" value="'+esc(o.invoiceNo||'')+'" placeholder="例：AB12345678" maxlength="14" autocapitalize="characters" autocomplete="off" style="flex:1;min-width:0;box-sizing:border-box">'
+      +(o.status==='done'?'<button class="abtn sc" style="border-radius:24px;flex:none" onclick="saveInvoiceNo('+o.id+')">儲存</button>':'')
+      +'</div></div>';
   }
   if(isAdmin){
     html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;border-top:1px dashed var(--taupe);padding-top:14px">';
@@ -3844,10 +3851,34 @@ function cancelStatus(id,which){
     persistOrder(o);renderAdmin();showToast('已取消');
   });
 }
+function normInvoice(v){return _halfw(String(v||'')).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12);}
+function invoiceIssue(v){
+  if(!v)return '還沒填發票號碼';
+  if(!/^[A-Z]{2}\d{8}$/.test(v))return '發票號碼「'+v+'」格式和一般電子發票（2 碼英文＋8 碼數字）不同';
+  return '';
+}
+function readInvoiceInput(){var el=document.getElementById('invoiceInput');return normInvoice(el?el.value:'');}
 function completeOrder(id){
   var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
-  o._prevStatus=o.status;o.status='done';
-  persistOrder(o);renderAdmin();openOrderDetail(id,true);showToast('訂單 #'+id+' 已完成');
+  var inv=readInvoiceInput();
+  var go=function(){
+    o._prevStatus=o.status;o.status='done';
+    if(inv)o.invoiceNo=inv;
+    persistOrder(o);renderAdmin();openOrderDetail(id,true);showToast('訂單 #'+id+' 已完成'+(inv?'，發票 '+inv:''));
+  };
+  var w=invoiceIssue(inv);
+  if(w){askConfirm(w+'，仍要完成訂單嗎？（之後可再補填）',go);return;}
+  go();
+}
+function saveInvoiceNo(id){
+  var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
+  var inv=readInvoiceInput();
+  var go=function(){
+    o.invoiceNo=inv; /* 清空時存空字串：updateDoc 不會刪除缺少的欄位 */
+    persistOrder(o);renderAdmin();openOrderDetail(id,true);showToast(inv?'已儲存發票號碼 '+inv:'已清除發票號碼');
+  };
+  if(inv&&invoiceIssue(inv)){askConfirm(invoiceIssue(inv)+'，確定要儲存嗎？',go);return;}
+  go();
 }
 function returnOrder(id){
   askConfirm('確定將訂單 #'+id+' 標記為退貨？金額不列入營業額，庫存會加回去，之後仍可編輯。',function(){
@@ -4530,10 +4561,10 @@ function exportSales(){
   showToast('已匯出銷售排行');
 }
 function exportOrders(){
-  var rows=[['訂單編號','日期','會員','收件人','電話','付款方式','寄送','取貨/地址','小計','運費','折扣','合計','訂金','含客製','狀態','備註']];
+  var rows=[['訂單編號','日期','會員','收件人','電話','付款方式','寄送','取貨/地址','小計','運費','折扣','合計','訂金','含客製','狀態','發票號碼','備註']];
   S.orders.forEach(function(o){rows.push([o.id,o.date,o.userName,o.receiver,o.phone,
     o.payment==='bank'?'銀行匯款':o.payment==='linepay'?'LINE Pay':'貨到付款',
-    o.shippingMethod,o.address,o.subtotal,o.shipping,o.discount,o.total,o.totalDeposit,o.hasCustom?'是':'否',sLabel(o.status),o.note]);});
+    o.shippingMethod,o.address,o.subtotal,o.shipping,o.discount,o.total,o.totalDeposit,o.hasCustom?'是':'否',sLabel(o.status),o.invoiceNo||'',o.note]);});
   downloadCSV('訂單資料_'+new Date().toISOString().slice(0,10)+'.csv',rows);
   showToast('已匯出訂單');
 }
