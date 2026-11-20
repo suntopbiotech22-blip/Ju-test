@@ -712,18 +712,14 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
       <div class="admin-sb">
         <h3>ADMIN</h3>
         <div class="adm-nav active" onclick="switchAdmin('dashboard',this)"><span class="nav-ic"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V11M11 20V4M18 20v-6"/></svg></span>總覽</div>
-        <div class="adm-nav" onclick="switchAdmin('products',this)"><span class="nav-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v5M12 16v5M3 12h5M16 12h5M5.6 5.6l3.5 3.5M14.9 14.9l3.5 3.5M18.4 5.6l-3.5 3.5M9.1 14.9l-3.5 3.5"/></svg></span>作品管理</div>
-        <div class="adm-nav" onclick="switchAdmin('inventory',this)"><span class="nav-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>庫存管理</div>
+        <div class="adm-nav" data-panels="products,inventory" onclick="switchAdmin('products',this)"><span class="nav-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v5M12 16v5M3 12h5M16 12h5M5.6 5.6l3.5 3.5M14.9 14.9l3.5 3.5M18.4 5.6l-3.5 3.5M9.1 14.9l-3.5 3.5"/></svg></span>作品管理</div>
         <div class="adm-nav" onclick="switchAdmin('orders',this)"><span class="nav-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.3v9.4L12 21l-8-4.3V7.3z"/><path d="M4 7.3L12 11l8-3.7M12 11v10"/></svg></span>訂單管理<span id="ordersTabBadge" class="tab-badge" style="display:none">0</span></div>
         <div class="adm-nav" onclick="switchAdmin('members',this)"><span class="nav-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5c0-4.1 3.4-7.5 7.5-7.5s7.5 3.4 7.5 7.5"/></svg></span>會員資料</div>
-        <div class="adm-nav" onclick="switchAdmin('discounts',this)"><span class="nav-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.6L12.6 20a2 2 0 0 1-2.8 0l-6.8-6.8a2 2 0 0 1 0-2.8L10.4 3 20 3v9z"/><circle cx="15" cy="8" r="1.3" fill="currentColor" stroke="none"/></svg></span>折扣設定</div>
-        <div class="adm-nav" onclick="switchAdmin('payment',this)"><span class="nav-ic"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/><path d="M2.5 9.5h19"/></svg></span>收款設定</div>
-        <div class="adm-nav" onclick="switchAdmin('sales',this)"><span class="nav-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V11M11 20V4M18 20v-6"/></svg></span>銷售報表</div>
-        <div class="adm-nav" onclick="switchAdmin('banners',this)"><span class="nav-ic"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4a1 1 0 0 0 1 1h2l8 4V5L7 9H5a1 1 0 0 0-1 1z"/><path d="M18 9a3 3 0 0 1 0 6"/></svg></span>跑馬燈訊息</div>
-        <div class="adm-nav" onclick="switchAdmin('popup',this)"><span class="nav-ic"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>進站彈窗</div>
-        <div class="adm-nav" onclick="switchAdmin('gifts',this)"><span class="nav-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v8h14v-8"/><path d="M12 8v12"/><path d="M12 8C10.5 8 8.5 7 8.5 5.3 8.5 4.3 9.2 3.6 10.2 3.6c2 0 1.8 4.4 1.8 4.4z"/><path d="M12 8c1.5 0 3.5-1 3.5-2.7C15.5 4.3 14.8 3.6 13.8 3.6c-2 0-1.8 4.4-1.8 4.4z"/></svg></span>贈品設定</div>
+        <div class="adm-nav" data-panels="discounts,gifts,banners,popup" onclick="switchAdmin('discounts',this)"><span class="nav-ic"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12.6L12.6 20a2 2 0 0 1-2.8 0l-6.8-6.8a2 2 0 0 1 0-2.8L10.4 3 20 3v9z"/><circle cx="15" cy="8" r="1.3" fill="currentColor" stroke="none"/></svg></span>行銷活動</div>
+        <div class="adm-nav" data-panels="payment,sales" onclick="switchAdmin('payment',this)"><span class="nav-ic"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/><path d="M2.5 9.5h19"/></svg></span>設定與報表</div>
       </div>
       <div class="admin-content">
+        <div id="admSubnav" class="ord-filter" style="margin-bottom:6px"></div>
         <div class="adm-panel active" id="panel-dashboard">
           <h2>總覽</h2>
           <div class="stats-grid" id="statsGrid"></div>
@@ -746,13 +742,12 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
             <button class="abtn pr" onclick="openProductModal()">＋ 新增作品</button>
-            <button class="abtn pr" onclick="exportProducts()"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 4 5-4M5 20h14"/></svg> 匯出作品（市集手帳）</button>
-            <button class="abtn sc" onclick="exportProductsCSV()"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 4 5-4M5 20h14"/></svg> 匯出價目表（Excel）</button>
+            <select class="abtn sc" style="-webkit-appearance:none;appearance:none;width:auto;cursor:pointer;margin-bottom:0" onchange="runExport(this)"><option value="">匯出 ▾</option><option value="exportProducts">作品（市集手帳）</option><option value="exportProductsCSV">價目表 Excel</option></select>
           </div>
-          <p class="cat-hint" style="margin-top:8px">「匯出作品」會下載一個 JSON 檔，可在市集手帳 App 的「作品 → 匯入清單」直接匯入，含分類、售價與款式。</p>
+          
           <div style="margin-top:16px" id="adminProductList"></div>
         </div>
-        <div class="adm-panel" id="panel-orders"><h2>訂單管理</h2><button class="abtn pr" style="margin-bottom:14px" onclick="exportOrders()"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 4 5-4M5 20h14"/></svg> 匯出 Excel</button><div id="adminOrderList"></div></div>
+        <div class="adm-panel" id="panel-orders"><h2>訂單管理</h2><select class="abtn sc" style="-webkit-appearance:none;appearance:none;width:auto;cursor:pointer;margin-bottom:14px" onchange="runExport(this)"><option value="">匯出 ▾</option><option value="exportOrders">訂單 Excel</option><option value="exportJournal">待登帳訂單</option><option value="exportPayouts">撥款紀錄</option></select><div id="adminOrderList"></div></div>
         <div class="adm-panel" id="panel-members"><h2>會員資料</h2><button class="abtn pr" style="margin-bottom:14px" onclick="exportMembers()"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 11l5 4 5-4M5 20h14"/></svg> 匯出 Excel</button><div id="membSortBar" style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div><div class="table-scroll"><table class="dtable" id="adminMemberTable"></table></div></div>
         <div class="adm-panel" id="panel-inventory"><h2>庫存管理</h2><div id="inventoryList"></div></div>
         <div class="adm-panel" id="panel-discounts">
@@ -1045,7 +1040,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1120g</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1120j</div>
 </footer>
 
 <!-- MODALS -->
@@ -1110,13 +1105,14 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
       <div class="fg"><label>銷售方式</label><select id="editSaleMode" onchange="toggleSaleMode()"><option value="instock">現貨（可立即出貨）</option><option value="preorder">預購（接單後製作，不限量）</option><option value="plimit">限量預購（接單後製作，限組數）</option></select></div>
       <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editNoDiscount" style="width:auto"><label style="margin-bottom:0">禁止使用所有折扣（此作品不參與折扣碼、會員優惠與分類促銷）</label></div>
       <div class="fg" id="stockField"><label id="stockFieldLabel">庫存數量（可留空＝不限量）</label><input type="number" id="editStock" placeholder="例：5"></div>
-      <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editCanCustom" style="width:auto"><label style="margin-bottom:0">可客製（可改顏色／字樣）</label></div>
-      <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editCustom" style="width:auto" onchange="toggleDeposit()"><label style="margin-bottom:0">客製作品</label></div>
+      <div class="fg"><label>客製</label><select id="editCustomSel" onchange="applyEditSelects()"><option value="none">不可客製</option><option value="can">可客製（可改顏色／字樣）</option><option value="custom">客製作品（僅限匯款）</option></select></div>
+      <div style="display:none"><input type="checkbox" id="editCanCustom"><input type="checkbox" id="editCustom"></div>
       <div id="depositField" style="display:none!important"><input type="hidden" id="editDeposit"></div>
-      <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editDraft" style="width:auto"><label style="margin-bottom:0">存為隱藏草稿（先不上架，稍後在後台手動上架）</label></div>
-      <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editPreview" style="width:auto" onchange="document.getElementById('previewNoteField').style.display=this.checked?'block':'none'"><label style="margin-bottom:0">搶先預覽（顧客可看介紹與價格，但暫不開放下單）</label></div>
+      <div class="fg"><label>上架狀態</label><select id="editStatusSel" onchange="applyEditSelects()"><option value="live">上架</option><option value="draft">隱藏草稿</option><option value="preview">搶先預覽（暫不開放下單）</option><option value="showcase">展示用・絕版</option></select></div>
+      <div style="display:none"><input type="checkbox" id="editDraft"><input type="checkbox" id="editPreview"><input type="checkbox" id="editShowcase"></div>
+      
       <div class="fg" id="previewNoteField" style="grid-column:1/-1;display:none"><label>預計開放購買時間（顯示給顧客，可留空）</label><input id="editPreviewNote" placeholder="例：預計 8/1 中午 12:00 開放"></div>
-      <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editShowcase" style="width:auto" onchange="document.getElementById('showcaseNoteField').style.display=this.checked?'block':'none'"><label style="margin-bottom:0">展示用・絕版（材料已無法取得、無法再製，僅供展示不開放購買）</label></div>
+      
       <div class="fg" id="showcaseNoteField" style="grid-column:1/-1;display:none"><label>展示說明（顯示給顧客，可留空）</label><input id="editShowcaseNote" placeholder="例：此為特別款，材料已絕版，僅此一件"></div>
     </div>
     <button class="sub-btn" onclick="saveProduct()">儲存作品</button>
@@ -1171,7 +1167,7 @@ var S={
 
 /* 版本廣播：SITE_BUILD 只能遞增（YYYYMMDD + 當日第幾個版）。
    舊分頁會從 config 即時收到新 build，就知道自己過期了。 */
-var SITE_VER='1120g',SITE_BUILD=202611207;
+var SITE_VER='1120j',SITE_BUILD=202611210;
 function publishSiteBuild(cfg){
   if(!(cfg&&typeof cfg==='object'))cfg={};
   var cur=parseInt(cfg.siteBuild,10)||0;
@@ -2311,6 +2307,7 @@ function openOrderDetail(id,isAdmin){
         +'<button class="abtn dg" style="border-radius:24px" onclick="deleteOrder('+o.id+')">刪除訂單</button>';
     }else{
       html+='<button class="abtn pr" style="border-radius:24px" onclick="completeOrder('+o.id+')">完成訂單</button>'
+        +(stepBackInfo(o)?'<button class="abtn sc" style="border-radius:24px" onclick="stepBack('+o.id+')">退回上一步</button>':'')
         +'<button class="abtn sc" style="border-radius:24px" onclick="openMergePicker('+o.id+')">合併訂單</button>'
         +'<button class="abtn dg" style="border-radius:24px" onclick="cancelOrder('+o.id+')">取消訂單</button>';
     }
@@ -3369,11 +3366,23 @@ function activateAdminPanel(p){
   document.querySelectorAll('.adm-panel').forEach(function(x){x.classList.remove('active');});
   document.querySelectorAll('.adm-nav').forEach(function(x){x.classList.remove('active');});
   document.getElementById('panel-'+p).classList.add('active');
-  document.querySelectorAll('.adm-nav').forEach(function(n){var a=n.getAttribute('onclick')||'';if(a.indexOf("'"+p+"'")>=0)n.classList.add('active');});
+  document.querySelectorAll('.adm-nav').forEach(function(n){var ps=(n.getAttribute('data-panels')||'').split(','),a=n.getAttribute('onclick')||'';if(ps.indexOf(p)>=0||a.indexOf("'"+p+"'")>=0)n.classList.add('active');});
+  renderAdmSubnav(p);
   try{history.replaceState(null,'',location.pathname+location.search+'#admin/'+p);}catch(e){}
   if(p==='products'){renderCatAdmin();renderCatSelect();}
   if(p==='inventory')renderInventory();
 }
+/* 1120j：後台選單分組，同組的頁面用上方小分頁切換 */
+var ADM_GROUPS=[['products','作品'],['inventory','庫存']],ADM_GROUPS2=[[['discounts','折扣'],['gifts','贈品'],['banners','跑馬燈・藝廊'],['popup','進站彈窗']],[['payment','收款'],['sales','銷售報表']]];
+function renderAdmSubnav(p){
+  var el=document.getElementById('admSubnav');if(!el)return;
+  var gs=[ADM_GROUPS].concat(ADM_GROUPS2),g=null;
+  gs.forEach(function(x){if(x.some(function(t){return t[0]===p;}))g=x;});
+  if(!g){el.innerHTML='';el.style.display='none';return;}
+  el.style.display='';
+  el.innerHTML=g.map(function(t){return '<button class="cat-tab'+(t[0]===p?' active':'')+'" onclick="switchAdmin(\''+t[0]+'\')">'+t[1]+'</button>';}).join('');
+}
+function runExport(el){var f=el.value;el.selectedIndex=0;if(f&&typeof window[f]==='function')window[f]();}
 function switchAdmin(p,el){activateAdminPanel(p);window.scrollTo(0,0);}
 function goAdmin(panel){activateAdminPanel(panel);window.scrollTo(0,0);}
 function refreshTotals(){
@@ -3968,21 +3977,17 @@ function acctCell(o){
   return top+'<div style="font-size:11px;margin-top:3px">'+prog+'</div>';
 }
 function acctSummaryHtml(){
-  var tS=0,tN=0,aS=0,aN=0,w=0;
+  var tS=0,aS=0,w=0;
   S.orders.forEach(function(o){
     if(acctNeedsWork(o))w++;
     if(orderVoided(o))return;
     var pd=ordPaid(o),sh=ordShipped(o);
-    if(pd&&!sh){tS+=Number(o.total)||0;tN++;}
-    else if(sh&&!pd){aS+=Number(o.total)||0;aN++;}
+    if(pd&&!sh)tS+=Number(o.total)||0;
+    else if(sh&&!pd)aS+=Number(o.total)||0;
   });
-  var box='flex:1;min-width:96px;background:var(--warm-ivory);border-radius:12px;padding:8px 12px;font-size:12px;color:var(--text-light);line-height:1.6';
-  var num='display:block;font-size:15px;font-weight:600;color:var(--cocoa)';
-  return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'
-    +'<div style="'+box+'">暫收中（已收款未出貨）<b style="'+num+'">NT$ '+tS+'</b>'+tN+' 筆</div>'
-    +'<div style="'+box+'">應收中（已出貨未收款）<b style="'+num+'">NT$ '+aS+'</b>'+aN+' 筆</div>'
-    +'<div style="'+box+';cursor:pointer'+(w?';background:#FFF4E5':'')+'" onclick="filterOrders(\'acct\')">待登帳<b style="'+num+(w?';color:var(--dusty-rose)':'')+'">'+w+' 筆</b>'
-    +'<a href="#" onclick="event.stopPropagation();exportJournal();return false" style="color:var(--dusty-rose)">匯出待登帳訂單 ›</a></div>'
+  return '<div style="font-size:12.5px;color:var(--text-light);margin-bottom:10px;line-height:1.9">'
+    +'暫收 <b style="color:var(--cocoa)">NT$ '+tS+'</b>・應收 <b style="color:var(--cocoa)">NT$ '+aS+'</b>・'
+    +'<a href="#" onclick="filterOrders(\'todo\');return false" style="color:'+(w?'var(--dusty-rose)':'var(--text-light)')+'">待登帳 '+w+' 筆</a>'
     +'</div>'+payoutSectionHtml();
 }
 function acctDetailBlock(o){
@@ -3990,19 +3995,17 @@ function acctDetailBlock(o){
   var stepHtml=st.steps.map(function(x,i){
     var right=x.done
       ?'<b style="color:#2e7d32">✓ '+esc(x.done)+'</b> <a href="#" onclick="unbookAcct('+o.id+',\''+x.k+'\');return false" style="font-size:11.5px;color:var(--text-light)">取消</a>'
-      :(x.due&&!st.voided&&!st.legacy?'<b style="color:var(--dusty-rose)">待登帳</b>':'<span style="color:var(--text-light)">尚未發生</span>');
-    return '<div style="display:flex;justify-content:space-between;gap:8px"><span>'+(i+1)+'. '+x.lbl+'</span><span>'+right+'</span></div>';
+      :(x.due&&!st.voided&&!st.legacy?miniBtn('登帳',"bookAcctStep("+o.id+",'"+x.k+"')"):'<span style="color:var(--text-light)">尚未發生</span>');
+    return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:32px"><span>'+(i+1)+'. '+x.lbl+'</span><span>'+right+'</span></div>';
   }).join('');
   var act='';
   if(st.legacy)act='<div style="font-size:12px;color:var(--text-light);margin-top:6px">這是改版前就完成的訂單，不列入登帳追蹤</div>';
-  if(st.todo.length)act='<button class="abtn pr" style="border-radius:24px;margin-top:8px" onclick="bookAcct('+o.id+')">登帳完成：'+st.todo.map(function(x){return x.lbl;}).join('＋')+'</button>';
-  else if(st.needReverse)act='<div style="font-size:12px;color:var(--dusty-rose);margin-top:6px">此單已取消／退貨，但有登過帳，記得做沖銷分錄</div><button class="abtn pr" style="border-radius:24px;margin-top:6px" onclick="reverseAcct('+o.id+')">已沖銷</button>';
+  if(st.needReverse)act='<div style="font-size:12px;color:var(--dusty-rose);margin-top:6px">此單已取消／退貨，但有登過帳，記得做沖銷分錄</div><button class="abtn pr" style="border-radius:24px;margin-top:6px" onclick="reverseAcct('+o.id+')">已沖銷</button>';
   return '<div style="margin-top:16px;background:var(--warm-ivory);border-radius:12px;padding:12px 14px">'
     +'<p style="font-size:13px;font-weight:600;color:var(--cocoa);margin:0 0 10px">出貨・發票・會計</p>'
-    +'<div class="fg"><label>寄出時間</label><input type="datetime-local" id="odShipAt" value="'+esc(o.shippedAt||'')+'" style="font-size:16px;box-sizing:border-box"></div>'
-    +(usesMB(o)?'<div class="fg"><label>賣貨便訂單編號</label><input id="odMbNo" value="'+esc(o.mbNo||'')+'" placeholder="賣貨便後台的訂單編號" maxlength="30" autocapitalize="characters" autocomplete="off" style="font-size:16px;box-sizing:border-box"></div>':'')
-    +'<div class="fg"><label>發票號碼</label><input id="invoiceInput" value="'+esc(o.invoiceNo||'')+'" placeholder="例：AB12345678" maxlength="14" autocapitalize="characters" autocomplete="off" style="font-size:16px;box-sizing:border-box"></div>'
-    +'<button class="abtn sc" style="border-radius:24px" onclick="saveShipInfo('+o.id+')">儲存</button>'
+    +fieldRow('寄出時間','<input type="datetime-local" id="odShipAt" value="'+esc(o.shippedAt||'')+'" style="font-size:16px">',"saveShipField("+o.id+",'at')")
+    +(usesMB(o)?fieldRow('賣貨便訂單編號','<input id="odMbNo" value="'+esc(o.mbNo||'')+'" placeholder="賣貨便後台的訂單編號" maxlength="30" autocapitalize="characters" autocomplete="off" style="font-size:16px">',"saveShipField("+o.id+",'mb')"):'')
+    +fieldRow('發票號碼','<input id="invoiceInput" value="'+esc(o.invoiceNo||'')+'" placeholder="例：AB12345678" maxlength="14" autocapitalize="characters" autocomplete="off" style="font-size:16px">',"saveShipField("+o.id+",'inv')")
     +'<div style="font-size:13px;color:var(--cocoa);line-height:2;margin-top:12px;border-top:1px dashed var(--taupe);padding-top:8px">'
     +'<div style="display:flex;justify-content:space-between"><span>'+(o.payment==='cod'?'客人取貨付款':'客人付款')+'</span><span>'+(ordPaid(o)?'✓ '+esc(fmtLocal(o.paidAt)||'已收款'):'<span style="color:var(--text-light)">'+(o.payment==='cod'?'尚未取貨':'尚未收款')+'</span>')+'</span></div>'
     +settleDetailRow(o)
@@ -4071,6 +4074,57 @@ function confirmShip(id){
   var w=invoiceIssue(inv);
   if(w){askConfirm(w+'，仍要出貨嗎？（之後可在訂單明細補填）',go);return;}
   go();
+}
+function miniBtn(label,act){
+  if(label==='儲存')return '<button aria-label="儲存" title="儲存" style="background:var(--cocoa);color:#fff;border:none;border-radius:50%;width:30px;height:30px;padding:0;font-size:15px;line-height:30px;font-family:inherit;cursor:pointer;flex:none" onclick="event.stopPropagation();'+act+'">✓</button>';
+  return '<button style="background:var(--cocoa);color:#fff;border:none;border-radius:14px;padding:4px 12px;font-size:12px;font-family:inherit;line-height:1.5;cursor:pointer;white-space:nowrap;flex:none" onclick="event.stopPropagation();'+act+'">'+label+'</button>';
+}
+function fieldRow(label,inputHtml,act){
+  return '<div class="fg"><label>'+label+'</label><div style="display:flex;gap:8px;align-items:center"><div style="flex:1;min-width:0">'+inputHtml+'</div>'+miniBtn('儲存',act)+'</div></div>';
+}
+function saveShipField(id,which){
+  var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
+  if(which==='at'){
+    var t=readShipAtInput(),autoShip=false;
+    o.shippedAt=t;
+    if(t&&!ordShipped(o)&&!orderVoided(o)){o.status='shipped';autoShip=true;if(o.payment!=='cod'&&!o.paidAt)o.paidAt=t;}
+    var closed=acctAutoClose(o);
+    persistOrder(o);renderAdmin();refreshOrderDetail(id);
+    showToast('已儲存寄出時間'+(autoShip?'，狀態改為已出貨':'')+(closed?'，訂單已自動完成':''));return;
+  }
+  if(which==='mb'){
+    var el=document.getElementById('odMbNo');o.mbNo=normMB(el?el.value:'');
+    persistOrder(o);renderAdmin();refreshOrderDetail(id);showToast(o.mbNo?'已儲存賣貨便訂單編號':'已清除賣貨便訂單編號');return;
+  }
+  var inv=readInvoiceInput();
+  var go=function(){o.invoiceNo=inv;persistOrder(o);renderAdmin();refreshOrderDetail(id);showToast(inv?'已儲存發票號碼':'已清除發票號碼');};
+  if(inv&&invoiceIssue(inv)){askConfirm(invoiceIssue(inv)+'，確定要儲存嗎？',go);return;}
+  go();
+}
+function stepBackInfo(o){
+  if(!o||orderClosed(o))return null;
+  var cod=o.payment==='cod';
+  if(cod&&o.paidAt)return {lbl:'已取貨',fn:function(){o.paidAt='';}};
+  if(o.status==='shipped')return {lbl:'已出貨',fn:function(){o.status='making';o.shippedAt='';}};
+  if(o.status==='making')return {lbl:'製作中',fn:function(){o.status=cod?'pending':'paid';}};
+  if(o.status==='paid')return {lbl:'已收款',fn:function(){o.status='pending';o.paidAt='';}};
+  return null;
+}
+function stepBack(id){
+  var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
+  var b=stepBackInfo(o);if(!b)return;
+  askConfirm('要取消「'+b.lbl+'」，退回上一步嗎？',function(){
+    b.fn();persistOrder(o);renderAdmin();refreshOrderDetail(id);showToast('已退回上一步');
+  });
+}
+function bookAcctStep(id,k){
+  var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
+  var st=acctState(o);
+  if(!st.todo.some(function(x){return x.k===k;}))return;
+  var a=Object.assign({},o.acct||{});a.path=st.path;a[k]=todayISO();o.acct=a;
+  var closed=acctAutoClose(o);
+  persistOrder(o);renderAdmin();refreshOrderDetail(id);
+  showToast('已登帳：'+ACCT_LBL[k]+(closed?'，訂單已自動完成':''));
 }
 function saveShipInfo(id){
   var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
@@ -4143,23 +4197,15 @@ function acctWaitText(o,st){
   return '';
 }
 function payoutSectionHtml(){
-  var plats=['linepay','cod'].map(function(k){
-    var os=payoutPending(k),g=0;os.forEach(function(o){g+=Number(o.total)||0;});
-    return {k:k,os:os,g:g};
-  });
-  var done=S.orders.some(function(o){return o.settle;});
-  if(!plats[0].os.length&&!plats[1].os.length&&!done)return '';
-  var rows=plats.map(function(x){
-    var name=PAYOUT_CFG[x.k].name;
-    return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px dashed var(--taupe)">'
-      +'<div style="min-width:0"><b style="color:var(--cocoa)">'+name+'</b>　'+(x.os.length?x.os.length+' 筆待撥款・訂單合計 NT$ '+x.g:'<span style="color:var(--text-light)">沒有待撥款</span>')
-      +(x.os.length?'<div style="font-size:11.5px;color:var(--text-light);white-space:normal">'+x.os.map(function(o){return '#'+o.id;}).join(' ')+'</div>':'')+'</div>'
-      +'<div style="flex:none">'+(x.os.length?acctBtn('撥款入帳',"openSettleModal('"+x.k+"','')",true):'')+'</div></div>';
+  var rows=['linepay','cod'].map(function(k){
+    var os=payoutPending(k);if(!os.length)return '';
+    var g=0;os.forEach(function(o){g+=Number(o.total)||0;});
+    return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 0">'
+      +'<span><b style="color:var(--cocoa)">'+PAYOUT_CFG[k].name+'</b> '+os.length+' 筆待撥款・NT$ '+g+'</span>'
+      +acctBtn('撥款入帳',"openSettleModal('"+k+"','')",true)+'</div>';
   }).join('');
-  return '<div style="background:#fff;border:1.5px solid var(--linen);border-radius:12px;padding:10px 14px;margin:-4px 0 12px;font-size:13px">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b style="color:var(--cocoa)">平台撥款</b>'
-    +'<a href="#" onclick="exportPayouts();return false" style="font-size:12px;color:var(--dusty-rose)">匯出撥款紀錄 ›</a></div>'
-    +rows+'</div>';
+  if(!rows)return '';
+  return '<div style="background:var(--warm-ivory);border-radius:12px;padding:4px 14px;margin-bottom:12px;font-size:13px">'+rows+'</div>';
 }
 function settleDetailRow(o){
   if(!isPlatform(o)||acctState(o).legacy)return '';
@@ -4639,6 +4685,42 @@ function batchDeleteProds(){
   if(!window.FB)return;
   Promise.all(ps.map(function(p){return window.FB.deleteProduct(p._docId);})).then(function(){var n=ps.length;S._selProds=[];showToast('已刪除 '+n+' 件作品');}).catch(function(e){showToast('刪除失敗：'+(e.code||e.message));});
 }
+function ordMatchFilter(o,flt){
+  if(flt==='all')return !orderClosed(o)||acctNeedsWork(o)||orderAwaitingPay(o);
+  if(flt==='todo')return orderAwaitingPay(o)||acctNeedsWork(o);
+  if(flt==='every')return true;
+  return o.status===flt;
+}
+/* 每張訂單目前該做的那一步 */
+function ordNextAction(o){
+  var st=acctState(o);
+  if(orderAwaitingPay(o)&&o.payment!=='cod'&&!ordPaid(o))return {label:'確認收款',act:"updStatus("+o.id+",'paid')"};
+  if(st.todo.length)return {label:'登帳：'+st.todo.map(function(x){return x.lbl;}).join('＋'),act:'bookAcct('+o.id+')'};
+  if(st.needReverse)return {label:'已沖銷',act:'reverseAcct('+o.id+')'};
+  if(orderClosed(o))return null;
+  var depOnly=o.hasCustom&&o.customDepositChoice==='deposit';
+  if(depOnly){
+    if(!o.depositPaid)return {label:'收訂金',act:"markMoney("+o.id+",'deposit')"};
+  }
+  var cod=o.payment==='cod';
+  if(!cod&&o.status==='pending')return {label:'確認收款',act:"updStatus("+o.id+",'paid')"};
+  if(o.status==='pending'||o.status==='paid')return {label:'開始製作',act:"updStatus("+o.id+",'making')"};
+  if(o.status==='making')return {label:'確認出貨',act:'openShipModal('+o.id+')'};
+  if(o.status==='shipped'){
+    if(depOnly&&!o.balancePaid)return {label:'收尾款',act:"markMoney("+o.id+",'balance')"};
+    if(cod&&!ordPaid(o))return {label:'確認取貨',act:'markCollect('+o.id+')'};
+    if(isPlatform(o)&&!o.settle)return {wait:'等撥款'};
+    return {label:'完成訂單',act:'completeOrder('+o.id+')'};
+  }
+  return null;
+}
+function ordProgressDots(o){
+  var st=acctState(o);
+  if(st.legacy||st.voided)return '';
+  return '<div style="font-size:10.5px;margin-top:4px;letter-spacing:.5px">'+st.steps.map(function(x){
+    return '<span style="color:'+(x.done?'#2e7d32':(x.due?'var(--dusty-rose)':'var(--text-light)'))+'">'+x.lbl+(x.done?'✓':'○')+'</span>';
+  }).join(' ')+'</div>';
+}
 function renderAdminOrds(){
   var el=document.getElementById('adminOrderList');
   if(!S.orders.length){el.innerHTML='<p style="color:var(--text-light);text-align:center;padding:30px">暫無訂單</p>';return;}
@@ -4646,75 +4728,53 @@ function renderAdminOrds(){
   var ids=S.orders.map(function(o){return o.id;});
   S._selOrders=S._selOrders.filter(function(id){return ids.indexOf(id)>=0;});
   var flt=S._ordFilter||'all';
-  function matchFilter(o){
-    if(flt==='all')return o.status!=='done';
-    if(flt==='await')return orderAwaitingPay(o);
-    if(flt==='acct')return acctNeedsWork(o);
-    return o.status===flt;
-  }
-  function fcount(k){
-    if(k==='all')return S.orders.filter(function(o){return o.status!=='done';}).length;
-    if(k==='await')return awaitingPayList().length;
-    if(k==='acct')return S.orders.filter(acctNeedsWork).length;
-    return S.orders.filter(function(o){return o.status===k;}).length;
-  }
-  var filters=[['all','進行中'],['await','已匯款待確認'],['acct','待登帳'],['pending','待確認'],['paid','已收款'],['making','製作中'],['shipped','已出貨'],['done','已完成'],['returned','已退貨'],['cancelled','已取消']];
-  var chips='<div class="ord-filter">'+filters.map(function(f){
-    var n=fcount(f[0]);
+  if(flt==='await'||flt==='acct')flt=S._ordFilter='todo';
+  var cnt=function(k){return S.orders.filter(function(o){return ordMatchFilter(o,k);}).length;};
+  var mains=[['all','進行中'],['todo','待處理'],['done','已完成'],['every','全部']];
+  var others=[['pending','待確認'],['paid','已收款'],['making','製作中'],['shipped','已出貨'],['returned','已退貨'],['cancelled','已取消']];
+  var isOther=others.some(function(f){return f[0]===flt;});
+  var chips='<div class="ord-filter" style="align-items:center">'+mains.map(function(f){
+    var n=f[0]==='every'?0:cnt(f[0]);
     return '<button class="cat-tab'+(flt===f[0]?' active':'')+'" onclick="filterOrders(\''+f[0]+'\')">'+f[1]+(n?' ('+n+')':'')+'</button>';
-  }).join('')+'</div>';
-  var list=S.orders.filter(matchFilter).slice().sort(function(a,b){
+  }).join('')
+    +'<select class="cat-tab'+(isOther?' active':'')+'" style="-webkit-appearance:none;appearance:none;width:auto;font-family:inherit" onchange="if(this.value)filterOrders(this.value)">'
+    +'<option value="">其他 ▾</option>'+others.map(function(f){var n=cnt(f[0]);return '<option value="'+f[0]+'"'+(flt===f[0]?' selected':'')+'>'+f[1]+(n?' ('+n+')':'')+'</option>';}).join('')+'</select>'
+    +'<button class="cat-tab'+(S._ordSelMode?' active':'')+'" style="margin-left:auto" onclick="toggleOrdSelMode()">'+(S._ordSelMode?'完成選取':'選取')+'</button>'
+    +'</div>';
+  var list=S.orders.filter(function(o){return ordMatchFilter(o,flt);}).slice().sort(function(a,b){
     var aw=orderAwaitingPay(a)?0:1,bw=orderAwaitingPay(b)?0:1;
     if(aw!==bw)return aw-bw;
     return (b.id||0)-(a.id||0);
   });
+  var sel=!!S._ordSelMode;
   var selN=S._selOrders.length;
   var allOn=selN>0&&list.length>0&&list.every(function(o){return S._selOrders.indexOf(o.id)>=0;});
-  var bar='<div class="batch-bar">'
+  var bar=sel?'<div class="batch-bar">'
     +'<label class="batch-all"><input type="checkbox" id="selAllOrders" onclick="toggleSelAllOrders(this)" '+(allOn?'checked':'')+'> 全選</label>'
     +'<span class="batch-cnt">已選 '+selN+' 筆</span>'
-    +'<span class="batch-acts"><button class="abtn dg" onclick="batchDeleteOrders()">批次刪除</button></span></div>';
-  var btn=function(active,act,label){
-    var st=active?'background:var(--cocoa);color:#fff':'background:var(--taupe);color:var(--cocoa)';
-    return '<button style="'+st+';border:none;border-radius:16px;padding:6px 12px;font-size:12px;font-family:inherit;cursor:pointer;white-space:nowrap" onclick="event.stopPropagation();'+act+'">'+label+'</button>';
-  };
+    +'<span class="batch-acts"><button class="abtn dg" onclick="batchDeleteOrders()">批次刪除</button></span></div>':'';
   var rows=list.map(function(o){
-    var cancelled=o.status==='cancelled';
     var closed=orderClosed(o);
-    var depOnly=o.hasCustom&&o.customDepositChoice==='deposit';
-    var paid=o.status==='paid'||o.status==='making'||o.status==='shipped';
-    var shipped=o.status==='shipped';
     var awaiting=orderAwaitingPay(o);
-    var payLbl=(o.payment==='bank'?'銀行匯款':o.payment==='linepay'?'LINE Pay':'貨到付款')
-      +(o.hasCustom?'<br><span style="font-size:11px;color:var(--dusty-rose)">客製：'+(o.customDepositChoice==='deposit'?'僅訂金':o.customDepositChoice==='full'?'全額匯款':'未選')+'</span>':'');
-    var payCell=closed?'—':depOnly
-      ?(btn(o.depositPaid,o.depositPaid?('cancelMoney('+o.id+",'deposit')"):('markMoney('+o.id+",'deposit')"),o.depositPaid?'✓ 訂金':'收訂金')
-        +' '+btn(o.balancePaid,o.balancePaid?('cancelMoney('+o.id+",'balance')"):('markMoney('+o.id+",'balance')"),o.balancePaid?'✓ 尾款':'收尾款'))
-      :(o.payment==='cod'
-        ?btn(ordPaid(o),ordPaid(o)?('cancelCollect('+o.id+')'):('markCollect('+o.id+')'),ordPaid(o)?'✓ 已取貨':'確認取貨')
-        :btn(paid,paid?('cancelStatus('+o.id+",'paid')"):('updStatus('+o.id+",'paid')"),paid?'✓ 已收款':'確認收款'));
-    var making=o.status==='making'||o.status==='shipped';
-    var makeCell=closed?'—':btn(making,making?('cancelStatus('+o.id+",'making')"):('updStatus('+o.id+",'making')"),making?'✓ 製作中':'開始製作');
+    var payLbl=o.payment==='bank'?'匯款':o.payment==='linepay'?'LINE Pay':'貨到付款';
+    var nx=ordNextAction(o);
+    var nxHtml=!nx?'':(nx.wait?'<span style="font-size:12px;color:var(--text-light)">'+nx.wait+'</span>'
+      :'<button style="background:var(--cocoa);color:#fff;border:none;border-radius:16px;padding:6px 12px;font-size:12px;font-family:inherit;cursor:pointer;white-space:nowrap" onclick="event.stopPropagation();'+nx.act+'">'+nx.label+'</button>');
     var ck=S._selOrders.indexOf(o.id)>=0;
-    var rowStyle='cursor:pointer'+(closed?';opacity:.55':'')+(awaiting?';background:#FFF4E5':(ck?';background:var(--warm-ivory)':''));
+    var rowStyle='cursor:pointer'+(closed&&!nx?';opacity:.55':'')+(awaiting?';background:#FFF4E5':(ck?';background:var(--warm-ivory)':''));
     return '<tr style="'+rowStyle+'" onclick="openOrderDetail('+o.id+',true)">'
-      +'<td onclick="event.stopPropagation()"><input type="checkbox" class="ordSel" onclick="toggleSelOrder('+o.id+',this)" '+(ck?'checked':'')+'></td>'
+      +(sel?'<td onclick="event.stopPropagation()"><input type="checkbox" class="ordSel" onclick="toggleSelOrder('+o.id+',this)" '+(ck?'checked':'')+'></td>':'')
       +'<td>#'+o.id+(awaiting?'<br><span class="await-chip">已匯款待確認</span>':'')+'<br><span style="font-size:11px;color:var(--text-light)">'+o.date+'</span></td>'
-      +'<td>'+esc(o.userName)+'</td><td style="font-size:12px">'+payLbl+'</td><td>NT$ '+o.total+'</td>'
-      +'<td>'+payCell+'</td>'
-      +'<td>'+makeCell+'</td>'
-      +'<td>'+(closed?(o.shippedAt?'<span style="font-size:12px">'+shortDate(o.shippedAt)+' 寄出</span>':'—'):btn(shipped,shipped?('cancelStatus('+o.id+",'shipped')"):('openShipModal('+o.id+')'),shipped?('✓ '+(o.shippedAt?shortDate(o.shippedAt)+' 寄出':'已出貨')):'確認出貨'))
-      +(o.mbNo?'<br><span style="font-size:11px;color:var(--text-light)">賣貨便 '+esc(o.mbNo)+'</span>':'')
-      +(o.invoiceNo?'<br><span style="font-size:11px;color:var(--text-light)">'+esc(o.invoiceNo)+'</span>':(shipped&&!orderVoided(o)?'<br><span style="font-size:11px;color:var(--dusty-rose)">未填發票</span>':''))+'</td>'
-      +'<td onclick="event.stopPropagation()">'+acctCell(o)+'</td>'
-      +'<td><span class="sbadge s-'+o.status+'">'+sLabel(o.status)+'</span></td></tr>';
+      +'<td style="white-space:normal">'+esc(o.userName)+'<br><span style="font-size:11px;color:var(--text-light)">'+payLbl+'・NT$ '+o.total+'</span></td>'
+      +'<td><span class="sbadge s-'+o.status+'">'+sLabel(o.status)+'</span>'+ordProgressDots(o)+'</td>'
+      +'<td style="text-align:right">'+nxHtml+'</td></tr>';
   }).join('');
-  if(!rows)rows='<tr><td colspan="10" style="text-align:center;color:var(--text-light);padding:24px">此分類沒有訂單</td></tr>';
-  el.innerHTML='<p style="font-size:12px;color:var(--text-light);margin-bottom:10px">點訂單列可查看明細；橘底＝顧客已回報匯款待你確認；按「確認出貨」時一併填寄出時間與發票；會計欄出現深色按鈕＝該登帳了（左右可滑動）</p>'
-    +acctSummaryHtml()+chips+bar
-    +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="dtable" style="white-space:nowrap;min-width:980px"><thead><tr><th></th><th>訂單</th><th>會員</th><th>付款</th><th>金額</th><th>收款</th><th>製作</th><th>出貨／發票</th><th>會計</th><th>狀態</th></tr></thead><tbody>'
+  if(!rows)rows='<tr><td colspan="5" style="text-align:center;color:var(--text-light);padding:24px">此分類沒有訂單</td></tr>';
+  el.innerHTML=acctSummaryHtml()+chips+bar
+    +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="dtable" style="white-space:nowrap;width:100%"><tbody>'
     +rows+'</tbody></table></div>';
 }
+function toggleOrdSelMode(){S._ordSelMode=!S._ordSelMode;if(!S._ordSelMode)S._selOrders=[];renderAdminOrds();}
 function filterOrders(k){S._ordFilter=k;renderAdminOrds();}
 function toggleSelOrder(id,el){
   if(!Array.isArray(S._selOrders))S._selOrders=[];
@@ -4724,12 +4784,7 @@ function toggleSelOrder(id,el){
 }
 function toggleSelAllOrders(el){
   var flt=S._ordFilter||'all';
-  var visible=S.orders.filter(function(o){
-    if(flt==='all')return true;
-    if(flt==='await')return orderAwaitingPay(o);
-    if(flt==='acct')return acctNeedsWork(o);
-    return o.status===flt;
-  }).map(function(o){return o.id;});
+  var visible=S.orders.filter(function(o){return ordMatchFilter(o,flt);}).map(function(o){return o.id;});
   S._selOrders=el.checked?visible:[];
   renderAdminOrds();
 }
@@ -5362,6 +5417,25 @@ function moneyStatusBlock(o){
 }
 
 
+/* 1120j：單選 → 背後的勾選欄位（存檔格式不變） */
+function syncEditSelects(){
+  var g=function(id){return document.getElementById(id).checked;};
+  document.getElementById('editCustomSel').value=g('editCustom')?'custom':(g('editCanCustom')?'can':'none');
+  document.getElementById('editStatusSel').value=g('editShowcase')?'showcase':(g('editPreview')?'preview':(g('editDraft')?'draft':'live'));
+  applyEditSelects(true);
+}
+function applyEditSelects(keepCustom){
+  var c=document.getElementById('editCustomSel').value,st=document.getElementById('editStatusSel').value;
+  if(keepCustom!==true||c!=='custom')document.getElementById('editCanCustom').checked=(c==='can');
+  var wasCustom=document.getElementById('editCustom').checked;
+  document.getElementById('editCustom').checked=(c==='custom');
+  document.getElementById('editDraft').checked=(st==='draft');
+  document.getElementById('editPreview').checked=(st==='preview');
+  document.getElementById('editShowcase').checked=(st==='showcase');
+  document.getElementById('previewNoteField').style.display=st==='preview'?'block':'none';
+  document.getElementById('showcaseNoteField').style.display=st==='showcase'?'block':'none';
+  if(wasCustom!==(c==='custom'))renderSpecEditor();
+}
 function toggleDeposit(){document.getElementById('depositField').style.display=document.getElementById('editCustom').checked?'block':'none';renderSpecEditor();}
 function toggleSaleMode(){
   var m=document.getElementById('editSaleMode').value;
@@ -5516,7 +5590,7 @@ function openProductModal(id){
     document.getElementById('editSaleMode').value='preorder';
     S.editImages=[];S.editThumbs=[];S.editSpecs=[];
   }
-  S._galSel=null;renderGalleryEditor();renderSpecEditor();toggleSaleMode();
+  S._galSel=null;renderGalleryEditor();renderSpecEditor();toggleSaleMode();syncEditSelects();
   document.getElementById('productEditModal').classList.add('open');
 }
 
