@@ -1044,7 +1044,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1112a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1120e</div>
 </footer>
 
 <!-- MODALS -->
@@ -1080,6 +1080,8 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
 <div class="moverlay" id="orderDetailModal"><div class="modal"><button class="mclose" onclick="closeModal('orderDetailModal')">✕</button><div id="orderDetailContent"></div></div></div>
 <div class="moverlay" id="memberOrdersModal"><div class="modal"><button class="mclose" onclick="closeModal('memberOrdersModal')">✕</button><h3 style="margin-bottom:10px">會員訂單</h3><div id="memberOrdersBody"></div></div></div>
 <div class="moverlay" id="confirmModal"><div class="modal" style="max-width:340px;text-align:center"><p id="confirmMsg" style="margin:6px 0 20px;color:var(--cocoa);font-size:15px"></p><div style="display:flex;gap:10px"><button class="abtn" style="flex:1;border-radius:30px;background:#fff;border:1.5px solid var(--gold);color:var(--cocoa)" onclick="closeModal('confirmModal')">取消</button><button class="abtn pr" style="flex:1;border-radius:30px" id="confirmOkBtn">確定</button></div></div></div>
+<div class="moverlay" id="shipModal"><div class="modal" style="max-width:360px"><h3 style="margin-bottom:4px">確認出貨</h3><p class="msub" id="shipModalSub" style="margin-bottom:12px"></p><div class="fg"><label>寄出時間</label><input type="datetime-local" id="shipAtInput" style="font-size:16px"></div><div class="fg"><label>發票號碼</label><input id="shipInvInput" placeholder="例：AB12345678" maxlength="14" autocapitalize="characters" autocomplete="off" style="font-size:16px"></div><div style="display:flex;gap:10px;margin-top:6px"><button class="abtn" style="flex:1;border-radius:30px;background:#fff;border:1.5px solid var(--gold);color:var(--cocoa);padding:10px 14px" onclick="closeModal('shipModal')">取消</button><button class="abtn pr" style="flex:1;border-radius:30px;padding:10px 14px" id="shipModalOk">確認出貨</button></div></div></div>
+<div class="moverlay" id="settleModal"><div class="modal" style="max-width:380px"><h3 style="margin-bottom:4px">撥款入帳</h3><p class="msub" id="settleSub" style="margin-bottom:8px"></p><div id="settleList" style="max-height:230px;overflow-y:auto;-webkit-overflow-scrolling:touch;font-size:13px;margin-bottom:10px"></div><div id="settleCalc" style="font-size:12.5px;color:var(--cocoa);line-height:1.8;background:var(--warm-ivory);border-radius:10px;padding:8px 12px;margin-bottom:12px"></div><div class="fg"><label>入帳日期</label><input type="date" id="settleDate" style="font-size:16px"></div><div class="fg"><label>實際入帳金額（看銀行存摺）</label><input type="number" inputmode="numeric" id="settleAmt" style="font-size:16px" oninput="if(S._settle)S._settle.touched=true;settleCalc()"></div><div style="display:flex;gap:10px;margin-top:6px"><button class="abtn" style="flex:1;border-radius:30px;background:#fff;border:1.5px solid var(--gold);color:var(--cocoa);padding:10px 14px" onclick="closeModal('settleModal')">取消</button><button class="abtn pr" style="flex:1;border-radius:30px;padding:10px 14px" onclick="confirmSettle()">確認入帳</button></div></div></div>
 <div class="moverlay" id="shipCheckModal"><div class="modal" style="max-width:390px"><h3 style="margin-bottom:4px">請再確認寄送資訊</h3><div id="shipCheckBody" style="font-size:13.5px;color:var(--cocoa);line-height:1.85;margin:12px 0 18px"></div><div style="display:flex;gap:10px"><button class="abtn" style="flex:1;border-radius:30px;background:#fff;border:1.5px solid var(--gold);color:var(--cocoa);padding:10px 14px;font-size:13px" onclick="closeModal('shipCheckModal')">返回修改</button><button class="abtn pr" style="flex:1;border-radius:30px;padding:10px 14px;font-size:13px" id="shipCheckOkBtn">確認無誤，送出</button></div></div></div>
 <div class="moverlay" id="productEditModal">
   <div class="modal">
@@ -1099,8 +1101,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
       </div>
       <div class="fg"><label>作品名稱</label><input id="editName" placeholder="例：粉花小圓髮夾"></div>
       <div class="fg"><label>分類</label><select id="editCat"></select></div>
-      <div class="fg"><label>售價 (NT$)</label><input type="number" id="editPrice" placeholder="380"></div>
-      <div class="fg"><label>原價（可留空）</label><input type="number" id="editOriginal" placeholder="480"></div>
+      <div class="fg"><label>價格 (NT$)</label><input type="number" id="editPrice" placeholder="380"><input type="hidden" id="editOriginal"></div>
       <div class="fg" style="grid-column:1/-1"><label>作品說明（可留空、可換行）</label><textarea id="editDesc" rows="5" style="width:100%;padding:10px 14px;border:1.5px solid var(--linen);border-radius:10px;font-family:inherit;font-size:13px;background:var(--cream);outline:none;line-height:1.7" placeholder="尺寸、注意事項、保養方式...（按 Enter 可換行）"></textarea></div>
       <div class="fg" style="grid-column:1/-1"><label>材質（可留空）</label><input id="editMaterial" placeholder="例：UV 膠、乾燥花、合金"></div>
       <div class="fg" style="display:flex;align-items:center;gap:10px"><input type="checkbox" id="editHot" style="width:auto"><label style="margin-bottom:0">熱銷商品</label></div>
@@ -1110,7 +1111,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
       <div class="fg" id="stockField"><label id="stockFieldLabel">庫存數量（可留空＝不限量）</label><input type="number" id="editStock" placeholder="例：5"></div>
       <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editCanCustom" style="width:auto"><label style="margin-bottom:0">可客製（可改顏色／字樣）</label></div>
       <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editCustom" style="width:auto" onchange="toggleDeposit()"><label style="margin-bottom:0">客製作品</label></div>
-      <div class="fg" id="depositField" style="grid-column:1/-1;display:none!important"><label>訂金金額 (NT$)</label><input type="number" id="editDeposit" placeholder="例：200"></div>
+      <div id="depositField" style="display:none!important"><input type="hidden" id="editDeposit"></div>
       <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editDraft" style="width:auto"><label style="margin-bottom:0">存為隱藏草稿（先不上架，稍後在後台手動上架）</label></div>
       <div class="fg" style="grid-column:1/-1;display:flex;align-items:center;gap:10px"><input type="checkbox" id="editPreview" style="width:auto" onchange="document.getElementById('previewNoteField').style.display=this.checked?'block':'none'"><label style="margin-bottom:0">搶先預覽（顧客可看介紹與價格，但暫不開放下單）</label></div>
       <div class="fg" id="previewNoteField" style="grid-column:1/-1;display:none"><label>預計開放購買時間（顯示給顧客，可留空）</label><input id="editPreviewNote" placeholder="例：預計 8/1 中午 12:00 開放"></div>
@@ -1169,7 +1170,7 @@ var S={
 
 /* 版本廣播：SITE_BUILD 只能遞增（YYYYMMDD + 當日第幾個版）。
    舊分頁會從 config 即時收到新 build，就知道自己過期了。 */
-var SITE_VER='1112a',SITE_BUILD=202611121;
+var SITE_VER='1120e',SITE_BUILD=202611205;
 function publishSiteBuild(cfg){
   if(!(cfg&&typeof cfg==='object'))cfg={};
   var cur=parseInt(cfg.siteBuild,10)||0;
@@ -1839,7 +1840,7 @@ function pCard(p){
   var priceMin,priceMax,isRange=false;
   if(specPrices.length){priceMin=Math.min.apply(null,specPrices);priceMax=Math.max.apply(null,specPrices);isRange=priceMin!==priceMax;}
   else{priceMin=priceMax=p.price;}
-  var hs=p.original&&p.original>p.price;
+  var hs=false; /* 1120a：不再使用原價 */
   var pct=hs?Math.round((1-p.price/p.original)*100):0;
   var ppMin=promoPrice(priceMin,p),ppMax=promoPrice(priceMax,p);
   var hasPromo=ppMin<priceMin||ppMax<priceMax;
@@ -2268,6 +2269,7 @@ function openOrderDetail(id,isAdmin){
     +(o.hasCustom?'客製付款：<span style="color:var(--dusty-rose);font-weight:600">'+(o.customDepositChoice==='deposit'?('僅匯訂金'+(o.customRemainChoice==='cod'?'（尾款 7-11 貨到付款）':o.customRemainChoice==='notify'?'（完成後通知付尾款）':'')):o.customDepositChoice==='full'?'全額匯款':'未選擇')+'</span><br>':'')
     +'寄送方式：'+(o.shippingMethod==='711'?'7-11 超商取貨':o.shippingMethod==='home'?'宅配到府':'7-11 賣貨便貨到付款')
     +'<br>取貨/地址：'+esc(o.address||'—')+'<br>收件人：'+esc(o.receiver)+'　'+esc(o.phone)+(o.ig?'　IG '+esc(o.ig):'')+(o.guest&&o.email?'<br>Email：'+esc(o.email):'')+(o.note?'<br>備註：'+esc(o.note):'')
+    +(o.shippedAt?'<br>寄出時間：'+esc(fmtLocal(o.shippedAt)):'')
     +(o.invoiceNo?'<br>發票號碼：<b style="color:var(--cocoa)">'+esc(o.invoiceNo)+'</b>':'')+'</div>';
   if(o.payment!=='cod'||depOnly){
     var reported=o.paymentProof||o.paymentNote;
@@ -2292,12 +2294,7 @@ function openOrderDetail(id,isAdmin){
       html+='<input type="file" id="proofInput" accept="image/*" style="display:none" onchange="uploadPaymentProof(this,'+o.id+')"></div>';
     }
   }
-  if(isAdmin&&o.status!=='cancelled'&&o.status!=='returned'){
-    html+='<div class="fg" style="margin-top:16px"><label>發票號碼'+(o.status==='done'?'':'（完成訂單時一併儲存）')+'</label>'
-      +'<div style="display:flex;gap:8px"><input id="invoiceInput" value="'+esc(o.invoiceNo||'')+'" placeholder="例：AB12345678" maxlength="14" autocapitalize="characters" autocomplete="off" style="flex:1;min-width:0;box-sizing:border-box">'
-      +(o.status==='done'?'<button class="abtn sc" style="border-radius:24px;flex:none" onclick="saveInvoiceNo('+o.id+')">儲存</button>':'')
-      +'</div></div>';
-  }
+  if(isAdmin)html+=acctDetailBlock(o);
   if(isAdmin){
     html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;border-top:1px dashed var(--taupe);padding-top:14px">';
     if(o.status==='cancelled'){
@@ -2367,7 +2364,7 @@ function renderProductPage(id){
   S._selSpec=sel0?sel0.name:'';
   var shownPrice=(sel0&&sel0.price!=null&&sel0.price!=='')?sel0.price:p.price;
   var shownDep=(sel0&&sel0.deposit!==''&&sel0.deposit!=null)?sel0.deposit:p.deposit;
-  var hs=p.original&&p.original>p.price;
+  var hs=false; /* 1120a：不再使用原價 */
   var basePrice=shownPrice;
   var promoDP=promoPrice(basePrice,p);
   var hasPromo=promoDP<basePrice;
@@ -3845,9 +3842,9 @@ function askConfirm(msg,onOk){
 function cancelStatus(id,which){
   askConfirm(which==='paid'?'是否要取消「已收款」狀態？':which==='making'?'是否要取消「製作中」狀態？':'是否要取消「已出貨」狀態？',function(){
     var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
-    if(which==='paid')o.status='pending';
+    if(which==='paid'){o.status='pending';o.paidAt='';}
     else if(which==='making')o.status='paid';
-    else if(which==='shipped')o.status='making';
+    else if(which==='shipped'){o.status='making';o.shippedAt='';}
     persistOrder(o);renderAdmin();showToast('已取消');
   });
 }
@@ -3857,13 +3854,406 @@ function invoiceIssue(v){
   if(!/^[A-Z]{2}\d{8}$/.test(v))return '發票號碼「'+v+'」格式和一般電子發票（2 碼英文＋8 碼數字）不同';
   return '';
 }
+/* ══ 出貨・發票・會計 1120a ═══════════════════════════════════
+   會計流程全自動判斷，只需在該登帳時按一次「登帳」：
+   先收款再出貨 → 暫收（收款時）→ 出貨開票（出貨開發票時）
+   先出貨再收款 → 應收（出貨開發票時）→ 收款沖帳（款項入帳時）
+   LINE Pay／賣貨便（1120c）：錢先掛在「應收帳款－平台」，平台撥款時整批「撥款入帳」，
+   差額自動拆成手續費／運費（1120d：不做預估，只記實際撥款）
+   全部登完、且已收款已出貨 → 訂單自動完成 */
+function _p2(n){return (n<10?'0':'')+n;}
+function nowLocalISO(){var d=new Date();return d.getFullYear()+'-'+_p2(d.getMonth()+1)+'-'+_p2(d.getDate())+'T'+_p2(d.getHours())+':'+_p2(d.getMinutes());}
+function todayISO(){return nowLocalISO().slice(0,10);}
+function fmtLocal(v){return v?String(v).replace('T',' '):'';}
+function shortDate(v){var m=String(v||'').match(/^\d{4}-(\d{2})-(\d{2})/);return m?(+m[1])+'/'+(+m[2]):String(v||'');}
+function ordPaid(o){
+  if(!o)return false;
+  if(o.paidAt!==undefined&&o.paidAt!==null)return !!o.paidAt;
+  if(o.payment==='cod')return o.status==='done';
+  return ['paid','making','shipped','done'].indexOf(o.status)>=0;
+}
+function ordShipped(o){return !!o&&(o.status==='shipped'||o.status==='done');}
+var ACCT_LBL={tmp:'暫收',rev:'出貨開票',ar:'應收',col:'收款沖帳',set:'撥款入帳'};
+var ACCT_WHEN={tmp:'收款時',rev:'出貨開發票，暫收款轉為銷貨收入',ar:'開發票出貨時',col:'款項入帳時',set:'平台撥款到銀行，對帳'};
+function acctWhen(o,k){
+  if(k==='tmp')return o.payment==='linepay'?'客人 LINE Pay 付款時':'確認匯款入帳時（收款對帳）';
+  return ACCT_WHEN[k]||'';
+}
+var PAYOUT_CFG={linepay:{name:'LINE Pay',rate:0.022,dMin:1,dMax:3},cod:{name:'賣貨便',fee:38,threshold:3000}};
+function isPlatform(o){return !!o&&(o.payment==='linepay'||o.payment==='cod');}
+function platName(o){return (PAYOUT_CFG[o.payment]||{}).name||'';}
+function acctCashAcct(o){return isPlatform(o)?'應收帳款－'+platName(o):'銀行存款';}
+function acctPath(o){
+  var a=o.acct||{};
+  if(a.path)return a.path;
+  var pd=ordPaid(o),sh=ordShipped(o);
+  if(pd&&sh&&o.paidAt&&o.shippedAt)return o.paidAt<=o.shippedAt?'tmp':'ar';
+  if(pd&&!sh)return 'tmp';
+  if(sh&&!pd)return 'ar';
+  return o.payment==='cod'?'ar':'tmp';
+}
+function acctState(o){
+  var a=o.acct||{},path=acctPath(o),pd=ordPaid(o),sh=ordShipped(o);
+  var plat=isPlatform(o);
+  /* 1120e 依實際流程排序：
+     匯款　　：收款對帳（暫收）→ 出貨開票
+     LINE Pay：收款（暫收）→ 撥款對帳 → 出貨開票
+     賣貨便　：開票出貨（應收）→ 撥款對帳 */
+  var sx=['set',!!o.settle];
+  var defs=path==='tmp'
+    ?[['tmp',pd]].concat(plat?[sx]:[]).concat([['rev',pd&&sh]])
+    :[['ar',sh]].concat(plat?[sx]:[['col',pd&&sh]]);
+  var steps=defs.map(function(d){return {k:d[0],lbl:ACCT_LBL[d[0]],due:d[1],done:a[d[0]]||''};});
+  var voided=orderVoided(o);
+  /* 1120a 之前就完成的舊單（沒有任何收款／寄出／登帳紀錄）不列入登帳追蹤 */
+  var legacy=!o.acct&&!o.paidAt&&!o.shippedAt&&(o.status==='done'||voided);
+  var booked=steps.some(function(x){return x.done;});
+  return {path:path,steps:steps,voided:voided,legacy:legacy,
+    todo:(voided||legacy)?[]:steps.filter(function(x){return x.due&&!x.done;}),
+    all:!voided&&steps.every(function(x){return x.done;}),
+    needReverse:voided&&booked&&!a.reversed};
+}
+function acctNeedsWork(o){var st=acctState(o);return st.todo.length>0||st.needReverse;}
+function acctText(o){
+  var st=acctState(o);
+  if(st.legacy)return '';
+  if(st.voided)return st.needReverse?'需沖銷':(o.acct&&o.acct.reversed?'已沖銷 '+o.acct.reversed:'');
+  return st.steps.map(function(x){return x.lbl+(x.done?'✓'+x.done:(x.due?'待登帳':'—'));}).join('／');
+}
+/* 款項與出貨都完成、兩筆帳都登好 → 自動完成訂單 */
+function acctAutoClose(o){
+  if(!o||orderClosed(o)||o.status!=='shipped'||!ordPaid(o))return false;
+  if(!acctState(o).all)return false;
+  o._prevStatus=o.status;o.status='done';return true;
+}
+function acctBtn(label,act,strong){
+  var st=strong?'background:var(--cocoa);color:#fff':'background:var(--taupe);color:var(--cocoa)';
+  return '<button style="'+st+';border:none;border-radius:16px;padding:6px 12px;font-size:12px;font-family:inherit;cursor:pointer;white-space:nowrap" onclick="event.stopPropagation();'+act+'">'+label+'</button>';
+}
+function acctCell(o){
+  var st=acctState(o),top;
+  if(st.legacy)return '<span style="color:var(--text-light)">—</span>';
+  if(st.voided){
+    if(st.needReverse)top=acctBtn('已沖銷','reverseAcct('+o.id+')',true)+'<br><span style="font-size:11px;color:var(--dusty-rose)">已登過帳，需沖銷</span>';
+    else return '<span style="color:var(--text-light)">—</span>';
+    return top;
+  }
+  if(st.todo.length)top=acctBtn('登帳：'+st.todo.map(function(x){return x.lbl;}).join('＋'),'bookAcct('+o.id+')',true);
+  else if(st.all)top='<b style="color:#2e7d32;font-size:12.5px">✓ 已入帳</b>';
+  else top='<span style="font-size:12px;color:var(--text-light)">'+acctWaitText(o,st)+'</span>';
+  var prog=st.steps.map(function(x){return '<span style="color:'+(x.done?'#2e7d32':(x.due?'var(--dusty-rose)':'var(--text-light)'))+'">'+x.lbl+(x.done?'✓':'○')+'</span>';}).join(' ');
+  return top+'<div style="font-size:11px;margin-top:3px">'+prog+'</div>';
+}
+function acctSummaryHtml(){
+  var tS=0,tN=0,aS=0,aN=0,w=0;
+  S.orders.forEach(function(o){
+    if(acctNeedsWork(o))w++;
+    if(orderVoided(o))return;
+    var pd=ordPaid(o),sh=ordShipped(o);
+    if(pd&&!sh){tS+=Number(o.total)||0;tN++;}
+    else if(sh&&!pd){aS+=Number(o.total)||0;aN++;}
+  });
+  var box='flex:1;min-width:96px;background:var(--warm-ivory);border-radius:12px;padding:8px 12px;font-size:12px;color:var(--text-light);line-height:1.6';
+  var num='display:block;font-size:15px;font-weight:600;color:var(--cocoa)';
+  return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">'
+    +'<div style="'+box+'">暫收中（已收款未出貨）<b style="'+num+'">NT$ '+tS+'</b>'+tN+' 筆</div>'
+    +'<div style="'+box+'">應收中（已出貨未收款）<b style="'+num+'">NT$ '+aS+'</b>'+aN+' 筆</div>'
+    +'<div style="'+box+';cursor:pointer'+(w?';background:#FFF4E5':'')+'" onclick="filterOrders(\'acct\')">待登帳<b style="'+num+(w?';color:var(--dusty-rose)':'')+'">'+w+' 筆</b>'
+    +'<a href="#" onclick="event.stopPropagation();exportJournal();return false" style="color:var(--dusty-rose)">匯出分錄 ›</a></div>'
+    +'</div>'+payoutSectionHtml();
+}
+function acctDetailBlock(o){
+  var st=acctState(o);
+  var stepHtml=st.steps.map(function(x,i){
+    var right=x.done
+      ?'<b style="color:#2e7d32">✓ '+esc(x.done)+'</b> <a href="#" onclick="unbookAcct('+o.id+',\''+x.k+'\');return false" style="font-size:11.5px;color:var(--text-light)">取消</a>'
+      :(x.due&&!st.voided&&!st.legacy?'<b style="color:var(--dusty-rose)">待登帳</b>':'<span style="color:var(--text-light)">尚未發生</span>');
+    return '<div style="display:flex;justify-content:space-between;gap:8px"><span>'+(i+1)+'. '+x.lbl+'<span style="font-size:11px;color:var(--text-light)">（'+acctWhen(o,x.k)+'）</span></span><span>'+right+'</span></div>';
+  }).join('');
+  var act='';
+  if(st.legacy)act='<div style="font-size:12px;color:var(--text-light);margin-top:6px">這是改版前就完成的訂單，不列入登帳追蹤</div>';
+  if(st.todo.length)act='<button class="abtn pr" style="border-radius:24px;margin-top:8px" onclick="bookAcct('+o.id+')">登帳完成：'+st.todo.map(function(x){return x.lbl;}).join('＋')+'</button>';
+  else if(st.needReverse)act='<div style="font-size:12px;color:var(--dusty-rose);margin-top:6px">此單已取消／退貨，但有登過帳，記得做沖銷分錄</div><button class="abtn pr" style="border-radius:24px;margin-top:6px" onclick="reverseAcct('+o.id+')">已沖銷</button>';
+  return '<div style="margin-top:16px;background:var(--warm-ivory);border-radius:12px;padding:12px 14px">'
+    +'<p style="font-size:13px;font-weight:600;color:var(--cocoa);margin:0 0 10px">出貨・發票・會計</p>'
+    +'<div class="fg"><label>寄出時間</label><input type="datetime-local" id="odShipAt" value="'+esc(o.shippedAt||'')+'" style="font-size:16px;box-sizing:border-box"></div>'
+    +'<div class="fg"><label>發票號碼</label><input id="invoiceInput" value="'+esc(o.invoiceNo||'')+'" placeholder="例：AB12345678" maxlength="14" autocapitalize="characters" autocomplete="off" style="font-size:16px;box-sizing:border-box"></div>'
+    +'<button class="abtn sc" style="border-radius:24px" onclick="saveShipInfo('+o.id+')">儲存寄出時間與發票</button>'
+    +'<div style="font-size:13px;color:var(--cocoa);line-height:2;margin-top:12px;border-top:1px dashed var(--taupe);padding-top:8px">'
+    +'<div style="display:flex;justify-content:space-between"><span>'+(o.payment==='cod'?'客人取貨付款':'客人付款')+'</span><span>'+(ordPaid(o)?'✓ '+esc(fmtLocal(o.paidAt)||'已收款'):'<span style="color:var(--text-light)">'+(o.payment==='cod'?'尚未取貨':'尚未收款')+'</span>')+'</span></div>'
+    +settleDetailRow(o)
+    +stepHtml+'</div>'+act+'</div>';
+}
+function refreshOrderDetail(id){var m=document.getElementById('orderDetailModal');if(m&&m.classList.contains('open'))openOrderDetail(id,true);}
+function bookAcct(id){
+  var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
+  var st=acctState(o);if(!st.todo.length)return;
+  var a=Object.assign({},o.acct||{});a.path=st.path;
+  var d=todayISO();st.todo.forEach(function(x){a[x.k]=d;});
+  o.acct=a;
+  var closed=acctAutoClose(o);
+  persistOrder(o);renderAdmin();refreshOrderDetail(id);
+  showToast('訂單 #'+id+' 已登帳：'+st.todo.map(function(x){return x.lbl;}).join('＋')+(closed?'，訂單已自動完成':''));
+}
+function unbookAcct(id,k){
+  askConfirm('確定取消「'+ACCT_LBL[k]+'」的登帳紀錄？',function(){
+    var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
+    var a=Object.assign({},o.acct||{});delete a[k];
+    if(!a.tmp&&!a.rev&&!a.ar&&!a.col)delete a.path;
+    o.acct=a;persistOrder(o);renderAdmin();refreshOrderDetail(id);showToast('已取消登帳');
+  });
+}
+function reverseAcct(id){
+  var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
+  var a=Object.assign({},o.acct||{});a.reversed=todayISO();o.acct=a;
+  persistOrder(o);renderAdmin();refreshOrderDetail(id);showToast('已標記沖銷');
+}
+function markCollect(id){
+  var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
+  o.paidAt=nowLocalISO();
+  var closed=acctAutoClose(o);
+  persistOrder(o);renderAdmin();showToast('訂單 #'+id+(o.payment==='cod'?' 客人已取貨付款，已列入賣貨便預計撥款':' 已收款')+(closed?'，訂單已自動完成':''));
+}
+function cancelCollect(id){
+  askConfirm('是否要取消「已取貨／已收款」？',function(){
+    var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
+    o.paidAt='';persistOrder(o);renderAdmin();showToast('已取消');
+  });
+}
+function readShipAtInput(){var el=document.getElementById('odShipAt');return el?el.value.trim():'';}
+function openShipModal(id){
+  var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
+  document.getElementById('shipModalSub').textContent='訂單 #'+oidLabel(o)+'　'+(o.receiver||'')+'　NT$ '+o.total;
+  document.getElementById('shipAtInput').value=o.shippedAt||nowLocalISO();
+  document.getElementById('shipInvInput').value=o.invoiceNo||'';
+  document.getElementById('shipModalOk').onclick=function(){confirmShip(id);};
+  document.getElementById('shipModal').classList.add('open');
+}
+function confirmShip(id){
+  var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
+  var t=(document.getElementById('shipAtInput').value||'').trim()||nowLocalISO();
+  var inv=normInvoice(document.getElementById('shipInvInput').value);
+  closeModal('shipModal');
+  var go=function(){
+    o.status='shipped';o.shippedAt=t;if(inv)o.invoiceNo=inv;
+    if(o.payment!=='cod'&&!o.paidAt)o.paidAt=t;
+    var closed=acctAutoClose(o);
+    persistOrder(o);renderAdmin();refreshOrderDetail(id);
+    showToast('訂單 #'+id+' 已出貨'+(inv?'，發票 '+inv:'')+(closed?'，訂單已自動完成':''));
+  };
+  var w=invoiceIssue(inv);
+  if(w){askConfirm(w+'，仍要出貨嗎？（之後可在訂單明細補填）',go);return;}
+  go();
+}
+function saveShipInfo(id){
+  var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
+  var t=readShipAtInput(),inv=readInvoiceInput();
+  var go=function(){
+    o.shippedAt=t;o.invoiceNo=inv;
+    var autoShip=false;
+    if(t&&!ordShipped(o)&&!orderVoided(o)){o.status='shipped';autoShip=true;if(o.payment!=='cod'&&!o.paidAt)o.paidAt=t;}
+    var closed=acctAutoClose(o);
+    persistOrder(o);renderAdmin();refreshOrderDetail(id);
+    showToast('已儲存'+(autoShip?'，狀態改為已出貨':'')+(closed?'，訂單已自動完成':''));
+  };
+  if(inv&&invoiceIssue(inv)){askConfirm(invoiceIssue(inv)+'，確定要儲存嗎？',go);return;}
+  go();
+}
+/* 會計分錄匯出：含稅金額依 5% 拆出銷項稅額；只匯出「待登帳」的分錄，匯出後可一鍵標記已登帳 */
+function journalLines(o,k){
+  var amt=Number(o.total)||0,cash=acctCashAcct(o);
+  var net=Math.round(amt/1.05),tax=amt-net;
+  var d=(k==='tmp'||k==='col')?(o.paidAt||''):(o.shippedAt||'');d=String(d).slice(0,10)||todayISO();
+  var memo='訂單 #'+o.id+' '+(o.receiver||'')+' '+ACCT_LBL[k];
+  var L=function(acc,dr,cr){return [d,memo,acc,dr||'',cr||'',o.id,o.invoiceNo||''];};
+  if(k==='tmp')return [L(cash,amt,0),L('暫收款',0,amt)];
+  if(k==='rev')return [L('暫收款',amt,0),L('銷貨收入',0,net),L('銷項稅額',0,tax)];
+  if(k==='ar')return [L(isPlatform(o)?cash:'應收帳款',amt,0),L('銷貨收入',0,net),L('銷項稅額',0,tax)];
+  return [L('銀行存款',amt,0),L('應收帳款',0,amt)];
+}
+function exportJournal(){
+  var rows=[['日期','摘要','會計科目','借方','貸方','訂單／撥款批次','發票號碼']],todo=[],groups=[];
+  S.orders.slice().sort(function(a,b){return (a.id||0)-(b.id||0);}).forEach(function(o){
+    var st=acctState(o);
+    st.todo.forEach(function(x){
+      todo.push([o,st.path,x.k]);
+      if(x.k==='set'&&o.settle){if(groups.indexOf(o.settle.b)<0)groups.push(o.settle.b);}
+      else rows=rows.concat(journalLines(o,x.k));
+    });
+  });
+  /* 撥款入帳：同一批撥款合成一筆分錄，整批一起標記 */
+  groups.forEach(function(b){
+    var bo=S.orders.filter(function(o){return o.settle&&o.settle.b===b;});
+    rows=rows.concat(settleLines(bo));
+    bo.forEach(function(o){if(!todo.some(function(t){return t[0]===o&&t[2]==='set';}))todo.push([o,acctPath(o),'set']);});
+  });
+  if(!todo.length){showToast('目前沒有待登帳的分錄');return;}
+  downloadCSV('會計分錄_'+todayISO()+'.csv',rows);
+  askConfirm('已匯出 '+todo.length+' 筆分錄，要一起標記為「已登帳」嗎？',function(){
+    var d=todayISO(),n=0;
+    todo.forEach(function(t){var o=t[0];var a=Object.assign({},o.acct||{});a.path=t[1];a[t[2]]=d;o.acct=a;});
+    var seen={};todo.forEach(function(t){var o=t[0];if(seen[o.id])return;seen[o.id]=1;if(acctAutoClose(o))n++;persistOrder(o);});
+    renderAdmin();showToast('已標記登帳'+(n?'，'+n+' 筆訂單自動完成':''));
+  });
+}
+/* ══ 平台撥款預估與對帳 1120c ══════════════════════════════ */
+function addDays(iso,n){var q=String(iso).slice(0,10).split('-');var d=new Date(+q[0],+q[1]-1,+q[2]+n);return d.getFullYear()+'-'+_p2(d.getMonth()+1)+'-'+_p2(d.getDate());}
+function payoutDeduct(o){var t=Number(o.total)||0;return o.payment==='linepay'?Math.round(t*PAYOUT_CFG.linepay.rate):(o.payment==='cod'?PAYOUT_CFG.cod.fee:0);}
+function payoutPending(plat){
+  return S.orders.filter(function(o){return isPlatform(o)&&(!plat||o.payment===plat)&&!o.settle&&ordPaid(o)&&!orderVoided(o)&&!acctState(o).legacy;})
+    .sort(function(a,b){var x=String(a.paidAt||''),y=String(b.paidAt||'');return x<y?-1:x>y?1:(a.id||0)-(b.id||0);});
+}
+
+
+
+
+function acctWaitText(o,st){
+  var nx=st.steps.filter(function(x){return !x.done;})[0];
+  if(!nx)return '';
+  if(!ordPaid(o)&&(nx.k==='tmp'||nx.k==='col'||nx.k==='set'))return o.payment==='cod'?'等取貨':'等收款';
+  if(nx.k==='rev'||nx.k==='ar')return '等出貨';
+  if(nx.k==='col')return '等收款';
+  if(nx.k==='set')return '等撥款';
+  return '';
+}
+function payoutSectionHtml(){
+  var plats=['linepay','cod'].map(function(k){
+    var os=payoutPending(k),g=0;os.forEach(function(o){g+=Number(o.total)||0;});
+    return {k:k,os:os,g:g};
+  });
+  var done=S.orders.some(function(o){return o.settle;});
+  if(!plats[0].os.length&&!plats[1].os.length&&!done)return '';
+  var rows=plats.map(function(x){
+    var name=PAYOUT_CFG[x.k].name;
+    return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px dashed var(--taupe)">'
+      +'<div style="min-width:0"><b style="color:var(--cocoa)">'+name+'</b>　'+(x.os.length?x.os.length+' 筆待撥款・訂單合計 NT$ '+x.g:'<span style="color:var(--text-light)">沒有待撥款</span>')
+      +(x.os.length?'<div style="font-size:11.5px;color:var(--text-light);white-space:normal">'+x.os.map(function(o){return '#'+o.id;}).join(' ')+'</div>':'')+'</div>'
+      +'<div style="flex:none">'+(x.os.length?acctBtn('撥款入帳',"openSettleModal('"+x.k+"','')",true):'')+'</div></div>';
+  }).join('');
+  return '<div style="background:#fff;border:1.5px solid var(--linen);border-radius:12px;padding:10px 14px;margin:-4px 0 12px;font-size:13px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><b style="color:var(--cocoa)">平台撥款</b>'
+    +'<a href="#" onclick="exportPayouts();return false" style="font-size:12px;color:var(--dusty-rose)">匯出撥款紀錄 ›</a></div>'
+    +'<div style="font-size:11.5px;color:var(--text-light);margin-bottom:4px">客人付款／取貨後會列在這裡；錢進銀行時按「撥款入帳」，照平台撥款明細勾選訂單</div>'
+    +rows+'</div>';
+}
+function settleDetailRow(o){
+  if(!isPlatform(o)||acctState(o).legacy)return '';
+  var right;
+  if(o.settle){
+    right='✓ '+esc(o.settle.d)+' 實收 NT$ '+o.settle.amt+(o.settle.n>1?'（共 '+o.settle.n+' 筆合併）':'')
+      +' <a href="#" onclick="unsettleBatch(\''+esc(o.settle.b)+'\');return false" style="font-size:11.5px;color:var(--text-light)">取消</a>';
+  }else if(ordPaid(o)&&!orderVoided(o)){
+    right='<span style="color:var(--dusty-rose)">等撥款</span>';
+  }else right='<span style="color:var(--text-light)">—</span>';
+  return '<div style="display:flex;justify-content:space-between;gap:8px"><span>'+platName(o)+' 撥款</span><span style="text-align:right">'+right+'</span></div>';
+}
+function openSettleModal(plat,idCsv){
+  var ids=String(idCsv||'').split(',').filter(Boolean).map(Number);
+  S._settle={plat:plat,sel:ids,touched:false};
+  document.getElementById('settleSub').textContent=PAYOUT_CFG[plat].name+'：勾選這次撥款包含的訂單';
+  document.getElementById('settleDate').value=todayISO();
+  document.getElementById('settleAmt').value='';
+  settleRender();
+  document.getElementById('settleModal').classList.add('open');
+}
+function settleRender(){
+  var st=S._settle;if(!st)return;
+  var list=payoutPending(st.plat);
+  document.getElementById('settleList').innerHTML=list.length?list.map(function(o){
+    var on=st.sel.indexOf(o.id)>=0;
+    return '<label style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--linen);cursor:pointer"><input type="checkbox" style="width:auto;flex:none"'+(on?' checked':'')+' onchange="settleToggle('+o.id+',this.checked)">'
+      +'<span style="flex:1">#'+o.id+' '+esc(o.receiver||'')+'<br><span style="font-size:11px;color:var(--text-light)">'+(o.payment==='cod'?'取貨 ':'付款 ')+esc(fmtLocal(o.paidAt))+'</span></span><span>NT$ '+o.total+'</span></label>';
+  }).join(''):'<p style="color:var(--text-light)">沒有待撥款的訂單</p>';
+  settleCalc();
+}
+function settleToggle(id,on){var st=S._settle;var i=st.sel.indexOf(id);if(on&&i<0)st.sel.push(id);if(!on&&i>=0)st.sel.splice(i,1);settleCalc();}
+function settleCalc(){
+  var st=S._settle;if(!st)return;
+  var os=S.orders.filter(function(o){return st.sel.indexOf(o.id)>=0;});
+  var g=0;os.forEach(function(o){g+=Number(o.total)||0;});
+  var amt=parseInt(document.getElementById('settleAmt').value,10);
+  var html=os.length?'已選 '+os.length+' 筆，訂單合計 <b>NT$ '+g+'</b>':'<span style="color:var(--dusty-rose)">請至少勾選一筆訂單</span>';
+  if(os.length&&!isNaN(amt)){
+    var diff=g-amt;
+    html+='<br>實收 NT$ '+amt+'，平台扣除 <b>NT$ '+diff+'</b>'+(st.plat==='cod'?'（運費 NT$ '+(PAYOUT_CFG.cod.fee*os.length)+'，其餘記手續費）':'（記手續費）');
+    var w=settleWarn(st.plat,os,amt);
+    if(w)html+='<br><span style="color:var(--dusty-rose)">'+w+'</span>';
+  }
+  document.getElementById('settleCalc').innerHTML=html;
+}
+/* 扣除金額和平台規則差太多 → 多半是漏勾或多勾 */
+function settleWarn(plat,os,amt){
+  var g=0,ded=0;os.forEach(function(o){g+=Number(o.total)||0;ded+=payoutDeduct(o);});
+  var diff=g-amt,tol=plat==='linepay'?10:0;
+  if(diff<0)return '實收比訂單合計還多 NT$ '+(-diff)+'，可能漏勾訂單';
+  if(Math.abs(diff-ded)>tol)return '平台扣除通常約 NT$ '+ded+'（'+(plat==='linepay'?'手續費 2.2%':'運費 '+PAYOUT_CFG.cod.fee+'×'+os.length)+'），這次差了 NT$ '+Math.abs(diff-ded)+'，請對照平台撥款明細確認勾選';
+  return '';
+}
+function confirmSettle(){
+  var st=S._settle;if(!st)return;
+  var os=S.orders.filter(function(o){return st.sel.indexOf(o.id)>=0;});
+  if(!os.length){showToast('請至少勾選一筆訂單');return;}
+  var d=(document.getElementById('settleDate').value||'').trim()||todayISO();
+  var amt=parseInt(document.getElementById('settleAmt').value,10);
+  if(isNaN(amt)||amt<=0){showToast('請填實際入帳金額');return;}
+  var save=function(){
+    var b=(st.plat==='linepay'?'LP':'MB')+d.replace(/-/g,'')+'-'+String(Date.now()).slice(-4);
+    os.forEach(function(o){o.settle={b:b,d:d,amt:amt,n:os.length};persistOrder(o);});
+    S._settle=null;
+    renderAdmin();showToast('已記錄 '+PAYOUT_CFG[st.plat].name+' 撥款 NT$ '+amt+'（'+os.length+' 筆），已列入待登帳');
+  };
+  var w=settleWarn(st.plat,os,amt);
+  closeModal('settleModal');
+  if(w){askConfirm(w+'。仍要照這樣記錄嗎？',save);return;}
+  save();
+}
+function unsettleBatch(b){
+  askConfirm('確定取消這筆撥款紀錄？同一批的訂單會一起回到「等撥款」',function(){
+    var id=null;
+    S.orders.forEach(function(o){
+      if(!(o.settle&&o.settle.b===b))return;
+      id=o.id;o.settle=null; /* 存 null：updateDoc 不會刪除缺少的欄位 */
+      if(o.acct&&o.acct.set){var a=Object.assign({},o.acct);delete a.set;o.acct=a;}
+      persistOrder(o);
+    });
+    renderAdmin();if(id!=null)refreshOrderDetail(id);showToast('已取消撥款紀錄');
+  });
+}
+function settleLines(bo){
+  if(!bo.length)return [];
+  var o0=bo[0],sv=o0.settle,name=platName(o0),gross=0;
+  bo.forEach(function(o){gross+=Number(o.total)||0;});
+  var memo=name+'撥款（訂單 #'+bo.map(function(o){return o.id;}).join('、#')+'）';
+  var L=function(acc,dr,cr){return [sv.d,memo,acc,dr||'',cr||'',sv.b,''];};
+  var rows=[L('銀行存款',sv.amt,0)];
+  var rest=gross-sv.amt;
+  if(o0.payment==='cod'){var fr=PAYOUT_CFG.cod.fee*bo.length;rows.push(L('運費',fr,0));rest-=fr;}
+  if(rest>0)rows.push(L('手續費',rest,0));
+  if(rest<0)rows.push(L('其他收入',0,-rest));
+  rows.push(L('應收帳款－'+name,0,gross));
+  return rows;
+}
+function exportPayouts(){
+  var rows=[['平台','狀態','入帳日','撥款批次','訂單編號','收件人','客人付款／取貨時間','訂單金額','批次實收','批次訂單數']];
+  ['linepay','cod'].forEach(function(k){payoutPending(k).forEach(function(o){
+    rows.push([PAYOUT_CFG[k].name,'待撥款','','',o.id,o.receiver||'',fmtLocal(o.paidAt),o.total,'','']);});});
+  S.orders.filter(function(o){return o.settle;}).sort(function(a,b){return a.settle.d<b.settle.d?1:a.settle.d>b.settle.d?-1:(a.id||0)-(b.id||0);}).forEach(function(o){
+    rows.push([platName(o),'已入帳',o.settle.d,o.settle.b,o.id,o.receiver||'',fmtLocal(o.paidAt),o.total,o.settle.amt,o.settle.n]);
+  });
+  if(rows.length<2){showToast('目前沒有平台撥款資料');return;}
+  downloadCSV('撥款紀錄_'+todayISO()+'.csv',rows);showToast('已匯出撥款紀錄');
+}
 function readInvoiceInput(){var el=document.getElementById('invoiceInput');return normInvoice(el?el.value:'');}
 function completeOrder(id){
   var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
   var inv=readInvoiceInput();
+  var _sa=readShipAtInput();
   var go=function(){
     o._prevStatus=o.status;o.status='done';
     if(inv)o.invoiceNo=inv;
+    var _now=nowLocalISO();
+    o.shippedAt=_sa||o.shippedAt||_now;
+    if(!o.paidAt)o.paidAt=_now; /* 完成＝款項已收齊 */
     persistOrder(o);renderAdmin();openOrderDetail(id,true);showToast('訂單 #'+id+' 已完成'+(inv?'，發票 '+inv:''));
   };
   var w=invoiceIssue(inv);
@@ -4120,19 +4510,19 @@ function renderAdminProds(){
     var rowBg=ck?'background:var(--warm-ivory)':(p.pinned?'background:#FFFAF2':'');
     return '<tr'+(rowBg?' style="'+rowBg+'"':'')+'><td><input type="checkbox" class="prodSel" onclick="toggleSelProd('+p.id+',this)" '+(ck?'checked':'')+'></td>'
       +'<td style="font-size:24px">'+img+'</td><td>'+esc(p.name)+(p.draft?'<br><span style="font-size:11px;color:var(--dusty-rose)"> 草稿（未上架）</span>':'')+(p.preview&&!p.draft?'<br><span style="font-size:11px;color:var(--cocoa)"> 搶先預覽（未開放購買）</span>':'')+(p.showcase?'<br><span style="font-size:11px;color:#6B5B4B"> 展示・絕版（不開放購買）</span>':'')+pinTag+'</td><td>'+esc(p.cat)+'</td><td>NT$ '+p.price+'</td>'
-      +'<td>'+(p.isCustom?'✓':'—')+'</td><td>'+(p.isCustom?'NT$ '+p.deposit:'—')+'</td>'
+      +'<td>'+(p.isCustom?'✓':'—')+'</td>'
       +'<td>'+(p.preview&&!p.draft?'<button class="abtn pr" onclick="openForSale('+p.id+')">開放購買</button>':'')+'<button class="abtn '+(p.draft?'pr':'sc')+'" onclick="togglePublish('+p.id+')">'+(p.draft?'上架':'下架')+'</button>'
       +'<button class="abtn '+(p.pinned?'ok':'sc')+'" onclick="togglePin('+p.id+')">'+(p.pinned?'取消置頂':'置頂')+'</button>'
       +'<button class="abtn sc" onclick="duplicateProduct('+p.id+')">複製</button>'
       +'<button class="abtn sc" onclick="openProductModal('+p.id+')">編輯</button>'
       +'<button class="abtn dg" onclick="delProd('+p.id+')">刪除</button></td></tr>';
   }).join('');
-  if(!rows)rows='<tr><td colspan="8" style="text-align:center;color:var(--text-light);padding:24px">此分類沒有作品</td></tr>';
+  if(!rows)rows='<tr><td colspan="7" style="text-align:center;color:var(--text-light);padding:24px">此分類沒有作品</td></tr>';
   var _host=document.getElementById('adminProductList');
   var _old=_host.querySelector('.table-scroll');
   var _sl=_old?_old.scrollLeft:0;
   var _sy=(window.pageYOffset||document.documentElement.scrollTop||0);
-  _host.innerHTML=chips+bar+'<div class="table-scroll"><table class="dtable"><thead><tr><th></th><th>圖</th><th>名稱</th><th>分類</th><th>售價</th><th>客製</th><th>訂金</th><th>操作</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  _host.innerHTML=chips+bar+'<div class="table-scroll"><table class="dtable"><thead><tr><th></th><th>圖</th><th>名稱</th><th>分類</th><th>價格</th><th>客製</th><th>操作</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
   var _new=_host.querySelector('.table-scroll');
   if(_new&&_sl)_new.scrollLeft=_sl;
   if(_sy)window.scrollTo(0,_sy);
@@ -4234,14 +4624,16 @@ function renderAdminOrds(){
   function matchFilter(o){
     if(flt==='all')return o.status!=='done';
     if(flt==='await')return orderAwaitingPay(o);
+    if(flt==='acct')return acctNeedsWork(o);
     return o.status===flt;
   }
   function fcount(k){
     if(k==='all')return S.orders.filter(function(o){return o.status!=='done';}).length;
     if(k==='await')return awaitingPayList().length;
+    if(k==='acct')return S.orders.filter(acctNeedsWork).length;
     return S.orders.filter(function(o){return o.status===k;}).length;
   }
-  var filters=[['all','進行中'],['await','已匯款待確認'],['pending','待確認'],['paid','已收款'],['making','製作中'],['shipped','已出貨'],['done','已完成'],['returned','已退貨'],['cancelled','已取消']];
+  var filters=[['all','進行中'],['await','已匯款待確認'],['acct','待登帳'],['pending','待確認'],['paid','已收款'],['making','製作中'],['shipped','已出貨'],['done','已完成'],['returned','已退貨'],['cancelled','已取消']];
   var chips='<div class="ord-filter">'+filters.map(function(f){
     var n=fcount(f[0]);
     return '<button class="cat-tab'+(flt===f[0]?' active':'')+'" onclick="filterOrders(\''+f[0]+'\')">'+f[1]+(n?' ('+n+')':'')+'</button>';
@@ -4273,7 +4665,9 @@ function renderAdminOrds(){
     var payCell=closed?'—':depOnly
       ?(btn(o.depositPaid,o.depositPaid?('cancelMoney('+o.id+",'deposit')"):('markMoney('+o.id+",'deposit')"),o.depositPaid?'✓ 訂金':'收訂金')
         +' '+btn(o.balancePaid,o.balancePaid?('cancelMoney('+o.id+",'balance')"):('markMoney('+o.id+",'balance')"),o.balancePaid?'✓ 尾款':'收尾款'))
-      :btn(paid,paid?('cancelStatus('+o.id+",'paid')"):('updStatus('+o.id+",'paid')"),paid?'✓ 已收款':'確認收款');
+      :(o.payment==='cod'
+        ?btn(ordPaid(o),ordPaid(o)?('cancelCollect('+o.id+')'):('markCollect('+o.id+')'),ordPaid(o)?'✓ 已取貨':'確認取貨')
+        :btn(paid,paid?('cancelStatus('+o.id+",'paid')"):('updStatus('+o.id+",'paid')"),paid?'✓ 已收款':'確認收款'));
     var making=o.status==='making'||o.status==='shipped';
     var makeCell=closed?'—':btn(making,making?('cancelStatus('+o.id+",'making')"):('updStatus('+o.id+",'making')"),making?'✓ 製作中':'開始製作');
     var ck=S._selOrders.indexOf(o.id)>=0;
@@ -4284,13 +4678,15 @@ function renderAdminOrds(){
       +'<td>'+esc(o.userName)+'</td><td style="font-size:12px">'+payLbl+'</td><td>NT$ '+o.total+'</td>'
       +'<td>'+payCell+'</td>'
       +'<td>'+makeCell+'</td>'
-      +'<td>'+(closed?'—':btn(shipped,shipped?('cancelStatus('+o.id+",'shipped')"):('updStatus('+o.id+",'shipped')"),shipped?'✓ 已出貨':'確認出貨'))+'</td>'
+      +'<td>'+(closed?(o.shippedAt?'<span style="font-size:12px">'+shortDate(o.shippedAt)+' 寄出</span>':'—'):btn(shipped,shipped?('cancelStatus('+o.id+",'shipped')"):('openShipModal('+o.id+')'),shipped?('✓ '+(o.shippedAt?shortDate(o.shippedAt)+' 寄出':'已出貨')):'確認出貨'))
+      +(o.invoiceNo?'<br><span style="font-size:11px;color:var(--text-light)">'+esc(o.invoiceNo)+'</span>':(shipped&&!orderVoided(o)?'<br><span style="font-size:11px;color:var(--dusty-rose)">未填發票</span>':''))+'</td>'
+      +'<td onclick="event.stopPropagation()">'+acctCell(o)+'</td>'
       +'<td><span class="sbadge s-'+o.status+'">'+sLabel(o.status)+'</span></td></tr>';
   }).join('');
-  if(!rows)rows='<tr><td colspan="8" style="text-align:center;color:var(--text-light);padding:24px">此分類沒有訂單</td></tr>';
-  el.innerHTML='<p style="font-size:12px;color:var(--text-light);margin-bottom:10px">點訂單列可查看明細與付款截圖；橘底＝顧客已回報匯款待你確認；客製訂金單分「訂金 / 尾款」兩段收款（左右可滑動）</p>'
-    +chips+bar
-    +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="dtable" style="white-space:nowrap;min-width:840px"><thead><tr><th></th><th>訂單</th><th>會員</th><th>付款</th><th>金額</th><th>收款</th><th>製作</th><th>出貨</th><th>狀態</th></tr></thead><tbody>'
+  if(!rows)rows='<tr><td colspan="10" style="text-align:center;color:var(--text-light);padding:24px">此分類沒有訂單</td></tr>';
+  el.innerHTML='<p style="font-size:12px;color:var(--text-light);margin-bottom:10px">點訂單列可查看明細；橘底＝顧客已回報匯款待你確認；按「確認出貨」時一併填寄出時間與發票；會計欄出現深色按鈕＝該登帳了（左右可滑動）</p>'
+    +acctSummaryHtml()+chips+bar
+    +'<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table class="dtable" style="white-space:nowrap;min-width:980px"><thead><tr><th></th><th>訂單</th><th>會員</th><th>付款</th><th>金額</th><th>收款</th><th>製作</th><th>出貨／發票</th><th>會計</th><th>狀態</th></tr></thead><tbody>'
     +rows+'</tbody></table></div>';
 }
 function filterOrders(k){S._ordFilter=k;renderAdminOrds();}
@@ -4305,6 +4701,7 @@ function toggleSelAllOrders(el){
   var visible=S.orders.filter(function(o){
     if(flt==='all')return true;
     if(flt==='await')return orderAwaitingPay(o);
+    if(flt==='acct')return acctNeedsWork(o);
     return o.status===flt;
   }).map(function(o){return o.id;});
   S._selOrders=el.checked?visible:[];
@@ -4561,10 +4958,10 @@ function exportSales(){
   showToast('已匯出銷售排行');
 }
 function exportOrders(){
-  var rows=[['訂單編號','日期','會員','收件人','電話','付款方式','寄送','取貨/地址','小計','運費','折扣','合計','訂金','含客製','狀態','發票號碼','備註']];
+  var rows=[['訂單編號','日期','會員','收件人','電話','付款方式','寄送','取貨/地址','小計','運費','折扣','合計','訂金','含客製','狀態','收款時間','寄出時間','發票號碼','會計進度','備註']];
   S.orders.forEach(function(o){rows.push([o.id,o.date,o.userName,o.receiver,o.phone,
     o.payment==='bank'?'銀行匯款':o.payment==='linepay'?'LINE Pay':'貨到付款',
-    o.shippingMethod,o.address,o.subtotal,o.shipping,o.discount,o.total,o.totalDeposit,o.hasCustom?'是':'否',sLabel(o.status),o.invoiceNo||'',o.note]);});
+    o.shippingMethod,o.address,o.subtotal,o.shipping,o.discount,o.total,o.totalDeposit,o.hasCustom?'是':'否',sLabel(o.status),fmtLocal(o.paidAt),fmtLocal(o.shippedAt),o.invoiceNo||'',acctText(o),o.note]);});
   downloadCSV('訂單資料_'+new Date().toISOString().slice(0,10)+'.csv',rows);
   showToast('已匯出訂單');
 }
@@ -4863,7 +5260,9 @@ function updStatus(id,ns){
   var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
   if(ns==='paid')o.status='paid';
   else if(ns==='making')o.status='making';
-  else if(ns==='shipped')o.status='shipped';
+  else if(ns==='shipped'){o.status='shipped';if(!o.shippedAt)o.shippedAt=nowLocalISO();}
+  if(o.payment!=='cod'&&!o.paidAt)o.paidAt=nowLocalISO(); /* 匯款／LINE Pay：收款、製作、出貨都代表已收到款 */
+  acctAutoClose(o);
   persistOrder(o);renderAdmin();showToast('訂單 #'+id+' 狀態已更新');
 }
 /* ══ 訂單防呆 IG-0907 ══════════════════════════════════════════
@@ -5187,7 +5586,7 @@ function saveProduct(){
   var thumbs=(S.editThumbs||[]).slice();if(thumbs.length!==imgs.length)thumbs=imgs.slice();
   var data={name:name,cat:document.getElementById('editCat').value,
     price:parseInt(document.getElementById('editPrice').value)||0,
-    original:parseInt(document.getElementById('editOriginal').value)||null,
+    original:null,
     desc:document.getElementById('editDesc').value,
     material:document.getElementById('editMaterial').value.trim(),
     canCustom:document.getElementById('editCanCustom').checked,
