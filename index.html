@@ -1040,7 +1040,7 @@ nav{background:rgba(255,252,247,.72)!important;-webkit-backdrop-filter:saturate(
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
     <span>@ju.accessories.tw</span>
   </a>
-  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1121a</div>
+  <div class="footer-meta">日梢生技有限公司　統一編號 90588451<br>網站版本 ver. 1124a</div>
 </footer>
 
 <!-- MODALS -->
@@ -1167,7 +1167,7 @@ var S={
 
 /* 版本廣播：SITE_BUILD 只能遞增（YYYYMMDD + 當日第幾個版）。
    舊分頁會從 config 即時收到新 build，就知道自己過期了。 */
-var SITE_VER='1121a',SITE_BUILD=202611211;
+var SITE_VER='1124a',SITE_BUILD=202611241;
 function publishSiteBuild(cfg){
   if(!(cfg&&typeof cfg==='object'))cfg={};
   var cur=parseInt(cfg.siteBuild,10)||0;
@@ -2239,7 +2239,7 @@ function openOrderDetail(id,isAdmin){
   var o=S.orders.find(function(x){return x.id===id;});if(!o)return;
   var depOnly=o.hasCustom&&o.customDepositChoice==='deposit';
   var _sp=orderPaySplit(o),remainder=_sp.remainder,payNow=_sp.payNow;
-  var lines=o.items.map(function(i){return '<div style="display:flex;justify-content:space-between;font-size:13px;margin:5px 0"><span>'+esc(i.name)+(i.spec?'（'+esc(i.spec)+'）':'')+(i.isCustom?'':'')+' ×'+i.qty+'</span><span>NT$ '+(i.price*i.qty)+'</span></div>';}).join('');
+  var lines=o.items.map(function(i){return '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;font-size:13px;margin:6px 0;line-height:1.6"><span style="flex:1;min-width:0">'+esc(i.name)+(i.spec?'（'+esc(i.spec)+'）':'')+' <span style="white-space:nowrap;color:var(--text-light)">×'+i.qty+'</span></span><span style="flex:none;white-space:nowrap">NT$ '+(i.price*i.qty)+'</span></div>';}).join('');
   var html='<h3 style="margin-bottom:4px">訂單 #'+esc(oidLabel(o))+'</h3>'
     +'<p class="msub" style="margin-bottom:12px">'+esc(o.date||'—')+'　<span class="sbadge s-'+esc(o.status)+'">'+sLabel(o.status)+'</span>'+(o.guest?'　<span class="sbadge" style="background:var(--warm-ivory);color:var(--cocoa)">訪客</span>':'')+'</p>'
     +'<div class="order-sum">'+lines
